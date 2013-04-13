@@ -4,6 +4,7 @@
 import configparser
 import os.path
 import queue
+import re
 import socket
 import sys
 import threading
@@ -11,19 +12,29 @@ import threading
 incoming = queue.Queue()
 outgoing = queue.Queue()
 
+regex_optional_prefix = re.compile(r"(?::([^! ]*)!?([^@ ]*)@?([^ ]*))?")
+regex_parameter = re.compile(r"((?:(?<= :)[^\r\n]*)|(?:[^: \r\n][^ \r\n]*))")
+
+def parse(octets):
+    text = octets.decode("utf-8", "replace")
+
+    match_prefix = regex_optional_prefix.match(text)
+    params = regex_parameter.findall(text[match_prefix.end():])
+    return match_prefix.groups(), params[0], params[1:]
+
 def thread(target, *args):
     t = threading.Thread(target=target, args=tuple(args))
     t.start()
 
-def receive(sock):
+def socket_receive(sock):
     with sock.makefile("rb") as s:
         # TODO: How do we know when we're connected?
-        incoming.put("Connected")
+        incoming.put(("connected",))
 
         for octets in s:
-            incoming.put(octets)
+            incoming.put(("received", octets))
 
-def send(sock):
+def socket_send(sock):
     with sock.makefile("wb") as s:
         while True:
             octets = outgoing.get()
@@ -36,8 +47,34 @@ def connect(host, port):
     print("Connecting to %s:%s" % (host, port))
     sock.connect((host, port))
 
-    thread(receive, sock)
-    thread(send, sock)
+    thread(socket_receive, sock)
+    thread(socket_send, sock)
+
+def event(name):
+    def decorate(function):
+        event.registry[name] = function
+        return function
+    return decorate
+event.registry = {}
+
+@event("PING")
+def ping(opt, prefix, parameters):
+    send("PONG", opt["client"]["nick"])
+
+@event("PRIVMSG")
+def exclamation(opt, prefix, parameters):
+    # ('nick', '~user', 'host') ['#channel', 'text']
+    nick, user, host = prefix
+    channel, text = tuple(parameters)
+
+    if text == opt["client"]["nick"] + "!":
+        send("PRIVMSG", channel, nick + "!")
+
+def send(*args):
+    if len(args) > 1:
+        args = args[:-1] + (":" + args[-1],)
+    text = re.sub(r"[\r\n]", "", " ".join(args))
+    outgoing.put(text.encode("utf-8", "replace")[:510] + b"\r\n")
 
 def utf8(text):
     return text.encode("utf-8")
@@ -57,24 +94,34 @@ def serve(base, opt):
             def handle(connection, client):
                 try: 
                     for octets in connection.makefile("rb"):
-                        incoming.put(octets)
+                        incoming.put(("command", octets))
                 finally:
                     connection.close()
             thread(handle, connection, client)
     thread(listen, sock)
 
     while True:
-        octets = incoming.get()
-        if octets == "Connected":
-            import random
-            n = random.randrange(0, 100000)
-            outgoing.put(utf8("NICK saxo%05i\r\n" % n))
-            outgoing.put(utf8("USER saxo%05i +iw saxo%05i saxo\r\n" % (n, n)))
+        input = incoming.get()
+
+        if input[0] == "connected":
+            send("NICK", opt["client"]["nick"])
+            send("USER", opt["client"]["nick"], "+iw", opt["client"]["nick"], "saxo")
             for channel in opt["client"]["channels"].split(" "):
-                outgoing.put(utf8("JOIN %s\r\n" % channel))
+                send("JOIN", channel)
+
+        elif input[0] == "command":
+            print("got command")
+
+        elif input[0] == "received":
+            octets = input[1]
+            print(repr(octets))
+            prefix, command, parameters = parse(octets)
+
+            if command in event.registry:
+                event.registry[command](opt, prefix, parameters)
+
         else:
-            text = octets.decode("utf-8", "replace")
-            print(repr(text))
+            print("?", input[0])
 
 def start(base):
     print("BASE:", base)
