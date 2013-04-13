@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+
+# Copyright 2013, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import sys
+
+# Save PEP 3122!
+if "." in __name__:
+    from . import script
+else:
+    import script
+
+if __name__ == "__main__":
+    script.main(sys.argv)
