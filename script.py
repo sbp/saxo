@@ -107,16 +107,17 @@ def create(args):
 
 @action
 def start(args):
-    print("Can't start a bot yet")
+    if args.directory is None:
+        directory = os.path.expanduser("~/.saxo")
+    else:
+        directory = args.directory
+
     if not args.foreground:
         # Save PEP 3122!
         if "." in __name__:
             from . import daemon
         else:
             import daemon
-
-        if args.directory is None:
-            args.directory = os.path.expanduser("~/.saxo")
 
         if args.output is None:
             output = open(os.devnull, "w")
@@ -125,8 +126,16 @@ def start(args):
         else:
             output = open(args.output, "w")
 
-        pidfile = os.path.join(args.directory, "pid")
+        pidfile = os.path.join(directory, "pid")
         daemon.start(pidfile, output)
+
+    # Save PEP 3122!
+    if "." in __name__:
+        from . import client
+    else:
+        import client
+
+    client.start(directory)
     return 0
 
 @action
