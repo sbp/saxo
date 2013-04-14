@@ -13,8 +13,10 @@ import sys
 
 # Save PEP 3122!
 if "." in __name__:
+    from . import core
     from . import generic
 else:
+    import core
     import generic
 
 incoming = queue.Queue()
