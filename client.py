@@ -13,10 +13,8 @@ import sys
 
 # Save PEP 3122!
 if "." in __name__:
-    from . import core
     from . import generic
 else:
-    import core
     import generic
 
 incoming = queue.Queue()
@@ -128,9 +126,21 @@ class Saxo(object):
 def utf8(text):
     return text.encode("utf-8")
 
+E_NO_PLUGINS = """
+The plugins directory is necessary for saxo to work. If it was deleted
+accidentally, just make a new empty directory and saxo will automatically
+populate it with the core plugin that it needs to work.
+"""
+
 def start(base):
-    # TODO: Check core.version
-    shutil.copy2(core.__file__, os.path.join(base, "plugins", "core.py"))
+    # Could check core.version instead
+    plugins = os.path.join(base, "plugins")
+    if not os.path.isdir(plugins):
+        generic.error("no plugins directory: `%s`" % plugins, E_NO_PLUGINS)
+
+    core_plugin = os.path.join(base, "plugins", "core.py")
+    if os.path.getmtime(core.__file__) > os.path.getmtime(core_plugin):
+        shutil.copy2(core.__file__, core_plugin)
 
     opt = configparser.ConfigParser()
     config = os.path.join(base, "config")
