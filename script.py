@@ -5,21 +5,11 @@ import argparse
 import os.path
 import sys
 
-def error(short, long=None, err=None):
-    print("saxo: error: " + short, file=sys.stderr)
-
-    if long is not None:
-        print(long.rstrip(), file=sys.stderr)
-
-    if err is not None:
-        if long is not None:
-            print("", file=sys.stderr)
-
-        print("This is the error message that python gave:", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("    %s" % err.__class__.__name__)
-        print("        %s" % err)
-    sys.exit(1)
+# Save PEP 3122!
+if "." in __name__:
+    from . import generic
+else:
+    import generic
 
 E_PYTHON_VERSION = """
 Your version of the python programming language is too old to run saxo. Use a
@@ -34,7 +24,7 @@ example, python3 can be installed using homebrew:
 """
 
 if sys.version_info < (3, 3):
-    error("requires python 3.3 or later", E_PYTHON_VERSION)
+    generic.error("requires python 3.3 or later", E_PYTHON_VERSION)
 
 def action(function):
     action.names[function.__name__] = function
@@ -181,8 +171,7 @@ def main(argv):
             if isinstance(code, int):
                 sys.exit(code)
         else:
-            error("unrecognised action: %s" % args.action)
-            # TODO: Should really exit 2
+            generic.error("unrecognised action: %s" % args.action, code=2)
 
     else:
         usage(args)

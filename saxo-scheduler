@@ -8,11 +8,12 @@ import sys
 def main():
     # Save PEP 3122!
     if "." in __name__:
-        from . import script
+        from . import scheduler
     else:
-        import script
+        import scheduler
 
-    script.main(sys.argv)
+    base = sys.argv[1]
+    scheduler.start(base)
 
 if __name__ == "__main__":
     main()
