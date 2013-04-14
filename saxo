@@ -6,13 +6,8 @@
 import sys
 
 def main():
-    # Save PEP 3122!
-    if "." in __name__:
-        from . import script
-    else:
-        import script
-
-    script.main(sys.argv)
+    import saxo
+    saxo.script(sys.argv)
 
 if __name__ == "__main__":
     main()

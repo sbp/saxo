@@ -79,6 +79,9 @@ def default(directory=None):
         error("could not write the config file `%s`" % config,
             E_UNWRITEABLE_CONFIG, err)
 
+    plugins = os.path.join(directory, "plugins")
+    os.mkdir(plugins)
+
     print("Created %s" % config)
     print("Modify this file with your own settings, and then run:")
     print("")
