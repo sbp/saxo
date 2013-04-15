@@ -82,6 +82,9 @@ def default(directory=None):
     plugins = os.path.join(directory, "plugins")
     os.mkdir(plugins)
 
+    commands = os.path.join(directory, "commands")
+    os.mkdir(commands)
+
     print("Created %s" % config)
     print("Modify this file with your own settings, and then run:")
     print("")

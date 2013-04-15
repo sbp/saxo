@@ -24,6 +24,8 @@ def send(base):
         client.send(octets + b"\n")
 
 def start(base):
+    generic.exit_cleanly()
+
     generic.thread(send, base)
     sockname =  os.path.join(base, "scheduler.sock")
     generic.serve(sockname, incoming)

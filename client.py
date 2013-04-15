@@ -13,11 +13,11 @@ import sys
 
 # Save PEP 3122!
 if "." in __name__:
-    from . import core
     from . import generic
+    from .saxo import path as saxo_path
 else:
-    import core
     import generic
+    from saxo import path as saxo_path
 
 incoming = queue.Queue()
 outgoing = queue.Queue()
@@ -56,8 +56,8 @@ class Saxo(object):
     def __init__(self, base, opt):
         self.base = base
         self.opt = opt
-
         self.events = {}
+        self.commands = {}
 
     def run(self):
         self.load()
@@ -65,6 +65,7 @@ class Saxo(object):
         self.handle()
 
     def load(self):
+        # Load events
         self.events.clear()
         plugins = os.path.join(self.base, "plugins")
         sys.path[:0] = [plugins]
@@ -72,6 +73,7 @@ class Saxo(object):
         for name in os.listdir(plugins):
             if ("_" in name) or (not name.endswith(".py")):
                 continue
+
             name = name[:-3]
             module = importlib.import_module(name)
             for attr in dir(module):
@@ -83,6 +85,14 @@ class Saxo(object):
             print("Loaded module:", name)
 
         sys.path[:1] = []
+
+        # Load commands
+        commands = os.path.join(self.base, "commands")
+        if os.path.isdir(commands):
+            self.commands.clear()
+            for name in os.listdir(commands):
+                print("Loaded command:", name)
+                self.commands[name] = os.path.join(commands, name)
 
     def connect(self):
         host = self.opt["server"]["host"]
@@ -112,6 +122,17 @@ class Saxo(object):
                 print(repr(octets))
                 prefix, command, parameters = parse(octets)
 
+                if command == "PRIVMSG":
+                    privmsg = parameters[1]
+                    if privmsg.startswith("."):
+                        if " " in privmsg:
+                            cmd, arg = privmsg[1:].split(" ", 1)
+                        else:
+                            cmd, arg = privmsg[1:], ""
+
+                        if cmd in self.commands:
+                            self.command(parameters[0], cmd, arg)
+
                 if command in self.events:
                     for function in self.events[command]:
                         function(self, prefix, parameters)
@@ -119,14 +140,34 @@ class Saxo(object):
             else:
                 print("?", input[0])
 
+    def command(self, sender, cmd, arg):
+        path = self.commands[cmd]
+
+        def process(path, arg):
+            env = os.environ.copy()
+            env["PYTHONPATH"] = saxo_path
+
+            proc = subprocess.Popen([path], env=env,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            octets = (arg + "\n").encode("utf-8", "replace")
+
+            try: outs, errs = proc.communicate(octets, timeout=6)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                outs = "Sorry, .%s took too long" % cmd
+            else:
+                outs = outs.decode("utf-8", "replace")
+            if not outs:
+                outs = "Sorry, .%s did not respond" % cmd
+
+            self.send("PRIVMSG", sender, outs)
+        generic.thread(process, path, arg)
+
     def send(self, *args):
         if len(args) > 1:
             args = args[:-1] + (":" + args[-1],)
         text = re.sub(r"[\r\n]", "", " ".join(args))
         outgoing.put(text.encode("utf-8", "replace")[:510] + b"\r\n")
-
-def utf8(text):
-    return text.encode("utf-8")
 
 E_NO_PLUGINS = """
 The plugins directory is necessary for saxo to work. If it was deleted
@@ -135,11 +176,19 @@ populate it with the core plugin that it needs to work.
 """
 
 def start(base):
-    # Could check core.version instead
+    # Save PEP 3122!
+    if "." in __name__:
+        from . import core
+    else:
+        import core
+
+    generic.exit_cleanly()
+
     plugins = os.path.join(base, "plugins")
     if not os.path.isdir(plugins):
         generic.error("no plugins directory: `%s`" % plugins, E_NO_PLUGINS)
 
+    # Could check core.version
     core_plugin = os.path.join(base, "plugins", "core.py")
     if os.path.getmtime(core.__file__) > os.path.getmtime(core_plugin):
         shutil.copy2(core.__file__, core_plugin)
@@ -156,9 +205,7 @@ def start(base):
 
     # start_scheduler
     saxo_scheduler = os.path.join(scripts, "saxo-scheduler")
-    # scheduler = 
     subprocess.Popen([saxo_scheduler, base])
-    # scheduler_pid = scheduler.pid
 
     saxo = Saxo(base, opt)
     saxo.run()

@@ -4,6 +4,7 @@
 # You know your code is good when you have a generic module
 
 import os
+import signal
 import socket
 import sys
 import threading
@@ -23,6 +24,13 @@ def error(short, long=None, err=None, code=1):
         print("    %s" % err.__class__.__name__)
         print("        %s" % err)
     sys.exit(code)
+
+def exit_cleanly():
+    def quit(signum, frame):
+        sys.exit()
+
+    signal.signal(signal.SIGINT, quit)
+    signal.signal(signal.SIGTERM, quit)
 
 def serve(sockname, incoming):
     if os.path.exists(sockname):
@@ -45,5 +53,5 @@ def serve(sockname, incoming):
     thread(listen, sock)
 
 def thread(target, *args):
-    t = threading.Thread(target=target, args=tuple(args))
+    t = threading.Thread(target=target, args=tuple(args), daemon=True)
     t.start()
