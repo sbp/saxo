@@ -32,6 +32,23 @@ def exit_cleanly():
     signal.signal(signal.SIGINT, quit)
     signal.signal(signal.SIGTERM, quit)
 
+def populate(saxo_path, base):
+    plugins = os.path.join(base, "plugins")
+    saxo_plugins = os.path.join(saxo_path, "plugins")
+
+    commands = os.path.join(base, "commands")
+    saxo_commands = os.path.join(saxo_path, "commands")
+
+    for name in os.listdir(saxo_plugins):
+        dest = os.path.join(plugins, name)
+        if not os.path.exists(dest):
+            os.symlink(os.path.join(saxo_plugins, name), dest)
+
+    for name in os.listdir(saxo_commands):
+        dest = os.path.join(commands, name)
+        if not os.path.exists(dest):
+            os.symlink(os.path.join(saxo_commands, name), dest)
+
 def serve(sockname, incoming):
     if os.path.exists(sockname):
         os.remove(sockname)

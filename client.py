@@ -106,6 +106,7 @@ class Saxo(object):
         generic.thread(socket_send, sock)
 
     def handle(self):
+        first = True
         while True:
             input = incoming.get()
 
@@ -122,6 +123,13 @@ class Saxo(object):
                 print(repr(octets))
                 prefix, command, parameters = parse(octets)
 
+                if first is True:
+                    # TODO: Remove duplication (see below)
+                    if ":1st" in self.events:
+                        for function in self.events[":1st"]:
+                            function(self, prefix, parameters)
+                    first = False
+
                 if command == "PRIVMSG":
                     privmsg = parameters[1]
                     if privmsg.startswith("."):
@@ -133,6 +141,7 @@ class Saxo(object):
                         if cmd in self.commands:
                             self.command(parameters[0], cmd, arg)
 
+                # TODO: Remove duplication (see above)
                 if command in self.events:
                     for function in self.events[command]:
                         function(self, prefix, parameters)
@@ -176,22 +185,13 @@ populate it with the core plugin that it needs to work.
 """
 
 def start(base):
-    # Save PEP 3122!
-    if "." in __name__:
-        from . import core
-    else:
-        import core
-
     generic.exit_cleanly()
 
     plugins = os.path.join(base, "plugins")
     if not os.path.isdir(plugins):
         generic.error("no plugins directory: `%s`" % plugins, E_NO_PLUGINS)
 
-    # Could check core.version
-    core_plugin = os.path.join(base, "plugins", "core.py")
-    if os.path.getmtime(core.__file__) > os.path.getmtime(core_plugin):
-        shutil.copy2(core.__file__, core_plugin)
+    generic.populate(saxo_path, base)
 
     opt = configparser.ConfigParser()
     config = os.path.join(base, "config")

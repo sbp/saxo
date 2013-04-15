@@ -5,21 +5,13 @@ import os.path
 import random
 import sys
 
-def error(short, long=None, err=None):
-    print("saxo: error: " + short, file=sys.stderr)
-
-    if long is not None:
-        print(long.rstrip(), file=sys.stderr)
-
-    if err is not None:
-        if long is not None:
-            print("", file=sys.stderr)
-
-        print("This is the error message that python gave:", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("    %s" % err.__class__.__name__)
-        print("        %s" % err)
-    sys.exit(1)
+# Save PEP 3122!
+if "." in __name__:
+    from . import generic
+    from .saxo import path as saxo_path
+else:
+    import generic
+    from saxo import path as saxo_path
 
 DEFAULT_CONFIG = """\
 # See TODO for more options
@@ -62,12 +54,12 @@ def default(directory=None):
         directory = os.path.expanduser("~/.saxo")
 
     if os.path.isdir(directory):
-        error("the directory `%s` already exists" % directory,
+        generic.error("the directory `%s` already exists" % directory,
             E_DIRECTORY_EXISTS)
 
     try: os.makedirs(directory)
     except Exception as err:
-        error("could not create the directory `%s`" % directory,
+        generic.error("could not create the directory `%s`" % directory,
             E_UNMAKEABLE_DIRECTORY, err)
 
     config = os.path.join(directory, "config")
@@ -76,7 +68,7 @@ def default(directory=None):
             # Generates a random bot name, from saxo00000 to saxo99999 inclusive
             f.write(DEFAULT_CONFIG % random.randrange(0, 100000))
     except Exception as err:
-        error("could not write the config file `%s`" % config,
+        generic.error("could not write the config file `%s`" % config,
             E_UNWRITEABLE_CONFIG, err)
 
     plugins = os.path.join(directory, "plugins")
@@ -84,6 +76,8 @@ def default(directory=None):
 
     commands = os.path.join(directory, "commands")
     os.mkdir(commands)
+
+    generic.populate(saxo_path, base)
 
     print("Created %s" % config)
     print("Modify this file with your own settings, and then run:")

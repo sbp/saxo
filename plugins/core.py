@@ -16,7 +16,7 @@ def exclamation(saxo, prefix, parameters):
     if text == saxo.opt["client"]["nick"] + "!":
         saxo.send("PRIVMSG", channel, nick + "!")
 
-@event(":connected")
+@event(":1st")
 def connected(saxo, prefix, parameters):
     saxo.send("NICK", saxo.opt["client"]["nick"])
     saxo.send("USER", saxo.opt["client"]["nick"], "+iw", saxo.opt["client"]["nick"], "saxo")
