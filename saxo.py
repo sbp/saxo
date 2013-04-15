@@ -27,9 +27,16 @@ if "__path__" in vars():
 # monitor (post)
 # environment
 
-def event(command="*", synchronous=False, priority="normal"):
+def command(function):
+    @event("PRIVMSG")
+    def inner(irc):
+        prefix = irc.client["prefix"]
+
+# TODO: priority?
+def event(command="*", synchronous=False):
     def decorate(function):
         function.saxo_event = command
+        function.saxo_synchronous = synchronous
         return function
     return decorate
 

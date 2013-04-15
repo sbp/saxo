@@ -10,11 +10,6 @@ def connected(irc):
     for channel in irc.client["channels"].split(" "):
         irc.send("JOIN", channel)
 
-@saxo.event("PRIVMSG")
-def exclamation(irc):
-    if irc.text == irc.client["nick"] + "!":
-        irc.say(irc.nick + "!")
-
 @saxo.event("PING")
 def ping(irc):
     irc.send("PONG", irc.client["nick"])

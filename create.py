@@ -19,11 +19,11 @@ DEFAULT_CONFIG = """\
 [server]
     host = irc.freenode.net
     port = 6667
-    ssl = False
 
 [client]
     nick = saxo%05i
     channels = ##saxo #test
+    prefix = .
 """
 
 E_DIRECTORY_EXISTS = """

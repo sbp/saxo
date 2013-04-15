@@ -1,7 +1,9 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+import atexit
 import configparser
+import imp
 import importlib
 import os.path
 import queue
@@ -10,6 +12,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import time
 
 # Save PEP 3122!
 if "." in __name__:
@@ -38,6 +41,9 @@ class ThreadSafeEnvironment(object):
         self.user = prefix[1]
         self.host = prefix[2]
 
+        if self.nick and self.user and self.host:
+            self.prefix = self.nick + "!" + self.user + "@" + self.host
+
         self.command = command
         self.parameters = parameters
 
@@ -50,7 +56,6 @@ class ThreadSafeEnvironment(object):
             # TODO: self.limit = 498 - len(self.sender + saxo_address)
             self.private = self.sender == self.client["nick"]
 
-        # @staticmethod
         def send(*args):
             saxo.send(*args)
         self.send = send
@@ -66,6 +71,9 @@ class ThreadSafeEnvironment(object):
             def reply(text):
                 saxo.send("PRIVMSG", self.sender, self.nick + ": " + text)
             self.reply = reply
+
+    def queue(self, item):
+        incoming.put(item)
 
 # threaded
 def socket_receive(sock):
@@ -110,7 +118,12 @@ class Saxo(object):
                 continue
 
             name = name[:-3]
-            module = importlib.import_module(name)
+            if not name in sys.modules:
+                module = importlib.import_module(name)
+            else:
+                module = sys.modules[name]
+                module = imp.reload(module)
+
             for attr in dir(module):
                 obj = getattr(module, attr)
                 if hasattr(obj, "saxo_event"):
@@ -153,6 +166,14 @@ class Saxo(object):
             elif input[0] == "local":
                 print("local", repr(input[1]))
 
+            elif input[0] == "reload":
+                before = time.time()
+                self.load()
+                elapsed = time.time() - before
+                if len(input) == 2:
+                    self.send("PRIVMSG", input[1],
+                        "Reloaded in %s seconds" % round(elapsed, 3))
+
             elif input[0] == "remote":
                 octets = input[1]
                 print(repr(octets))
@@ -160,31 +181,41 @@ class Saxo(object):
 
                 if command == "PRIVMSG":
                     privmsg = parameters[1]
-                    if privmsg.startswith("."):
+                    pfx = self.opt["client"]["prefix"]
+                    length = len(pfx)
+
+                    if privmsg.startswith(pfx):
+                        privmsg = privmsg[length:]
                         if " " in privmsg:
-                            cmd, arg = privmsg[1:].split(" ", 1)
+                            cmd, arg = privmsg.split(" ", 1)
                         else:
-                            cmd, arg = privmsg[1:], ""
+                            cmd, arg = privmsg, ""
 
                         if cmd in self.commands:
                             self.command(parameters[0], cmd, arg)
 
                 irc = ThreadSafeEnvironment(self, prefix, command, parameters)
+                def safe(function, irc):
+                    try: function(irc)
+                    except Exception as err:
+                        print(err)
 
                 # TODO: Remove duplication below
                 if first is True:
                     if ":1st" in self.events:
                         for function in self.events[":1st"]:
-                            try: function(irc)
-                            except Exception as err:
-                                print(err)
+                            if not function.saxo_synchronous:
+                                generic.thread(safe, function, irc)
+                            else:
+                                safe(function, irc)
                     first = False
 
                 if command in self.events:
                     for function in self.events[command]:
-                        try: function(irc)
-                        except Exception as err:
-                            print(err)
+                        if not function.saxo_synchronous:
+                            generic.thread(safe, function, irc)
+                        else:
+                            safe(function, irc)
 
             else:
                 print("?", input[0])
@@ -236,6 +267,7 @@ def start(base):
     opt = configparser.ConfigParser()
     config = os.path.join(base, "config")
     opt.read(config)
+    # TODO: defaulting?
 
     scripts = os.path.dirname(sys.modules["__main__"].__file__)
     scripts = os.path.abspath(scripts)
@@ -245,7 +277,11 @@ def start(base):
 
     # start_scheduler
     saxo_scheduler = os.path.join(scripts, "saxo-scheduler")
-    subprocess.Popen([saxo_scheduler, base])
+    proc = subprocess.Popen([saxo_scheduler, base])
+
+    def quit_scheduler(proc):
+        proc.kill()
+    atexit.register(quit_scheduler, proc)
 
     saxo = Saxo(base, opt)
     saxo.run()
