@@ -2,6 +2,6 @@
 
 import saxo
 
-@saxo.command
+@saxo.pipe
 def upper(text):
     return text.upper()

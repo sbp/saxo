@@ -1,24 +1,20 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
-from saxo import event
+import saxo
 
-@event("PING")
-def ping(saxo, prefix, parameters):
-    saxo.send("PONG", saxo.opt["client"]["nick"])
+@saxo.event(":1st")
+def connected(irc):
+    irc.send("NICK", irc.client["nick"])
+    irc.send("USER", irc.client["nick"], "+iw", irc.client["nick"], "saxo")
+    for channel in irc.client["channels"].split(" "):
+        irc.send("JOIN", channel)
 
-@event("PRIVMSG")
-def exclamation(saxo, prefix, parameters):
-    # ('nick', '~user', 'host') ['#channel', 'text']
-    nick, user, host = prefix
-    channel, text = tuple(parameters)
+@saxo.event("PRIVMSG")
+def exclamation(irc):
+    if irc.text == irc.client["nick"] + "!":
+        irc.say(irc.nick + "!")
 
-    if text == saxo.opt["client"]["nick"] + "!":
-        saxo.send("PRIVMSG", channel, nick + "!")
-
-@event(":1st")
-def connected(saxo, prefix, parameters):
-    saxo.send("NICK", saxo.opt["client"]["nick"])
-    saxo.send("USER", saxo.opt["client"]["nick"], "+iw", saxo.opt["client"]["nick"], "saxo")
-    for channel in saxo.opt["client"]["channels"].split(" "):
-        saxo.send("JOIN", channel)
+@saxo.event("PING")
+def ping(irc):
+    irc.send("PONG", irc.client["nick"])

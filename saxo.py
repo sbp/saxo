@@ -23,7 +23,17 @@ if "__path__" in vars():
 
         del directory
 
-def command(function):
+# command = text?
+# monitor (post)
+# environment
+
+def event(command="*", synchronous=False, priority="normal"):
+    def decorate(function):
+        function.saxo_event = command
+        return function
+    return decorate
+
+def pipe(function):
     # __name__ is "saxo"
     import resource
     import sys
@@ -49,13 +59,12 @@ def command(function):
             where = "(%s:%s)" % (os.path.basename(item[0]), item[1])
             result = python + " " + where
         break
+
     sys.stdout.write(result + "\n")
 
-def event(command):
-    def decorate(function):
-        function.saxo_event = command
-        return function
-    return decorate
+def setup(function):
+    function.saxo_setup = True
+    return function
 
 def script(argv):
     # Save PEP 3122!

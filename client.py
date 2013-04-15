@@ -32,6 +32,41 @@ def parse(octets):
     params = regex_parameter.findall(text[match_prefix.end():])
     return match_prefix.groups(), params[0], params[1:]
 
+class ThreadSafeEnvironment(object):
+    def __init__(self, saxo, prefix, command, parameters):
+        self.nick = prefix[0]
+        self.user = prefix[1]
+        self.host = prefix[2]
+
+        self.command = command
+        self.parameters = parameters
+
+        for key in saxo.opt:
+            setattr(self, key, dict(saxo.opt[key]))
+
+        if command == "PRIVMSG":
+            self.sender = self.parameters[0]
+            self.text = self.parameters[1]
+            # TODO: self.limit = 498 - len(self.sender + saxo_address)
+            self.private = self.sender == self.client["nick"]
+
+        # @staticmethod
+        def send(*args):
+            saxo.send(*args)
+        self.send = send
+
+        if hasattr(self, "sender"):
+            # @staticmethod
+            def say(text):
+                saxo.send("PRIVMSG", self.sender, text)
+            self.say = say
+
+        if hasattr(self, "nick") and hasattr(self, "sender"):
+            # @staticmethod
+            def reply(text):
+                saxo.send("PRIVMSG", self.sender, self.nick + ": " + text)
+            self.reply = reply
+
 # threaded
 def socket_receive(sock):
     with sock.makefile("rb") as s:
@@ -123,13 +158,6 @@ class Saxo(object):
                 print(repr(octets))
                 prefix, command, parameters = parse(octets)
 
-                if first is True:
-                    # TODO: Remove duplication (see below)
-                    if ":1st" in self.events:
-                        for function in self.events[":1st"]:
-                            function(self, prefix, parameters)
-                    first = False
-
                 if command == "PRIVMSG":
                     privmsg = parameters[1]
                     if privmsg.startswith("."):
@@ -141,10 +169,22 @@ class Saxo(object):
                         if cmd in self.commands:
                             self.command(parameters[0], cmd, arg)
 
-                # TODO: Remove duplication (see above)
+                irc = ThreadSafeEnvironment(self, prefix, command, parameters)
+
+                # TODO: Remove duplication below
+                if first is True:
+                    if ":1st" in self.events:
+                        for function in self.events[":1st"]:
+                            try: function(irc)
+                            except Exception as err:
+                                print(err)
+                    first = False
+
                 if command in self.events:
                     for function in self.events[command]:
-                        function(self, prefix, parameters)
+                        try: function(irc)
+                        except Exception as err:
+                            print(err)
 
             else:
                 print("?", input[0])

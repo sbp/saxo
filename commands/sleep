@@ -3,7 +3,7 @@
 import saxo
 import time
 
-@saxo.command
+@saxo.pipe
 def sleep(text):
     duration = int(text)
     before = time.time()
