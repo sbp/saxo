@@ -4,11 +4,14 @@
 import os
 import queue
 import socket
+import time
 
 # Save PEP 3122!
 if "." in __name__:
+    from . import database
     from . import generic
 else:
+    import database
     import generic
 
 incoming = queue.Queue()
@@ -21,29 +24,63 @@ def send(base):
 
     while True:
         octets = outgoing.get()
+        print("SEND:", octets)
         client.send(octets + b"\n")
 
 def start(base):
     generic.exit_cleanly()
 
-    generic.thread(send, base)
-    sockname =  os.path.join(base, "scheduler.sock")
-    generic.serve(sockname, incoming)
+    database_filename = os.path.join(base, "database.sqlite3")
+    with database.Database(database_filename) as db:
+        if not "saxo_periodic" in db:
+            db["saxo_periodic"].create(
+                ("period", int),
+                ("command", bytes),
+                ("args", bytes))
 
-    outgoing.put(b"started scheduler")
-    while True:
-        input = incoming.get()
-        print(repr(input))
+            # TODO: Or "check_connection"
+            db["saxo_periodic"].insert(
+                (180, b"ping", b""))
 
-    # saxo_periodic
-    # saxo_schedule
+        if not "saxo_schedule" in db:
+            db["saxo_schedule"].create(
+                ("unixtime", int),
+                ("command", bytes),
+                ("args", bytes))
 
-    # the reminder structure could be generic
-    # so, e.g. you could set a reload. just allow anything in the IPC protocol
-    # use a heap to cache upcoming reminders
+        generic.thread(send, base)
 
-    # saxo_periodic
-    # period (int), command (text? blob?), args (pickled blob)
+        sockname =  os.path.join(base, "scheduler.sock")
+        generic.serve(sockname, incoming)
 
-    # saxo_schedule
-    # unixtime (int), command (text? blob?), args (pickled blob)
+        generic.instruction(outgoing, "message", "started scheduler")
+
+        periodic = {}
+        # Start all periodic commands in ten seconds
+        # TODO: Randomise start times between 5-15 seconds?
+        for period, command, args in db["saxo_periodic"]:
+            periodic[(period, command, args)] = time.time() + 10
+
+        def tick():
+            start = time.time()
+
+            for (period, command, args), when in periodic.items():
+                if when < start:
+                    outgoing.put(command + b" " + args)
+                    periodic[(period, command, args)] += period
+
+            elapsed = time.time() - start
+            if elapsed < 1.0:
+                time.sleep(1.0 - elapsed)
+
+            return True
+
+        def tock():
+            ...
+
+        while tick():
+            tock()
+
+        # while True:
+        #     input = incoming.get()
+        #     print(repr(input))

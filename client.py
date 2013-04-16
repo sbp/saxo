@@ -12,6 +12,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import threading
 import time
 
 # Save PEP 3122!
@@ -21,6 +22,8 @@ if "." in __name__:
 else:
     import generic
     from saxo import path as saxo_path
+
+# TODO: Make printing thread-safe
 
 incoming = queue.Queue()
 outgoing = queue.Queue()
@@ -83,17 +86,23 @@ def socket_receive(sock):
 
         for octets in s:
             incoming.put(("remote", octets))
-    incoming.put(("disconnected",))
+    incoming.put(("receive_disco",))
 
 # threaded
 def socket_send(sock):
     with sock.makefile("wb") as s:
         while True:
             octets = outgoing.get()
+            if octets == b"":
+                break
+
             print("->", repr(octets.decode("ascii")))
-            s.write(octets)
-            s.flush()
-    incoming.put(("disco",))
+            try:
+                s.write(octets)
+                s.flush()
+            except BrokenPipeError:
+                break
+    incoming.put(("send_disco",))
 
 class Saxo(object):
     def __init__(self, base, opt):
@@ -101,6 +110,7 @@ class Saxo(object):
         self.opt = opt
         self.events = {}
         self.commands = {}
+        self.discotimer = None
 
     def run(self):
         self.load()
@@ -151,80 +161,119 @@ class Saxo(object):
         host = self.opt["server"]["host"]
         port = int(self.opt["server"]["port"])
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Connecting to %s:%s" % (host, port))
-        sock.connect((host, port))
+        self.sock.connect((host, port))
+        self.first = True
 
-        generic.thread(socket_receive, sock)
-        generic.thread(socket_send, sock)
+        generic.thread(socket_receive, self.sock)
+        generic.thread(socket_send, self.sock)
 
     def handle(self):
-        first = True
         while True:
-            input = incoming.get()
+            instruction_args = incoming.get()
+            instruction = instruction_args[0]
+            args = tuple(instruction_args[1:])
 
-            if input[0] == "connected":
-                if ":connected" in self.events:
-                    for function in self.events[":connected"]:
-                        function(self, None, None)
+            if instruction != "remote":
+                print("handle:", instruction, args)
 
-            elif input[0] == "local":
-                print("local", repr(input[1]))
-                # just add another to the list?
-
-            elif input[0] == "reload":
-                before = time.time()
-                self.load()
-                elapsed = time.time() - before
-                if len(input) == 2:
-                    self.send("PRIVMSG", input[1],
-                        "Reloaded in %s seconds" % round(elapsed, 3))
-
-            elif input[0] == "remote":
-                octets = input[1]
-                print(repr(octets))
-                prefix, command, parameters = parse(octets)
-
-                if command == "PRIVMSG":
-                    privmsg = parameters[1]
-                    pfx = self.opt["client"]["prefix"]
-                    length = len(pfx)
-
-                    if privmsg.startswith(pfx):
-                        privmsg = privmsg[length:]
-                        if " " in privmsg:
-                            cmd, arg = privmsg.split(" ", 1)
-                        else:
-                            cmd, arg = privmsg, ""
-
-                        if cmd in self.commands:
-                            self.command(parameters[0], cmd, arg)
-
-                irc = ThreadSafeEnvironment(self, prefix, command, parameters)
-                def safe(function, irc):
-                    try: function(irc)
-                    except Exception as err:
-                        print(err)
-
-                # TODO: Remove duplication below
-                if first is True:
-                    if ":1st" in self.events:
-                        for function in self.events[":1st"]:
-                            if not function.saxo_synchronous:
-                                generic.thread(safe, function, irc)
-                            else:
-                                safe(function, irc)
-                    first = False
-
-                if command in self.events:
-                    for function in self.events[command]:
-                        if not function.saxo_synchronous:
-                            generic.thread(safe, function, irc)
-                        else:
-                            safe(function, irc)
-
+            if hasattr(self, "instruction_" + instruction):
+                method = getattr(self, "instruction_" + instruction)
+                method(*args)
+                # except Exception as err:
+                #     print("handle error:", err)
             else:
-                print("?", input[0])
+                print("Unknown instruction:", instruction)
+
+    def instruction_connected(self):
+        if ":connected" in self.events:
+            for function in self.events[":connected"]:
+                function(self, None, None)
+
+    def instruction_message(self, text):
+        print("IPC message:", text)
+
+    def instruction_msg(self, *args):
+        self.send("PRIVMSG", *args)
+
+    def instruction_ping(self):
+        self.send("PING", self.opt["client"]["nick"])
+
+        # def reconnect():
+        #     raise NotImplemented
+        self.discotimer = threading.Timer(5, self.instruction_reconnect)
+        self.discotimer.start()
+
+    def instruction_reconnect(self):
+        self.sock.shutdown(socket.SHUT_RDWR)
+        self.sock.close()
+        outgoing.put(b"") # Closes the send thread
+        time.sleep(3)
+        # TODO: Check that the threads actually exited
+        self.connect()
+
+    def instruction_reload(self, destination=None):
+        before = time.time()
+        self.load()
+        elapsed = time.time() - before
+        if destination:
+            self.send("PRIVMSG", destination,
+                "Reloaded in %s seconds" % round(elapsed, 3))
+
+    def instruction_remote(self, octets):
+        print(repr(octets))
+        prefix, command, parameters = parse(octets)
+
+        if command == "PRIVMSG":
+            privmsg = parameters[1]
+            pfx = self.opt["client"]["prefix"]
+            length = len(pfx)
+
+            if privmsg.startswith(pfx):
+                privmsg = privmsg[length:]
+                if " " in privmsg:
+                    cmd, arg = privmsg.split(" ", 1)
+                else:
+                    cmd, arg = privmsg, ""
+
+                if cmd in self.commands:
+                    self.command(parameters[0], cmd, arg)
+
+        elif command == "PONG":
+            if self.discotimer is not None:
+                try:
+                    self.discotimer.cancel()
+                    self.discotimer = None
+                    print("Cancelled the disco timer")
+                except:
+                    ...
+
+        irc = ThreadSafeEnvironment(self, prefix, command, parameters)
+        def safe(function, irc):
+            try: function(irc)
+            except Exception as err:
+                print(err)
+
+        # TODO: Remove duplication below
+        if self.first is True:
+            if ":1st" in self.events:
+                for function in self.events[":1st"]:
+                    if not function.saxo_synchronous:
+                        generic.thread(safe, function, irc)
+                    else:
+                        safe(function, irc)
+            self.first = False
+
+        if command in self.events:
+            for function in self.events[command]:
+                if not function.saxo_synchronous:
+                    generic.thread(safe, function, irc)
+                else:
+                    safe(function, irc)
+
+    def instruction_send(self, *args):
+        self.send(*args)
 
     def command(self, sender, cmd, arg):
         path = self.commands[cmd]

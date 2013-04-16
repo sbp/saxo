@@ -3,7 +3,9 @@
 
 # You know your code is good when you have a generic module
 
+import base64
 import os
+import pickle
 import signal
 import socket
 import sys
@@ -32,6 +34,10 @@ def exit_cleanly():
     signal.signal(signal.SIGINT, quit)
     signal.signal(signal.SIGTERM, quit)
 
+def instruction(outgoing, name, *args):
+    data = b64pickle(args)
+    outgoing.put(name.encode("ascii") + b" " + data)
+
 def populate(saxo_path, base):
     plugins = os.path.join(base, "plugins")
     saxo_plugins = os.path.join(saxo_path, "plugins")
@@ -49,6 +55,10 @@ def populate(saxo_path, base):
         if not os.path.exists(dest):
             os.symlink(os.path.join(saxo_commands, name), dest)
 
+def b64pickle(*args):
+    pickled = pickle.dumps(args)
+    return base64.b64encode(pickled)
+
 def serve(sockname, incoming):
     if os.path.exists(sockname):
         os.remove(sockname)
@@ -63,7 +73,23 @@ def serve(sockname, incoming):
             def handle(connection, client):
                 try: 
                     for octets in connection.makefile("rb"):
-                        incoming.put(("local", octets))
+                        try:
+                            text = octets.decode("ascii", "replace")
+                            text = text.strip("\n")
+
+                            if " " in text:
+                                instruction, data = text.split(" ", 1)
+                                if data:
+                                    pickled = base64.b64decode(data)
+                                    args = pickle.loads(pickled)
+                                else:
+                                    args = tuple()
+                            else:
+                                instruction, args = text, tuple()
+                                
+                            incoming.put((instruction,) + args)
+                        except Exception as err:
+                            print("ERROR!", err.__class__.__name__, err)
                 finally:
                     connection.close()
             thread(handle, connection, client)
@@ -72,3 +98,4 @@ def serve(sockname, incoming):
 def thread(target, *args):
     t = threading.Thread(target=target, args=tuple(args), daemon=True)
     t.start()
+    return t
