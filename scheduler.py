@@ -56,10 +56,9 @@ def start(base):
         generic.instruction(outgoing, "message", "started scheduler")
 
         periodic = {}
-        # Start all periodic commands in ten seconds
-        # TODO: Randomise start times between 5-15 seconds?
+        current = time.time()
         for period, command, args in db["saxo_periodic"]:
-            periodic[(period, command, args)] = time.time() + 10
+            periodic[(period, command, args)] = current + period
 
         def tick():
             start = time.time()

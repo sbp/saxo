@@ -11,6 +11,29 @@ import socket
 import sys
 import threading
 
+def console():
+    client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    client_sock = os.path.expanduser("~/.saxo/client.sock")
+    client.connect(client_sock)
+
+    while True:
+        try: text = input("$ ")
+        except (EOFError, KeyboardInterrupt):
+            print("")
+            print("Quitting...")
+            break
+
+        if " " in text:
+            instruction, args = text.split(" ", 1)
+            if args:
+                args = eval("(%s,)" % args)
+                args = b64pickle(args)
+        else:
+            instruction, args = text, b""
+
+        octets = instruction.encode("ascii") + b" " + args
+        client.send(octets + b"\n")
+
 def error(short, long=None, err=None, code=1):
     print("saxo: error: " + short, file=sys.stderr)
 
@@ -86,7 +109,7 @@ def serve(sockname, incoming):
                                     args = tuple()
                             else:
                                 instruction, args = text, tuple()
-                                
+
                             incoming.put((instruction,) + args)
                         except Exception as err:
                             print("ERROR!", err.__class__.__name__, err)

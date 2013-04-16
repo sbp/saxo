@@ -180,9 +180,9 @@ class Saxo(object):
 
             if hasattr(self, "instruction_" + instruction):
                 method = getattr(self, "instruction_" + instruction)
-                method(*args)
-                # except Exception as err:
-                #     print("handle error:", err)
+                try: method(*args)
+                except Exception as err:
+                    print("handle error:", err)
             else:
                 print("Unknown instruction:", instruction)
 
@@ -200,17 +200,20 @@ class Saxo(object):
     def instruction_ping(self):
         self.send("PING", self.opt["client"]["nick"])
 
-        # def reconnect():
-        #     raise NotImplemented
-        self.discotimer = threading.Timer(5, self.instruction_reconnect)
+        def reconnect():
+            incoming.put(("reconnect",))
+        self.discotimer = threading.Timer(30, reconnect)
         self.discotimer.start()
 
     def instruction_reconnect(self):
+        # Never call this from a thread, otherwise the following can give an OSError
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
+
         outgoing.put(b"") # Closes the send thread
         time.sleep(3)
         # TODO: Check that the threads actually exited
+
         self.connect()
 
     def instruction_reload(self, destination=None):
