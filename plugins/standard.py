@@ -13,9 +13,8 @@ def prefix(irc):
     if irc.text == irc.client["nick"] + ": prefix?":
         irc.reply('"' + irc.client["prefix"] + '"')
 
-@saxo.event("PRIVMSG")
+@saxo.command("reload")
 def reload(irc):
     if "owner" in irc.client:
         if irc.prefix == irc.client["owner"]:
-            if irc.text == irc.client["prefix"] + "reload":
-                irc.queue(("reload", irc.sender))
+            irc.queue(("reload", irc.sender))

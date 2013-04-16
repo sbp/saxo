@@ -23,14 +23,26 @@ if "__path__" in vars():
 
         del directory
 
-# command = text?
-# monitor (post)
+# monitor (post) - event priority low?
+# doesn't really matter since they're threaded...
 # environment
 
-def command(function):
-    @event("PRIVMSG")
-    def inner(irc):
-        prefix = irc.client["prefix"]
+def command(name):
+    def decorate(function):
+        @event("PRIVMSG")
+        def inner(irc):
+            prefix = irc.client["prefix"]
+            if irc.text.startswith(prefix):
+                length = len(prefix)
+                text = irc.text[length:]
+                if " " in text:
+                    cmd, arg = text.split(" ", 1)
+                else:
+                    cmd, arg = text, ""
+                irc.arg = arg
+                function(irc)
+        return inner
+    return decorate
 
 # TODO: priority?
 def event(command="*", synchronous=False):

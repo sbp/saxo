@@ -34,3 +34,16 @@ def start(base):
     while True:
         input = incoming.get()
         print(repr(input))
+
+    # saxo_periodic
+    # saxo_schedule
+
+    # the reminder structure could be generic
+    # so, e.g. you could set a reload. just allow anything in the IPC protocol
+    # use a heap to cache upcoming reminders
+
+    # saxo_periodic
+    # period (int), command (text? blob?), args (pickled blob)
+
+    # saxo_schedule
+    # unixtime (int), command (text? blob?), args (pickled blob)

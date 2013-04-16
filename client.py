@@ -126,11 +126,16 @@ class Saxo(object):
 
             for attr in dir(module):
                 obj = getattr(module, attr)
+
                 if hasattr(obj, "saxo_event"):
                     try: self.events[obj.saxo_event].append(obj)
                     except KeyError:
                         self.events[obj.saxo_event] = [obj]
-            print("Loaded module:", name)
+
+                elif hasattr(obj, "saxo_setup"):
+                    obj(self)
+
+            # print("Loaded module:", name)
 
         sys.path[:1] = []
 
@@ -139,7 +144,7 @@ class Saxo(object):
         if os.path.isdir(commands):
             self.commands.clear()
             for name in os.listdir(commands):
-                print("Loaded command:", name)
+                # print("Loaded command:", name)
                 self.commands[name] = os.path.join(commands, name)
 
     def connect(self):
@@ -165,6 +170,7 @@ class Saxo(object):
 
             elif input[0] == "local":
                 print("local", repr(input[1]))
+                # just add another to the list?
 
             elif input[0] == "reload":
                 before = time.time()
