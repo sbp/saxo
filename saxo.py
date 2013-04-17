@@ -35,12 +35,15 @@ def command(name):
             if irc.text.startswith(prefix):
                 length = len(prefix)
                 text = irc.text[length:]
+
                 if " " in text:
                     cmd, arg = text.split(" ", 1)
                 else:
                     cmd, arg = text, ""
-                irc.arg = arg
-                function(irc)
+
+                if cmd == name:
+                    irc.arg = arg
+                    function(irc)
         return inner
     return decorate
 

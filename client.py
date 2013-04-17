@@ -56,8 +56,10 @@ class ThreadSafeEnvironment(object):
         if command == "PRIVMSG":
             self.sender = self.parameters[0]
             self.text = self.parameters[1]
-            # TODO: self.limit = 498 - len(self.sender + saxo_address)
             self.private = self.sender == self.client["nick"]
+            if saxo.address:
+                # TODO: Why was this 498 for duxlot?
+                self.limit = 493 - len(self.sender + saxo.address)
 
         def send(*args):
             saxo.send(*args)
@@ -82,26 +84,28 @@ class ThreadSafeEnvironment(object):
 def socket_receive(sock):
     with sock.makefile("rb") as s:
         # TODO: How do we know when we're connected?
-        incoming.put(("connected",))
-
+        incoming.put(("receive_conn",))
         for octets in s:
             incoming.put(("remote", octets))
     incoming.put(("receive_disco",))
 
 # threaded
 def socket_send(sock):
-    with sock.makefile("wb") as s:
-        while True:
-            octets = outgoing.get()
-            if octets == b"":
-                break
+    def sending(sock):
+        with sock.makefile("wb") as s:
+            incoming.put(("send_conn",))
+            while True:
+                octets = outgoing.get()
+                if octets == None:
+                    break
 
-            print("->", repr(octets.decode("ascii")))
-            try:
+                print("->", repr(octets.decode("ascii")))
                 s.write(octets)
                 s.flush()
-            except BrokenPipeError:
-                break
+
+    try: sending(sock)
+    except BrokenPipeError:
+        ...
     incoming.put(("send_disco",))
 
 class Saxo(object):
@@ -110,7 +114,10 @@ class Saxo(object):
         self.opt = opt
         self.events = {}
         self.commands = {}
+        self.address = None
         self.discotimer = None
+        self.receiving = False
+        self.sending = False
 
     def run(self):
         self.load()
@@ -129,7 +136,9 @@ class Saxo(object):
 
             name = name[:-3]
             if not name in sys.modules:
-                module = importlib.import_module(name)
+                try: module = importlib.import_module(name)
+                except Exception as err:
+                    print("Error loading %s:" % name, err)
             else:
                 module = sys.modules[name]
                 module = imp.reload(module)
@@ -186,6 +195,9 @@ class Saxo(object):
             else:
                 print("Unknown instruction:", instruction)
 
+    def instruction_address(self, address):
+        self.address = address
+
     def instruction_connected(self):
         if ":connected" in self.events:
             for function in self.events[":connected"]:
@@ -205,14 +217,31 @@ class Saxo(object):
         self.discotimer = threading.Timer(30, reconnect)
         self.discotimer.start()
 
-    def instruction_reconnect(self):
+    def instruction_quit(self):
         # Never call this from a thread, otherwise the following can give an OSError
+        self.send("QUIT")
+        outgoing.put(None) # Closes the send thread
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
 
-        outgoing.put(b"") # Closes the send thread
+    def instruction_receive_conn(self):
+        self.receiving = True
+
+    def instruction_receive_disco(self):
+        self.receiving = False
+
+    def instruction_reconnect(self):
+        # Never call this from a thread, otherwise the following can give an OSError
+        outgoing.put(None) # Closes the send thread
+        self.sock.shutdown(socket.SHUT_RDWR)
+        self.sock.close()
+
         time.sleep(3)
-        # TODO: Check that the threads actually exited
+        for attempt in range(7):
+            if self.receiving or self.sending:
+                time.sleep(1)
+            # TODO: If the threads are still active, they should be killed
+            # Unfortunately, threads in python can't be killed
 
         self.connect()
 
@@ -277,6 +306,12 @@ class Saxo(object):
 
     def instruction_send(self, *args):
         self.send(*args)
+
+    def instruction_send_conn(self):
+        self.sending = True
+
+    def instruction_send_disco(self):
+        self.sending = False
 
     def command(self, sender, cmd, arg):
         path = self.commands[cmd]
