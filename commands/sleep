@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Copyright 2013, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
 import saxo
 import time
 

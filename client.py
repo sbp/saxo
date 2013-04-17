@@ -206,8 +206,8 @@ class Saxo(object):
     def instruction_message(self, text):
         print("IPC message:", text)
 
-    def instruction_msg(self, *args):
-        self.send("PRIVMSG", *args)
+    def instruction_msg(self, destination, text):
+        self.send("PRIVMSG", destination, text)
 
     def instruction_ping(self):
         self.send("PING", self.opt["client"]["nick"])
@@ -223,6 +223,7 @@ class Saxo(object):
         outgoing.put(None) # Closes the send thread
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
+        sys.exit()
 
     def instruction_receive_conn(self):
         self.receiving = True
@@ -304,6 +305,14 @@ class Saxo(object):
                 else:
                     safe(function, irc)
 
+    def instruction_schedule(self, unixtime, command, args):
+        unixtime = str(unixtime).encode("ascii")
+        command = command.encode("ascii")
+        args = generic.b64pickle(args)
+
+        octets = unixtime + b" " + command + b" " + args
+        scheduler_process.stdin.write(octets + b"\n")
+
     def instruction_send(self, *args):
         self.send(*args)
 
@@ -320,11 +329,11 @@ class Saxo(object):
             env = os.environ.copy()
             env["PYTHONPATH"] = saxo_path
 
-            proc = subprocess.Popen([path], env=env,
+            octets = arg.encode("utf-8", "replace")
+            proc = subprocess.Popen([path, octets, self.base], env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-            octets = (arg + "\n").encode("utf-8", "replace")
 
-            try: outs, errs = proc.communicate(octets, timeout=6)
+            try: outs, errs = proc.communicate(timeout=6)
             except subprocess.TimeoutExpired:
                 proc.kill()
                 outs = "Sorry, .%s took too long" % cmd
@@ -349,6 +358,7 @@ populate it with the core plugin that it needs to work.
 """
 
 def start(base):
+    global scheduler_process
     generic.exit_cleanly()
 
     plugins = os.path.join(base, "plugins")
@@ -366,15 +376,21 @@ def start(base):
     scripts = os.path.abspath(scripts)
 
     sockname =  os.path.join(base, "client.sock")
+    # TODO: Not generic anymore; isn't used in scheduler
     generic.serve(sockname, incoming)
+    os.chmod(sockname, 0o600)
+    def remove_sock(sockname):
+        os.remove(sockname)
+    atexit.register(remove_sock, sockname)
 
     # start_scheduler
     saxo_scheduler = os.path.join(scripts, "saxo-scheduler")
-    proc = subprocess.Popen([saxo_scheduler, base])
+    scheduler_process = subprocess.Popen([saxo_scheduler, base],
+        stdin=subprocess.PIPE)
 
-    def quit_scheduler(proc):
-        proc.kill()
-    atexit.register(quit_scheduler, proc)
+    def quit_scheduler(scheduler_process):
+        scheduler_process.kill()
+    atexit.register(quit_scheduler, scheduler_process)
 
     saxo = Saxo(base, opt)
     saxo.run()

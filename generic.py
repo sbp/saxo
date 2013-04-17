@@ -78,8 +78,8 @@ def populate(saxo_path, base):
         if not os.path.exists(dest):
             os.symlink(os.path.join(saxo_commands, name), dest)
 
-def b64pickle(*args):
-    pickled = pickle.dumps(args)
+def b64pickle(obj):
+    pickled = pickle.dumps(obj)
     return base64.b64encode(pickled)
 
 def serve(sockname, incoming):

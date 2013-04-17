@@ -11,6 +11,20 @@ class Table(object):
     def __iter__(self):
         return self.rows()
 
+    def __delitem__(self, row):
+        fields = []
+        for field in self.schema():
+            fields.append(field[1])
+
+        if len(row) == len(fields):
+            query = "DELETE FROM %s WHERE " % self.name
+            query += " AND ".join(["%s=?" % field for field in fields])
+            cursor = self.connection.cursor()
+            cursor.execute(query, row)
+            self.connection.commit()
+        else:
+            raise ValueError("Wrong length: %s" % row)
+
     def create(self, *schema):
         cursor = self.connection.cursor()
         types = {
@@ -50,6 +64,16 @@ class Table(object):
                 break
             yield result
 
+    def schema(self):
+        cursor = self.connection.cursor()
+        query = "PRAGMA table_info(%s)" % self.name
+        cursor.execute(query)
+        while True:
+            result = cursor.fetchone()
+            if result is None:
+                break
+            yield result
+
 class Database(object):
     def __init__(self, path):
         self.path = path
@@ -82,6 +106,9 @@ def test():
     import os
 
     filename = "/tmp/saxo-test.sqlite3"
+    if os.path.isfile(filename):
+        os.remove(filename)
+
     with Database(filename) as db:
         assert "example" not in db
         db["example"].create(
@@ -96,6 +123,10 @@ def test():
         print(list(db["example"]))
         assert list(db["example"].rows(order="name")) == [('abc', 10), ('pqr', 5)]
         assert list(db["example"].rows(order="size")) == [('pqr', 5), ('abc', 10)]
+        print(list(db["example"].schema()))
+
+        del db["example"][("pqr", 5)]
+        print(list(db["example"]))
 
     os.remove(filename)
 

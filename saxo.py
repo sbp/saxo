@@ -69,20 +69,30 @@ def pipe(function):
     generic.exit_cleanly()
     resource.setrlimit(resource.RLIMIT_CPU, (6, 6))
 
-    for line in sys.stdin:
-        try: result = function(line.rstrip("\n"))
-        except Exception as err:
-            import os.path
-            import traceback
+    arg = sys.argv[1]
 
-            python = err.__class__.__name__ + ": " + str(err)
-            stack = traceback.extract_tb(err.__traceback__, limit=2)
-            item = stack.pop()
-            where = "(%s:%s)" % (os.path.basename(item[0]), item[1])
-            result = python + " " + where
-        break
+    try: result = function(arg)
+    except Exception as err:
+        import os.path
+        import traceback
 
-    sys.stdout.write(result + "\n")
+        python = err.__class__.__name__ + ": " + str(err)
+        stack = traceback.extract_tb(err.__traceback__, limit=2)
+        item = stack.pop()
+        where = "(%s:%s)" % (os.path.basename(item[0]), item[1])
+        result = python + " " + where
+
+    if result is not None:
+        sys.stdout.write(result + "\n")
+
+def request(*args, **kargs):
+    # Save PEP 3122!
+    if "." in __name__:
+        from . import web
+    else:
+        import web
+
+    return web.request(*args, **kargs)
 
 def setup(function):
     function.saxo_setup = True
@@ -94,4 +104,5 @@ def script(argv):
         from .script import main
     else:
         from script import main
+
     main(argv)

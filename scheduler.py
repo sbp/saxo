@@ -4,6 +4,7 @@
 import os
 import queue
 import socket
+import sys
 import time
 
 # Save PEP 3122!
@@ -17,6 +18,19 @@ else:
 incoming = queue.Queue()
 outgoing = queue.Queue()
 
+# threaded
+def receive():
+    for line in sys.stdin.buffer:
+        try:
+            octets = line[:-1] # Up to b"\n"
+            unixtime, command, args = octets.split(b" ", 2)
+            unixtime = int(unixtime)
+            incoming.put((unixtime, command, args))
+        except Exception as err:
+            print("Schedule Parse Error:", err)
+            continue
+
+# threaded
 def send(base):
     client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     client_sock = os.path.join(base, "client.sock")
@@ -39,8 +53,7 @@ def start(base):
                 ("args", bytes))
 
             # TODO: Or "check_connection"
-            db["saxo_periodic"].insert(
-                (180, b"ping", b""))
+            db["saxo_periodic"].insert((180, b"ping", b""))
 
         if not "saxo_schedule" in db:
             db["saxo_schedule"].create(
@@ -48,10 +61,8 @@ def start(base):
                 ("command", bytes),
                 ("args", bytes))
 
+        generic.thread(receive)
         generic.thread(send, base)
-
-        sockname =  os.path.join(base, "scheduler.sock")
-        generic.serve(sockname, incoming)
 
         generic.instruction(outgoing, "message", "started scheduler")
 
@@ -60,17 +71,41 @@ def start(base):
         for period, command, args in db["saxo_periodic"]:
             periodic[(period, command, args)] = current + period
 
+        duration = 1/2
+
         def tick():
             start = time.time()
 
+            # Check for new scheduled commands
+            # TODO: New periodic commands
+            while True:
+                try: triple = incoming.get(timeout=1/6 * duration)
+                except queue.Empty:
+                    break
+                else:
+                    print("Scheduling:", triple) # TODO: Remove, debug
+                    db["saxo_schedule"].insert(triple)
+                    elapsed = time.time() - start
+                    if elapsed > (1/3 * duration):
+                        break
+
+            # Periodic commands
             for (period, command, args), when in periodic.items():
                 if when < start:
                     outgoing.put(command + b" " + args)
                     periodic[(period, command, args)] += period
 
+            # Scheduled commands
+            schedule = db["saxo_schedule"].rows(order="unixtime")
+            for (unixtime, command, args) in schedule:
+                if unixtime > start:
+                    break
+                outgoing.put(command + b" " + args)
+                del db["saxo_schedule"][(unixtime, command, args)]
+
             elapsed = time.time() - start
-            if elapsed < 1.0:
-                time.sleep(1.0 - elapsed)
+            if elapsed < duration:
+                time.sleep(duration - elapsed)
 
             return True
 
@@ -79,7 +114,3 @@ def start(base):
 
         while tick():
             tock()
-
-        # while True:
-        #     input = incoming.get()
-        #     print(repr(input))
