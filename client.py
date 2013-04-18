@@ -247,7 +247,7 @@ class Saxo(object):
         outgoing.put(None) # Closes the send thread
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
-        sys.exit()
+        os._exit(0) # sys.exit() won't work, not sure why
 
     def instruction_receiving(self):
         self.receiving = True
@@ -259,7 +259,6 @@ class Saxo(object):
                 outgoing.put(None)
             else:
                 incoming.put(("reconnect", False))
-            self.network_reconnect = True
 
     def instruction_reconnect(self, close=True):
         if close:
