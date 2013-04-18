@@ -46,9 +46,9 @@ if __name__ == "__main__":
         description="Quick and flexible irc bot, extensible in any language",
         long_description="Documented in `@sbp/saxo/README.md <%s>`_" % README,
         packages=["saxo"],
-        package_dir={"saxo": ""},
+        package_dir={"saxo": "."},
         package_data={"saxo": [
-            "README\.md", "commands/*", "plugins/*", "test/*"
+            "README.md", "commands/*", "plugins/*", "test/*"
         ]},
         scripts=["saxo"],
         platforms="Linux and OS X",
