@@ -1,0 +1,10 @@
+.g reddit
+http://www.reddit.com/
+
+.in 9s ê!
+: Will remind at <.*>
+WAIT 6
+: ê!
+
+.upper abc
+ABC

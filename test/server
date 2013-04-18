@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+if [ ! -f saxo ]
+then echo 'Error: saxo script not found'
+    exit 1
+fi
+
+python3 test/server.py

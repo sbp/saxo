@@ -10,6 +10,6 @@ publish:
 	git push
 	git push --tags
 
-.PHONY: test
-test:
-	test/run
+# .PHONY: test
+# test:
+# 	test/run

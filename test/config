@@ -1,0 +1,12 @@
+# See TODO for more options
+
+[server]
+    host = localhost
+    port = 61070
+
+[client]
+    nick = saxo
+    channels = #saxo
+    prefix = .
+    owner = owner!~owner@localhost
+    flood = True

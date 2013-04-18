@@ -110,7 +110,9 @@ record chmod 000 /tmp/sax/.saxo/config
 
 saxo start
 
-record chmod 644 /tmp/sax/.saxo/config
+saxo stop
+
+# record chmod 644 /tmp/sax/.saxo/config
 
 
 ####################################

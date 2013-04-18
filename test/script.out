@@ -1,0 +1,188 @@
+$ HOME=/tmp/sax
+
+$ : Testing create, 01
+
+$ rm -rf /tmp/sax
+
+$ touch /tmp/sax
+
+$ saxo create
+saxo: error: could not create the directory `/tmp/sax/.saxo`
+
+The attempt to make this directory recursively, creating any necessary parent
+directories in the process, failed. Check permissions on all parent directories
+to make sure that we can write here. Also make sure that the parent path is a
+directory.
+
+This is the error message that python gave:
+
+    NotADirectoryError
+        [Errno 20] Not a directory: '/tmp/sax/.saxo'
+
+$ rm /tmp/sax
+
+$ : Testing create, 02
+
+$ rm -rf /tmp/sax
+
+$ mkdir /tmp/sax
+
+$ touch /tmp/sax/.saxo
+
+$ saxo create
+saxo: error: could not create the directory `/tmp/sax/.saxo`
+
+The attempt to make this directory recursively, creating any necessary parent
+directories in the process, failed. Check permissions on all parent directories
+to make sure that we can write here. Also make sure that the parent path is a
+directory.
+
+This is the error message that python gave:
+
+    FileExistsError
+        [Errno 17] File exists: '/tmp/sax/.saxo'
+
+$ : Testing create, 03
+
+$ rm -rf /tmp/sax
+
+$ mkdir -p /tmp/sax/.saxo
+
+$ saxo create
+saxo: error: the directory `/tmp/sax/.saxo` already exists
+
+You tried to make a directory that already exists. This is usually caused by
+saxo already existing through a previous creation command. It may also be
+caused by a path conflict, for example if you thought that you needed to
+manually create the saxo directory beforehand.
+
+This script won't write new material into any existing directories in case of
+data corruption.
+
+$ : Testing create, 04
+
+$ rm -rf /tmp/sax
+
+$ saxo create
+Created /tmp/sax/.saxo/config
+Modify this file with your own settings, and then run:
+
+    ./saxo start
+
+$ saxo create
+saxo: error: the directory `/tmp/sax/.saxo` already exists
+
+You tried to make a directory that already exists. This is usually caused by
+saxo already existing through a previous creation command. It may also be
+caused by a path conflict, for example if you thought that you needed to
+manually create the saxo directory beforehand.
+
+This script won't write new material into any existing directories in case of
+data corruption.
+
+$ : Testing start, 01
+
+$ rm -rf /tmp/sax
+
+$ saxo start
+Running saxo as PID 4508
+This PID is also saved in /tmp/sax/.saxo/pid
+
+$ saxo stop
+saxo: error: There is no bot currently running
+
+$ : Testing start, 02
+
+$ rm -rf /tmp/sax
+
+$ mkdir -p /tmp/sax/.saxo
+
+$ touch /tmp/sax/.saxo/config
+
+$ chmod 000 /tmp/sax/.saxo/config
+
+$ saxo start
+Running saxo as PID 4516
+This PID is also saved in /tmp/sax/.saxo/pid
+
+$ saxo stop
+saxo: error: There is no bot currently running
+
+$ : Testing start, 03
+
+$ rm -rf /tmp/sax
+
+$ mkdir -p /tmp/sax/.saxo
+
+$ touch /tmp/sax/.saxo/config
+
+$ chmod 000 /tmp/sax/.saxo
+
+$ saxo start
+Error: Can't write to PID file: /tmp/sax/.saxo/pid
+
+$ chmod 755 /tmp/sax/.saxo
+
+$ : Testing options, 01
+
+$ rm -rf /tmp/sax
+
+$ saxo
+saxo 0.1.000
+
+Usage:
+    saxo -v
+    saxo create [ directory ]
+    saxo [ -f ] [ -o filename ] start [ directory ]
+    saxo stop [ directory ]
+    saxo active [ directory ]
+
+Try `saxo -h` for more detailed usage
+
+$ saxo --help
+saxo 0.1.000
+
+Usage:
+
+    saxo -v / --version
+        Show the current saxo version
+
+    saxo create [ directory ]
+        Create a default configuration file
+
+    saxo [ Options ] start [ directory ]
+        Starts a bot. Options:
+
+            -f / --foreground
+                Don't run the bot as a daemon
+
+            -o / --output filename
+                Redirect stdout and stderr to filename
+
+    saxo stop [ directory ]
+        Stops a bot
+
+    saxo active [ directory ]
+        Shows whether a bot is active
+
+$ saxo --version
+saxo 0.1.000
+
+$ saxo create
+Created /tmp/sax/.saxo/config
+Modify this file with your own settings, and then run:
+
+    ./saxo start
+
+$ saxo -f start
+Connecting to irc.freenode.net:6667
+handle: message ('started scheduler',)
+IPC message: started scheduler
+handle: receiving ()
+handle: sending ()
+b':niven.freenode.net NOTICE * :*** Looking up your hostname...\r\n'
+
+$ : Cleanup
+
+$ rm -rf /tmp/sax
+

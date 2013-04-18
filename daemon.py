@@ -44,7 +44,7 @@ def start(pidfile, output):
     pid = os.getpid()
 
     print("Running saxo as PID %s" % pid)
-    print("The PID will be saved to %s" % pidfile)
+    print("This PID is also saved in %s" % pidfile)
 
     sys.stdout.flush()
     sys.stderr.flush()

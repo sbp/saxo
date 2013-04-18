@@ -118,7 +118,7 @@ def socket_send(sock):
                 if octets == None:
                     break
 
-                debug("->", repr(octets.decode("ascii")))
+                debug("->", repr(octets.decode("utf-8", "replace")))
                 s.write(octets)
                 s.flush()
 
@@ -137,7 +137,7 @@ class Saxo(object):
         self.discotimer = None
         self.receiving = False
         self.sending = False
-        self.reconnecting = False
+        self.user_reconnection = False
 
     def run(self):
         self.load()
@@ -254,26 +254,32 @@ class Saxo(object):
 
     def instruction_disco_receiving(self):
         self.receiving = False
-        if (not self.sending) and (not self.reconnecting):
-            incoming.put(("reconnect", True))
+        if not self.user_reconnection:
+            if self.sending:
+                outgoing.put(None)
+            else:
+                incoming.put(("reconnect", False))
+            self.network_reconnect = True
 
     def instruction_reconnect(self, close=True):
         if close:
-            self.reconnecting = True
+            self.user_reconnection = True
             # Never call this from a thread, otherwise the following can give an OSError
             outgoing.put(None) # Closes the send thread
             self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
 
-        time.sleep(3)
+        if not self.opt["client"]["flood"]:
+            time.sleep(3)
         for attempt in range(7):
-            if self.receiving or self.sending:
-                time.sleep(1)
-            # TODO: If the threads are still active, they should be killed
-            # Unfortunately, threads in python can't be killed
+            if not self.opt["client"]["flood"]:
+                if self.receiving or self.sending:
+                    time.sleep(1)
+                # TODO: If the threads are still active, they should be killed
+                # Unfortunately, threads in python can't be killed
 
         if close:
-            self.reconnecting = False
+            self.user_reconnection = False
         self.connect()
 
     def instruction_reload(self, destination=None):
@@ -348,8 +354,12 @@ class Saxo(object):
 
     def instruction_disco_sending(self):
         self.sending = False
-        if (not self.receiving) and (not self.reconnecting):
-            incoming.put(("reconnect", True))
+        if not self.user_reconnection:
+            if not self.receiving:
+                incoming.put(("reconnect", False))
+            else:
+                # TODO: Close the socket?
+                ...
 
     def command(self, prefix, sender, cmd, arg):
         path = self.commands[cmd]
