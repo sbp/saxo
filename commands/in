@@ -3,9 +3,9 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
-import os.path
+import os
 import re
-import socket
+import saxo
 import sys
 import time
 
@@ -68,15 +68,8 @@ def parse_periods(text):
     seconds, message = periods_seconds(text)
     return seconds, basetime + seconds, message
 
-def b64pickle(obj):
-    import base64
-    import pickle
-    pickled = pickle.dumps(obj)
-    return base64.b64encode(pickled)
-
-def main():
-    arg = sys.argv[1]
-
+@saxo.pipe
+def main(arg):
     if not arg:
         return "Schedule a reminder"
 
@@ -91,16 +84,7 @@ def main():
     else:
         message = nick + "!"
 
-    base = os.environ["SAXO_BASE"]
-    sockname = os.path.join(base, "client.sock")
-    client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    client.connect(sockname)
-
     args = (unixtime, "msg", (sender, message))
-    client.send(b"schedule " + b64pickle(args) + b"\n")
+    saxo.communicate("schedule", args)
 
-    # irc.queue(("schedule", unixtime, "msg", (irc.sender, message)))
-    print("Will remind at %s" % time.ctime(unixtime))
-
-if __name__ == "__main__":
-    main()
+    return "Will remind at %s" % time.ctime(unixtime)

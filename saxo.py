@@ -47,6 +47,24 @@ def command(name):
         return inner
     return decorate
 
+def communicate(command, args, base=None):
+    import base64
+    import os
+    import pickle
+    import socket
+
+    if base is None:
+        base = os.environ["SAXO_BASE"]
+
+    sockname = os.path.join(base, "client.sock")
+    client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    client.connect(sockname)
+
+    command = command.encode("ascii", "replace")
+    pickled = pickle.dumps(args)
+    client.send(command + b" " + base64.b64encode(pickled) + b"\n")
+    client.close()
+
 # TODO: priority?
 def event(command="*", synchronous=False):
     def decorate(function):
@@ -56,8 +74,9 @@ def event(command="*", synchronous=False):
     return decorate
 
 def pipe(function):
-    # __name__ is "saxo"
-    import resource
+    # This gives you concise code, clean exiting, and a custom error wrapper
+    # TODO: Would like to run this in caller __name__ == "__main__"
+    # __name__ here is "saxo"
     import sys
 
     # Save PEP 3122!
@@ -67,8 +86,6 @@ def pipe(function):
         import generic
 
     generic.exit_cleanly()
-    resource.setrlimit(resource.RLIMIT_CPU, (6, 6))
-
     arg = sys.argv[1]
 
     try: result = function(arg)

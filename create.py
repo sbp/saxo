@@ -49,20 +49,20 @@ regular file, and that you have adequate permissions to write on all parent
 directories.
 """
 
-def default(directory=None):
-    if directory is None:
-        directory = os.path.expanduser("~/.saxo")
+def default(base=None):
+    if base is None:
+        base = os.path.expanduser("~/.saxo")
 
-    if os.path.isdir(directory):
-        generic.error("the directory `%s` already exists" % directory,
+    if os.path.isdir(base):
+        generic.error("the directory `%s` already exists" % base,
             E_DIRECTORY_EXISTS)
 
-    try: os.makedirs(directory)
+    try: os.makedirs(base)
     except Exception as err:
-        generic.error("could not create the directory `%s`" % directory,
+        generic.error("could not create the directory `%s`" % base,
             E_UNMAKEABLE_DIRECTORY, err)
 
-    config = os.path.join(directory, "config")
+    config = os.path.join(base, "config")
     try:
         with open(config, "w", encoding="ascii") as f:
             # Generates a random bot name, from saxo00000 to saxo99999 inclusive
@@ -71,10 +71,10 @@ def default(directory=None):
         generic.error("could not write the config file `%s`" % config,
             E_UNWRITEABLE_CONFIG, err)
 
-    plugins = os.path.join(directory, "plugins")
+    plugins = os.path.join(base, "plugins")
     os.mkdir(plugins)
 
-    commands = os.path.join(directory, "commands")
+    commands = os.path.join(base, "commands")
     os.mkdir(commands)
 
     generic.populate(saxo_path, base)

@@ -389,6 +389,7 @@ def start(base):
     if not os.path.isdir(plugins):
         generic.error("no plugins directory: `%s`" % plugins, E_NO_PLUGINS)
 
+    # TODO: Check for broken symlinks
     generic.populate(saxo_path, base)
 
     opt = configparser.ConfigParser()
