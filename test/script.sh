@@ -93,6 +93,8 @@ echo garbage > /tmp/sax/.saxo/config
 
 saxo start
 
+saxo stop
+
 
 ####################################
 
@@ -145,8 +147,9 @@ saxo --version | \
 
 saxo create
 
-saxo -f start | head -n 14 | \
-    sed -E "s!$PWD!\$PWD!; s/:[a-z]+/:irc/; s/PID [0-9]+/PID <pid>/"
+saxo -f start | head -n 7
+
+echo
 
 
 ####################################

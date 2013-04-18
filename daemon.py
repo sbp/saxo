@@ -1,6 +1,7 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+import atexit
 import os
 import sys
 

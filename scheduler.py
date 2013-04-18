@@ -16,36 +16,8 @@ else:
     import generic
 
 incoming = queue.Queue()
-outgoing = queue.Queue()
 
-# threaded
-def receive():
-    for line in sys.stdin.buffer:
-        try:
-            octets = line[:-1] # Up to b"\n"
-            unixtime, command, args = octets.split(b" ", 2)
-            unixtime = int(unixtime)
-            incoming.put((unixtime, command, args))
-        except Exception as err:
-            print("Schedule Parse Error:", err)
-            continue
-
-# threaded
-def send(base):
-    client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    client_sock = os.path.join(base, "client.sock")
-    client.connect(client_sock)
-
-    while True:
-        octets = outgoing.get()
-        print("SEND:", octets)
-        client.send(octets + b"\n")
-
-def start(base, client=None):
-    process = client is None
-    if process:
-        generic.exit_cleanly()
-
+def start(base, client):
     database_filename = os.path.join(base, "database.sqlite3")
     with database.Database(database_filename) as db:
         if not "saxo_periodic" in db:
@@ -63,14 +35,7 @@ def start(base, client=None):
                 ("command", bytes),
                 ("args", bytes))
 
-        if process:
-            generic.thread(receive)
-            generic.thread(send, base)
-
-        if process:
-            generic.instruction(outgoing, "message", "started scheduler")
-        else:
-            client.put(("message", "started scheduler"))
+        client.put(("message", "started scheduler"))
 
         periodic = {}
         current = time.time()
@@ -89,7 +54,6 @@ def start(base, client=None):
                 except queue.Empty:
                     break
                 else:
-                    print("Scheduling:", triple) # TODO: Remove, debug
                     db["saxo_schedule"].insert(triple)
                     elapsed = time.time() - start
                     if elapsed > (1/3 * duration):
@@ -98,12 +62,9 @@ def start(base, client=None):
             # Periodic commands
             for (period, command, args), when in periodic.items():
                 if when < start:
-                    if process:
-                        outgoing.put(command + b" " + args)
-                    else:
-                        # Calling this command causes the following del to fail
-                        cmd = command.decode("ascii")
-                        client.put((cmd,) + generic.b64unpickle(args))
+                    # Calling this command causes the following del to fail
+                    cmd = command.decode("ascii")
+                    client.put((cmd,) + generic.b64unpickle(args))
                     periodic[(period, command, args)] += period
 
             # Scheduled commands
@@ -111,12 +72,9 @@ def start(base, client=None):
             for (unixtime, command, args) in schedule:
                 if unixtime > start:
                     break
-                if process:
-                    outgoing.put(command + b" " + args)
-                else:
-                    # Calling this command causes the following del to fail
-                    cmd = command.decode("ascii")
-                    client.put((cmd,) + generic.b64unpickle(args))
+                # Calling this command causes the following del to fail
+                cmd = command.decode("ascii")
+                client.put((cmd,) + generic.b64unpickle(args))
                 del db["saxo_schedule"][(unixtime, command, args)]
 
             elapsed = time.time() - start

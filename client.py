@@ -8,7 +8,7 @@ import importlib
 import os.path
 import queue
 import re
-import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -18,12 +18,31 @@ import time
 # Save PEP 3122!
 if "." in __name__:
     from . import generic
+    from . import scheduler
     from .saxo import path as saxo_path
 else:
     import generic
+    import scheduler
     from saxo import path as saxo_path
 
-# TODO: Make printing thread-safe
+lock = threading.Lock()
+
+def debug(*args, **kargs):
+    with lock:
+        try:
+            print(*args, **kargs)
+            sys.stdout.flush()
+        except BrokenPipeError:
+            sys.exit()
+
+# List of threads:
+# client.receive
+# client.send
+# every plugin function
+# every process command, as a communication wrapper
+# scheduler
+# serve.listen
+# every serve.connection instance
 
 incoming = queue.Queue()
 outgoing = queue.Queue()
@@ -99,7 +118,7 @@ def socket_send(sock):
                 if octets == None:
                     break
 
-                print("->", repr(octets.decode("ascii")))
+                debug("->", repr(octets.decode("ascii")))
                 s.write(octets)
                 s.flush()
 
@@ -139,7 +158,7 @@ class Saxo(object):
             if not name in sys.modules:
                 try: module = importlib.import_module(name)
                 except Exception as err:
-                    print("Error loading %s:" % name, err)
+                    debug("Error loading %s:" % name, err)
             else:
                 module = sys.modules[name]
                 module = imp.reload(module)
@@ -155,7 +174,7 @@ class Saxo(object):
                 elif hasattr(obj, "saxo_setup"):
                     obj(self)
 
-            # print("Loaded module:", name)
+            # debug("Loaded module:", name)
 
         sys.path[:1] = []
 
@@ -164,7 +183,7 @@ class Saxo(object):
         if os.path.isdir(commands):
             self.commands.clear()
             for name in os.listdir(commands):
-                # print("Loaded command:", name)
+                # debug("Loaded command:", name)
                 self.commands[name] = os.path.join(commands, name)
 
     def connect(self):
@@ -172,7 +191,7 @@ class Saxo(object):
         port = int(self.opt["server"]["port"])
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print("Connecting to %s:%s" % (host, port))
+        debug("Connecting to %s:%s" % (host, port))
         self.sock.connect((host, port))
         self.first = True
 
@@ -186,7 +205,7 @@ class Saxo(object):
             args = tuple(instruction_args[1:])
 
             if instruction != "remote":
-                print("handle:", instruction, args)
+                debug("handle:", instruction, args)
 
             if not isinstance(instruction, str):
                 continue
@@ -196,9 +215,9 @@ class Saxo(object):
                 method = getattr(self, method_name)
                 try: method(*args)
                 except Exception as err:
-                    print("handle error:", err)
+                    debug("handle error:", err)
             else:
-                print("Unknown instruction:", instruction)
+                debug("Unknown instruction:", instruction)
 
     def instruction_address(self, address):
         self.address = address
@@ -209,7 +228,7 @@ class Saxo(object):
                 function(self, None, None)
 
     def instruction_message(self, text):
-        print("IPC message:", text)
+        debug("IPC message:", text)
 
     def instruction_msg(self, destination, text):
         self.send("PRIVMSG", destination, text)
@@ -266,7 +285,7 @@ class Saxo(object):
                 "Reloaded in %s seconds" % round(elapsed, 3))
 
     def instruction_remote(self, octets):
-        print(repr(octets))
+        debug(repr(octets))
         prefix, command, parameters = parse(octets)
 
         if command == "PRIVMSG":
@@ -289,7 +308,7 @@ class Saxo(object):
                 try:
                     self.discotimer.cancel()
                     self.discotimer = None
-                    print("Cancelled the disco timer")
+                    debug("Cancelled the disco timer")
                 except:
                     ...
 
@@ -297,7 +316,7 @@ class Saxo(object):
         def safe(function, irc):
             try: function(irc)
             except Exception as err:
-                print(err)
+                debug(err)
 
         # TODO: Remove duplication below
         if self.first is True:
@@ -319,14 +338,7 @@ class Saxo(object):
     def instruction_schedule(self, unixtime, command, args):
         command = command.encode("ascii")
         args = generic.b64pickle(args)
-
-        if scheduler_process is False:
-            scheduler.incoming.put((unixtime, command, args))
-            return
-
-        unixtime = str(unixtime).encode("ascii")
-        octets = unixtime + b" " + command + b" " + args
-        scheduler_process.stdin.write(octets + b"\n")
+        scheduler.incoming.put((unixtime, command, args))
 
     def instruction_send(self, *args):
         self.send(*args)
@@ -353,6 +365,7 @@ class Saxo(object):
             env["SAXO_SENDER"] = sender
 
             octets = arg.encode("utf-8", "replace")
+            # path can't be injected into since it's created in self.load
             proc = subprocess.Popen([path, octets, self.base], env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
@@ -374,6 +387,38 @@ class Saxo(object):
         text = re.sub(r"[\r\n]", "", " ".join(args))
         outgoing.put(text.encode("utf-8", "replace")[:510] + b"\r\n")
 
+def serve(sockname, incoming):
+    if os.path.exists(sockname):
+        os.remove(sockname)
+
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.bind(sockname)
+    sock.listen(1)
+
+    def listen(sock):
+        while True:
+            connection, client = sock.accept()
+            def handle(connection, client):
+                try: 
+                    for octets in connection.makefile("rb"):
+                        try:
+                            text = octets.decode("ascii", "replace")
+                            text = text.strip("\n")
+
+                            if " " in text:
+                                instruction, data = text.split(" ", 1)
+                                args = generic.b64unpickle(data)
+                            else:
+                                instruction, args = text, tuple()
+
+                            incoming.put((instruction,) + args)
+                        except Exception as err:
+                            debug("ERROR!", err.__class__.__name__, err)
+                finally:
+                    connection.close()
+            generic.thread(handle, connection, client)
+    generic.thread(listen, sock)
+
 E_NO_PLUGINS = """
 The plugins directory is necessary for saxo to work. If it was deleted
 accidentally, just make a new empty directory and saxo will automatically
@@ -381,9 +426,9 @@ populate it with the core plugin that it needs to work.
 """
 
 def start(base):
-    global scheduler
-    global scheduler_process
     generic.exit_cleanly()
+    # http://stackoverflow.com/questions/11423225
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
     plugins = os.path.join(base, "plugins")
     if not os.path.isdir(plugins):
@@ -401,30 +446,14 @@ def start(base):
     scripts = os.path.abspath(scripts)
 
     sockname =  os.path.join(base, "client.sock")
-    # TODO: Not generic anymore; isn't used in scheduler
-    generic.serve(sockname, incoming)
+    serve(sockname, incoming)
     os.chmod(sockname, 0o600)
+
     def remove_sock(sockname):
         os.remove(sockname)
     atexit.register(remove_sock, sockname)
 
-    # start_scheduler
-    scheduler_process = False
-
-    if not scheduler_process:
-        if "." in __name__:
-            from . import scheduler
-        else:
-            import scheduler
-        generic.thread(scheduler.start, base, incoming)
-    else:
-        saxo_scheduler = os.path.join(scripts, "saxo-scheduler")
-        scheduler_process = subprocess.Popen([saxo_scheduler, base],
-            stdin=subprocess.PIPE)
-
-        def quit_scheduler(scheduler_process):
-            scheduler_process.kill()
-        atexit.register(quit_scheduler, scheduler_process)
+    generic.thread(scheduler.start, base, incoming)
 
     saxo = Saxo(base, opt)
     saxo.run()

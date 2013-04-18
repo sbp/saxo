@@ -3,7 +3,9 @@
 
 import argparse
 import os.path
+import signal
 import sys
+import time
 
 # Save PEP 3122!
 if "." in __name__:
@@ -33,8 +35,8 @@ action.names = {}
 
 # Options
 
-def version(args):
-    print("saxo alpha")
+def version(args, v):
+    print("saxo %s" % v)
 
 USAGE = """
 Usage:
@@ -47,8 +49,8 @@ Usage:
 Try `saxo -h` for more detailed usage
 """
 
-def usage(args):
-    version(args)
+def usage(args, v):
+    version(args, v)
     print(USAGE.rstrip())
 
 HELP = """
@@ -76,8 +78,8 @@ Usage:
         Shows whether a bot is active
 """
 
-def help(args):
-    version(args)
+def help(args, v):
+    version(args, v)
     print(HELP.rstrip())
 
 # Actions
@@ -90,7 +92,7 @@ def create(args):
     else:
         import create
 
-    # def default(directory=None)
+    # def default(base=None)
     # — create.py
     create.default(args.directory)
     return 0
@@ -130,10 +132,26 @@ def start(args):
 
 @action
 def stop(args):
-    print("Can't start a bot yet")
+    if args.directory is None:
+        directory = os.path.expanduser("~/.saxo")
+    else:
+        directory = args.directory
+
+    pidfile = os.path.join(directory, "pid")
+    if not os.path.exists(pidfile):
+        generic.error("There is no bot currently running")
+
+    with open(pidfile, encoding="ascii") as f:
+        text = f.read()
+        pid = int(text.rstrip("\n"))
+
+    # TODO: Make this less crude
+    os.kill(pid, signal.SIGTERM)
+    # os.kill(pid, signal.SIGKILL)
+
     return 0
 
-def main(argv):
+def main(argv, v):
     # NOTE: No default for argv, because what script name would we use?
 
     parser = argparse.ArgumentParser(description="Control saxo irc bot instances",
@@ -160,10 +178,10 @@ def main(argv):
     args = parser.parse_args(argv[1:])
 
     if args.help:
-        help(args)
+        help(args, v)
 
     elif args.version:
-        version(args)
+        version(args, v)
 
     elif args.action:
         if args.action in action.names:
@@ -174,4 +192,4 @@ def main(argv):
             generic.error("unrecognised action: %s" % args.action, code=2)
 
     else:
-        usage(args)
+        usage(args, v)

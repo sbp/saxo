@@ -1,6 +1,10 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+version = "0.1.000"
+# WARNING: If updating anything before this message,
+# change the offset in setup.py
+
 path = None
 
 if "__file__" in vars():
@@ -73,6 +77,7 @@ def event(command="*", synchronous=False):
         return function
     return decorate
 
+# TODO: pipe is somewhat of a misnomer since it uses argv[1] now
 def pipe(function):
     # This gives you concise code, clean exiting, and a custom error wrapper
     # TODO: Would like to run this in caller __name__ == "__main__"
@@ -122,4 +127,4 @@ def script(argv):
     else:
         from script import main
 
-    main(argv)
+    main(argv, version)

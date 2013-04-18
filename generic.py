@@ -78,6 +78,17 @@ def populate(saxo_path, base):
         if not os.path.exists(dest):
             os.symlink(os.path.join(saxo_commands, name), dest)
 
+    # Clean up any broken symlinks
+    for directory in (plugins, commands):
+        for name in os.listdir(directory):
+            link = os.path.join(directory, name)
+            if not os.path.islink(link):
+                continue
+
+            target = os.readlink(link)
+            if not os.path.exists(target):
+                os.remove(link)
+
 def b64pickle(obj):
     pickled = pickle.dumps(obj)
     return base64.b64encode(pickled)
@@ -87,38 +98,6 @@ def b64unpickle(data):
         pickled = base64.b64decode(data)
         return pickle.loads(pickled)
     return tuple()
-
-def serve(sockname, incoming):
-    if os.path.exists(sockname):
-        os.remove(sockname)
-
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.bind(sockname)
-    sock.listen(1)
-
-    def listen(sock):
-        while True:
-            connection, client = sock.accept()
-            def handle(connection, client):
-                try: 
-                    for octets in connection.makefile("rb"):
-                        try:
-                            text = octets.decode("ascii", "replace")
-                            text = text.strip("\n")
-
-                            if " " in text:
-                                instruction, data = text.split(" ", 1)
-                                args = b64unpickle(data)
-                            else:
-                                instruction, args = text, tuple()
-
-                            incoming.put((instruction,) + args)
-                        except Exception as err:
-                            print("ERROR!", err.__class__.__name__, err)
-                finally:
-                    connection.close()
-            thread(handle, connection, client)
-    thread(listen, sock)
 
 def thread(target, *args):
     t = threading.Thread(target=target, args=tuple(args), daemon=True)
