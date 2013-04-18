@@ -82,6 +82,12 @@ def b64pickle(obj):
     pickled = pickle.dumps(obj)
     return base64.b64encode(pickled)
 
+def b64unpickle(data):
+    if data:
+        pickled = base64.b64decode(data)
+        return pickle.loads(pickled)
+    return tuple()
+
 def serve(sockname, incoming):
     if os.path.exists(sockname):
         os.remove(sockname)
@@ -102,11 +108,7 @@ def serve(sockname, incoming):
 
                             if " " in text:
                                 instruction, data = text.split(" ", 1)
-                                if data:
-                                    pickled = base64.b64decode(data)
-                                    args = pickle.loads(pickled)
-                                else:
-                                    args = tuple()
+                                args = b64unpickle(data)
                             else:
                                 instruction, args = text, tuple()
 

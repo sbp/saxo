@@ -1,8 +1,12 @@
+#!/usr/bin/env python3
+
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+import os.path
 import re
-import saxo
+import socket
+import sys
 import time
 
 clock_dict_scales = {
@@ -64,19 +68,39 @@ def parse_periods(text):
     seconds, message = periods_seconds(text)
     return seconds, basetime + seconds, message
 
-@saxo.command("in")
-def command(irc):
-    if not irc.arg:
+def b64pickle(obj):
+    import base64
+    import pickle
+    pickled = pickle.dumps(obj)
+    return base64.b64encode(pickled)
+
+def main():
+    arg = sys.argv[1]
+
+    if not arg:
         return "Schedule a reminder"
 
-    seconds, unixtime, message = parse_periods(irc.arg)
+    seconds, unixtime, message = parse_periods(arg)
     if not seconds:
         return "Couldn't understand your duration. Use units?"
 
+    nick = os.environ["SAXO_NICK"]
+    sender = os.environ["SAXO_SENDER"]
     if message:
-        message = irc.nick + ": " + message
+        message = nick + ": " + message
     else:
-        message = irc.nick + "!"
+        message = nick + "!"
 
-    irc.queue(("schedule", unixtime, "msg", (irc.sender, message)))
-    irc.reply("Will remind at %s" % time.ctime(unixtime))
+    base = os.environ["SAXO_BASE"]
+    sockname = os.path.join(base, "client.sock")
+    client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    client.connect(sockname)
+
+    args = (unixtime, "msg", (sender, message))
+    client.send(b"schedule " + b64pickle(args) + b"\n")
+
+    # irc.queue(("schedule", unixtime, "msg", (irc.sender, message)))
+    print("Will remind at %s" % time.ctime(unixtime))
+
+if __name__ == "__main__":
+    main()

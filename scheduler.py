@@ -41,8 +41,10 @@ def send(base):
         print("SEND:", octets)
         client.send(octets + b"\n")
 
-def start(base):
-    generic.exit_cleanly()
+def start(base, client=None):
+    process = client is None
+    if process:
+        generic.exit_cleanly()
 
     database_filename = os.path.join(base, "database.sqlite3")
     with database.Database(database_filename) as db:
@@ -61,10 +63,14 @@ def start(base):
                 ("command", bytes),
                 ("args", bytes))
 
-        generic.thread(receive)
-        generic.thread(send, base)
+        if process:
+            generic.thread(receive)
+            generic.thread(send, base)
 
-        generic.instruction(outgoing, "message", "started scheduler")
+        if process:
+            generic.instruction(outgoing, "message", "started scheduler")
+        else:
+            client.put(("message", "started scheduler"))
 
         periodic = {}
         current = time.time()
@@ -92,7 +98,12 @@ def start(base):
             # Periodic commands
             for (period, command, args), when in periodic.items():
                 if when < start:
-                    outgoing.put(command + b" " + args)
+                    if process:
+                        outgoing.put(command + b" " + args)
+                    else:
+                        # Calling this command causes the following del to fail
+                        cmd = command.decode("ascii")
+                        client.put((cmd,) + generic.b64unpickle(args))
                     periodic[(period, command, args)] += period
 
             # Scheduled commands
@@ -100,7 +111,12 @@ def start(base):
             for (unixtime, command, args) in schedule:
                 if unixtime > start:
                     break
-                outgoing.put(command + b" " + args)
+                if process:
+                    outgoing.put(command + b" " + args)
+                else:
+                    # Calling this command causes the following del to fail
+                    cmd = command.decode("ascii")
+                    client.put((cmd,) + generic.b64unpickle(args))
                 del db["saxo_schedule"][(unixtime, command, args)]
 
             elapsed = time.time() - start
