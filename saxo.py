@@ -69,6 +69,22 @@ def communicate(command, args, base=None):
     client.send(command + b" " + base64.b64encode(pickled) + b"\n")
     client.close()
 
+# TODO: Can't call this saxo.database, because the import sets that attribute
+def db(name=None):
+    import os
+
+    # Save PEP 3122!
+    if "." in __name__:
+        from .database import Database
+    else:
+        from database import Database
+
+    if name is None:
+        base = os.environ["SAXO_BASE"]
+        name = os.path.join(base, "database.sqlite3")
+
+    return Database(name)
+
 # TODO: priority?
 def event(command="*", synchronous=False):
     def decorate(function):

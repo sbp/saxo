@@ -59,6 +59,8 @@ def parse(octets):
 
 class ThreadSafeEnvironment(object):
     def __init__(self, saxo, prefix, command, parameters):
+        self.base = saxo.base
+
         self.nick = prefix[0]
         self.user = prefix[1]
         self.host = prefix[2]
@@ -378,6 +380,7 @@ class Saxo(object):
 
             octets = arg.encode("utf-8", "replace")
             # path can't be injected into since it's created in self.load
+            # TODO: Catch PermissionError
             proc = subprocess.Popen([path, octets, self.base], env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 

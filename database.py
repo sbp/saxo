@@ -1,6 +1,7 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+import re
 import sqlite3
 
 class Table(object):
@@ -38,7 +39,7 @@ class Table(object):
         query = "CREATE TABLE IF NOT EXISTS %s (%s)" % (self.name, schema)
         cursor.execute(query)
 
-    def insert(self, row, *rows):
+    def insert(self, row, *rows, commit=True):
         cursor = self.connection.cursor()
         size = len(row)
         args = ",".join(["?"] * size)
@@ -47,7 +48,9 @@ class Table(object):
         cursor.execute(query, tuple(row))
         for extra in rows:
             cursor.execute(query, tuple(extra))
-        self.connection.commit()
+
+        if commit:
+            self.connection.commit()
 
     def rows(self, order=None):
         cursor = self.connection.cursor()
@@ -79,8 +82,18 @@ class Database(object):
         self.path = path
         self.connection = sqlite3.connect(path)
 
+        def regexp(pattern, text):
+            return re.search(pattern, text) is not None
+        self.connection.create_function("REGEXP", 2, regexp)
+
     def __iter__(self):
         raise NotImplemented
+
+    def __delitem__(self, key):
+        if key in self:
+            query = "DROP TABLE %s" % key
+            cursor = self.connection.cursor()
+            cursor.execute(query)
 
     def __contains__(self, key):
         cursor = self.connection.cursor()
@@ -101,6 +114,18 @@ class Database(object):
 
     def commit(self):
         self.connection.commit()
+
+    def query(self, text, *args):
+        cursor = self.connection.cursor()
+        if not args:
+            cursor.execute(text)
+        else:
+            cursor.execute(text, args)
+        while True:
+            result = cursor.fetchone()
+            if result is None:
+                break
+            yield result
 
 def test():
     import os
