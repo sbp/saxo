@@ -86,7 +86,7 @@ class Database(object):
         cursor = self.connection.cursor()
         query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
         cursor.execute(query, (key,))
-        return cursor.fetchone() is not None        
+        return cursor.fetchone() is not None
 
     def __getitem__(self, key):
         return Table(self.connection, key)

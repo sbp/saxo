@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import re
+import saxo
+
+regex_entry = re.compile(r"(\w+):\s*\"([^\"]*)\",?\s*")
+
+# TODO: From saxo's web.py
+def decode_entities(hypertext):
+    import html.entities
+    _regex_entity = re.compile(r"&([^;\s]+);")
+
+    def entity(match):
+        name = match.group(1).lower()
+
+        if name.startswith("#x"):
+            return chr(int(name[2:], 16))
+        elif name.startswith("#"):
+            return chr(int(name[1:]))
+        elif name in html.entities.name2codepoint:
+            return chr(html.entities.name2codepoint[name])
+        return "[" + name + "]"
+
+    return _regex_entity.sub(entity, hypertext)
+
+@saxo.pipe
+def c(arg):
+    substitutions = {
+        "ϕ": "phi",
+        "π": "pi",
+        "tau": "(pi*2)",
+        "τ": "(pi*2)"
+    }
+
+    expression = arg
+    for a, b in substitutions.items():
+        expression = expression.replace(a, b)
+
+    page = saxo.request(
+        "http://www.google.com/ig/calculator",
+        query={"q": expression})
+
+    def parse(text):
+        text = text.strip("{}")
+        while text:
+            match = regex_entry.match(text)
+            if not match:
+                break
+            yield match.groups()
+            text = text[match.end():]
+
+    fields = dict(parse(page["text"]))
+    google_left = fields.get("lhs")
+    google_right = fields.get("rhs")
+
+    if fields.get("error"):
+        return "Google indicates that the input may be malformed"
+
+    right = fields.get("rhs", "")
+    if right:
+        right = right.encode("iso-8859-1")
+        right = right.decode("unicode-escape")
+
+        substitutions = {
+            "<sup>": "^(",
+            "</sup>": ")",
+            "\xA0": "," # nbsp
+        }
+        for a, b in substitutions.items():
+            right = right.replace(a, b)
+
+        # this html.decode_entities is needed: source is JSON, not HTML
+        return decode_entities(right)
+    return "Google indicates a bad 'rhs' field. Malformed input?"

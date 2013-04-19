@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import re
+import saxo
+
+r_parens = re.compile(r"(\s*)\(\s*(.*?)\s*\)")
+r_stringified = re.compile(r'"stringified":\s"([^"]+)"')
+r_superscript = re.compile(r"\^\(?(-?[0-9]+)\)?")
+
+@saxo.pipe
+def wa(arg):
+    page = saxo.request(
+        "http://www.wolframalpha.com/input/",
+        follow=True,
+        query={
+            "asynchronous": "false",
+            "i": arg
+        })
+
+    simples = {
+        r"\/": "/",
+        r"\'": "'",
+        "": "",
+        " °": "°",
+        "~~": " ~",
+        "~~ ": " ~"
+    }
+
+    patterns = {
+        r"\\n( *\| *)?": ", ",
+        r"~~ *\(": "~(",
+        r"[ \t]+": " ",
+        r"([0-9]{12})[0-9]+": r"\g<1>"
+    }
+
+    def parentheses(text):
+        def replacement(match):
+            pre = " " if match.group(1) else ""
+            content = match.group(2)
+            return pre + "(" + content + ")"
+        return r_parens.sub(replacement, text)
+
+    def superscript(text):
+        super = {"0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
+            "5": "⁵", "6": "⁶", "7": "⁷","8": "⁸", "9": "⁹", "-": "⁻"}
+
+        def replacement(match):
+            characters = []
+            for character in match.group(1):
+                characters.append(super.get(character, character))
+            return "".join(characters)
+        return r_superscript.sub(replacement, text)
+
+    def pretty(text):
+        for key, value in simples.items():
+            text = text.replace(key, value)
+
+        for key, value in patterns.items():
+            text = re.sub(key, value, text)
+
+        text = re.sub(r"[ \t]+\|[ \t]+", ": ", text)
+        text = parentheses(text)
+        return superscript(text)
+
+    first = ""
+    items = []
+
+    expression = ""
+    expressions = []
+
+    for i, stringified in enumerate(r_stringified.findall(page["text"])):
+        exp = pretty(stringified)
+        if not i:
+            expression = exp[:]
+        else:
+            if exp.startswith(expression):
+                exp = exp[len(expression):].lstrip(" =")
+            expressions.append(exp)
+
+    sep = "; "
+
+    limit = 400
+
+    if not expression:
+        return "No results found"
+
+    text = expression + " = "
+    for exp in expressions:
+        if len((text + exp + sep).encode("utf-8")) > limit:
+            break
+
+        text += exp + sep
+    return text.rstrip(sep)

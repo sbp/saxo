@@ -411,7 +411,7 @@ def serve(sockname, incoming):
         while True:
             connection, client = sock.accept()
             def handle(connection, client):
-                try: 
+                try:
                     for octets in connection.makefile("rb"):
                         try:
                             text = octets.decode("ascii", "replace")

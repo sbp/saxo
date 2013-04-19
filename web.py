@@ -59,7 +59,7 @@ def content_type(info):
     return mime, encoding
 
 def decode_entities(hypertext):
-    def entity(match): 
+    def entity(match):
         name = match.group(1).lower()
 
         if name.startswith("#x"):
@@ -72,7 +72,7 @@ def decode_entities(hypertext):
 
     return _regex_entity.sub(entity, hypertext)
 
-def request(url, query=None, data=None, method="GET", 
+def request(url, query=None, data=None, method="GET",
         limit=None, follow=True, headers=None):
     headers = {} if (headers is None) else headers
 
