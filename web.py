@@ -58,7 +58,7 @@ def content_type(info):
                 break
     return mime, encoding
 
-def decode_entities(args):
+def decode_entities(hypertext):
     def entity(match): 
         name = match.group(1).lower()
 
@@ -70,7 +70,7 @@ def decode_entities(args):
             return chr(html.entities.name2codepoint[name])
         return "[" + name + "]"
 
-    return _regex_entity.sub(entity, args.html)
+    return _regex_entity.sub(entity, hypertext)
 
 def request(url, query=None, data=None, method="GET", 
         limit=None, follow=True, headers=None):

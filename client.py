@@ -145,6 +145,9 @@ class Saxo(object):
         self.handle()
 
     def load(self):
+        # Update symlinks
+        generic.populate(saxo_path, self.base)
+
         # Load events
         self.events.clear()
         plugins = os.path.join(self.base, "plugins")
