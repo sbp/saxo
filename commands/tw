@@ -3,6 +3,7 @@
 # Copyright 2012-3, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+import os
 import re
 import saxo
 import time
@@ -105,7 +106,10 @@ def get_tweet(username=None, tweet=None, url=None):
 @saxo.pipe
 def tw(arg):
     if not arg:
-        return "Show a tweet from a link, username, or tweet id"
+        if "SAXO_URL" in os.environ:
+            arg = os.environ["SAXO_URL"]
+        else:
+            return "Show a tweet from a link, username, or tweet id"
 
     if arg.startswith("@"):
         arg = arg[1:]

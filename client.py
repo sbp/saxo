@@ -140,6 +140,7 @@ class Saxo(object):
         self.receiving = False
         self.sending = False
         self.user_reconnection = False
+        self.links = {}
 
     def run(self):
         self.load()
@@ -231,6 +232,9 @@ class Saxo(object):
         if ":connected" in self.events:
             for function in self.events[":connected"]:
                 function(self, None, None)
+
+    def instruction_link(self, channel, link):
+        self.links[channel] = link
 
     def instruction_message(self, text):
         debug("IPC message:", text)
@@ -377,11 +381,13 @@ class Saxo(object):
             ###
             env["SAXO_NICK"] = prefix[0]
             env["SAXO_SENDER"] = sender
+            if sender in self.links:
+                env["SAXO_URL"] = self.links[sender]
 
             octets = arg.encode("utf-8", "replace")
             # path can't be injected into since it's created in self.load
             # TODO: Catch PermissionError
-            proc = subprocess.Popen([path, octets, self.base], env=env,
+            proc = subprocess.Popen([path, octets], env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
             try: outs, errs = proc.communicate(octets + b"\n", timeout=6)

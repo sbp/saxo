@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import os
+import re
+import saxo
+import subprocess
+
+pattern = r'\+?"[^"\\]*(?:\\.[^"\\]*)*"|\[[^]\\]*(?:\\.[^]\\]*)*\]|\S+'
+regex_search_term = re.compile(pattern)
+
+def terms(text):
+    terms = []
+    while text:
+        text = text.strip()
+        match = regex_search_term.match(text)
+        if not match:
+            raise ValueError("No search term found, here: %r" % text)
+
+        term = match.group(0)
+        terms.append(term)
+        text = text[len(term):]
+    return terms
+
+@saxo.pipe
+def gcs(arg):
+    if not arg:
+        return "Count results for multiple phrases on Google"
+
+    phrases = terms(arg)
+    results = []
+    for phrase in phrases:
+            path = os.path.join(os.environ["SAXO_COMMANDS"], "gc")
+            octets = phrase.encode("utf-8")
+            proc = subprocess.Popen([path, octets],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
+            try: outs, errs = proc.communicate(octets + b"\n", timeout=1)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                outs = "[timeout]"
+            else:
+                outs = outs.decode("utf-8", "replace")
+            if not outs:
+                outs = "[no response]"
+
+            results.append((phrase, outs))
+
+    # TODO: Sort by results
+    return ", ".join("%s (%s)" % (a, b) for (a, b) in results)

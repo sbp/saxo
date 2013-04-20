@@ -115,12 +115,17 @@ class Database(object):
     def commit(self):
         self.connection.commit()
 
-    def query(self, text, *args):
+
+    def execute(self, text, *args):
         cursor = self.connection.cursor()
         if not args:
             cursor.execute(text)
         else:
             cursor.execute(text, args)
+        return cursor
+
+    def query(self, text, *args):
+        cursor = self.execute(text, *args)
         while True:
             result = cursor.fetchone()
             if result is None:

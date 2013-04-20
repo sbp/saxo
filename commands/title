@@ -3,6 +3,7 @@
 # Copyright 2012-3, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+import os
 import re
 import saxo
 

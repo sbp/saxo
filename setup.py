@@ -7,8 +7,14 @@ import os.path
 import sys
 import distutils.core
 
+try: import sqlite3
+except ImportError:
+    print("Error: sqlite3 is not installed", file=sys.stderr)
+    print("Please build Python against the sqlite libraries", file=sys.stderr)
+    sys.exit(1)
+
 if sys.version_info < (3, 3):
-    print("Error: Requires python 3.3 or later", file=sys.stderr)
+    print("Error: Requires Python 3.3 or later", file=sys.stderr)
     sys.exit(1)
 
 def update_version():

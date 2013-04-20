@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import datetime
+import decimal
+import math as maths
+import saxo
+import socket
+import struct
+
+@saxo.pipe
+def npl(args):
+    server = "ntp1.npl.co.uk"
+    client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    client.sendto(b"\x1B" + 47 * b"\x00", (server, 123))
+    data, address = client.recvfrom(48)
+
+    if data:
+        buf = struct.unpack("B" * 48, data)
+        d = decimal.Decimal
+        value = d("0.0")
+        for i in range(8):
+            value += d(buf[32 + i]) * d(str(maths.pow(2, (3 - i) * 8)))
+        value -= d(2208988800)
+        # timestamp = str(d)
+
+        a, b = str(value).split(".")
+        f = "%Y-%m-%d %H:%M:%S"
+        dt = datetime.datetime.utcfromtimestamp(value).strftime(f)
+        return dt + "." + b[:6] + " UTC"
+    return "No data was received from %s" % server

@@ -25,6 +25,12 @@ example, python3 can be installed using homebrew:
     http://mxcl.github.io/homebrew/
 """
 
+try: import sqlite3
+except ImportError:
+    print("Error: sqlite3 is not installed", file=sys.stderr)
+    print("Please build Python against the sqlite libraries", file=sys.stderr)
+    sys.exit(1)
+
 if sys.version_info < (3, 3):
     generic.error("requires python 3.3 or later", E_PYTHON_VERSION)
 
