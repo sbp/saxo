@@ -103,11 +103,17 @@ class ThreadSafeEnvironment(object):
 
 # threaded
 def socket_receive(sock):
-    with sock.makefile("rb") as s:
-        # TODO: How do we know when we're connected?
-        incoming.put(("receiving",))
-        for octets in s:
-            incoming.put(("remote", octets))
+    def receive_loop(sock, incoming):
+        with sock.makefile("rb") as s:
+            # TODO: How do we know when we're connected?
+            incoming.put(("receiving",))
+            for octets in s:
+                incoming.put(("remote", octets))
+
+    try: receive_loop(sock, incoming)
+    except Exception as err:
+        # Usually IOError, EOFError, socket.error, or ssl.SSLError
+        ...
     incoming.put(("disco_receiving",))
 
 # threaded
@@ -125,7 +131,8 @@ def socket_send(sock):
                 s.flush()
 
     try: sending(sock)
-    except BrokenPipeError:
+    except Exception as err:
+        # Usually BrokenPipeError
         ...
     incoming.put(("disco_sending",))
 
@@ -199,6 +206,14 @@ class Saxo(object):
         port = int(self.opt["server"]["port"])
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if "ssl" in self.opt["server"]:
+            import ssl
+            debug("Warning: Using SSL, but not validating the cert!")
+            self.sock = ssl.wrap_socket(
+                self.sock,
+                server_side=False,
+                cert_reqs=ssl.CERT_NONE) # TODO: or CERT_REQUIRED
+
         debug("Connecting to %s:%s" % (host, port))
         self.sock.connect((host, port))
         self.first = True
