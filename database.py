@@ -126,11 +126,17 @@ class Database(object):
 
     def query(self, text, *args):
         cursor = self.execute(text, *args)
+        # Duplicate rows are sometimes given,
+        # even when sqlite3 was compiled thread-safe
+        previous = None
         while True:
             result = cursor.fetchone()
             if result is None:
                 break
+            if result == previous:
+                continue
             yield result
+            previous = result
 
 def test():
     import os

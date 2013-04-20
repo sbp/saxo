@@ -167,7 +167,9 @@ class Saxo(object):
                     debug("Error loading %s:" % name, err)
             else:
                 module = sys.modules[name]
-                module = imp.reload(module)
+                try: module = imp.reload(module)
+                except Exception as err:
+                    debug("Error reloading %s:" % name, err)
 
             for attr in dir(module):
                 obj = getattr(module, attr)
@@ -381,6 +383,7 @@ class Saxo(object):
             ###
             env["SAXO_NICK"] = prefix[0]
             env["SAXO_SENDER"] = sender
+            env["SAXO_BOT"] = self.opt["client"]["nick"]
             if sender in self.links:
                 env["SAXO_URL"] = self.links[sender]
 

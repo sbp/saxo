@@ -1,10 +1,61 @@
+.c e ** (i * 2/3pi)
+0.977568548 + 0.210617505 i
+
+.ety frog
+"<.{32,}>" - http://etymonline.com/index.php?term=frog
+
 .g reddit
 http://www.reddit.com/
+
+.gc gombuc
+<[0-9,]+>
+
+.gcs [a b c] "d e f" g h i
+[a b c] (<[0-9,]+>), "d e f" (<[0-9,]+>), g (<[0-9,]+>), h (<[0-9,]+>), i (<[0-9,]+>)
+
+.img rongorongo
+http://<.*>
 
 .in 9s ê!
 : Will remind at <.*>
 WAIT 6
 : ê!
 
+.news UN special envoy
+http://<.*>
+
+.npl
+<[0-9 :.-]{26}> UTC
+
+.py len("mâché!")
+8
+
+.suggest up Pompeii
+Perhaps up Pompeii: <.{16,}>
+
+.title http://inamidst.com/
+inamidst.com, by Sean B. Palmer
+
+.to
+Send a message to somebody
+
+.to $(BOT) something
+Thanks, noted
+
+.to $(USER) something
+You can tell yourself that
+
+.tr :fr mon chat
+my cat (fr » en). translate.google.com
+
+.tw 241314011524788225
+Juhu, mache nächste Woche also was mit maxi :3 (@Einhornkotze2)
+
+.tw https://twitter.com/Einhornkotze2/status/241314011524788225
+Juhu, mache nächste Woche also was mit maxi :3 (@Einhornkotze2)
+
 .upper abc
 ABC
+
+.wik Rime of the Ancient Mariner
+"The Rime of the Ancient Mariner <.*> Coleridge<.*>" - https://en.wikipedia.org/wiki/Rime_of_the_Ancient_Mariner

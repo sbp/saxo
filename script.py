@@ -30,6 +30,10 @@ except ImportError:
     print("Error: sqlite3 is not installed", file=sys.stderr)
     print("Please build Python against the sqlite libraries", file=sys.stderr)
     sys.exit(1)
+else:
+    if not sqlite3.threadsafety:
+        print("Error: Your sqlite3 is not thread-safe", file=sys.stderr)
+        sys.exit(1)
 
 if sys.version_info < (3, 3):
     generic.error("requires python 3.3 or later", E_PYTHON_VERSION)
