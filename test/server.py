@@ -1,6 +1,7 @@
 # Copyright 2012-3, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+import codecs
 import multiprocessing
 import os
 import re
@@ -8,6 +9,8 @@ import socket
 import socketserver
 import sys
 import time
+
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
 scripts = os.path.dirname(sys.modules["__main__"].__file__)
 scripts = os.path.abspath(scripts)

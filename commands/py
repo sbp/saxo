@@ -8,5 +8,10 @@ import saxo
 
 @saxo.pipe
 def py(arg):
-    page = saxo.request("http://tumbolia.appspot.com/py/" + urllib.parse.quote(arg))
+    # If you don't encode the arg, you can get this error:
+    # UnicodeEncodeError: 'utf-8' codec [...]: surrogates not allowed
+    arg = arg.encode("utf-8", "replace")
+    quoted = urllib.parse.quote(arg)
+
+    page = saxo.request("http://tumbolia.appspot.com/py/" + quoted)
     return page["text"]

@@ -489,6 +489,7 @@ def start(base):
     serve(sockname, incoming)
     os.chmod(sockname, 0o600)
 
+    # TODO: Find out why this doesn't always work
     def remove_sock(sockname):
         os.remove(sockname)
     atexit.register(remove_sock, sockname)

@@ -2,6 +2,7 @@
 # Source: http://inamidst.com/saxo/
 
 import argparse
+import codecs
 import os
 import signal
 import sys
@@ -12,6 +13,9 @@ if "." in __name__:
     from . import generic
 else:
     import generic
+
+sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
 E_PYTHON_VERSION = """
 Your version of the python programming language is too old to run saxo. Use a
@@ -228,12 +232,12 @@ def test(args):
             line = line.rstrip("\n")
             outgoing.put("C: " + line)
 
-        manifest01 = ["commands", "config", "database.sqlite3", "plugins"]
-        manifest02 = ["client.sock", "commands", "config", "database.sqlite3", "plugins"]
+        manifest01 = {"commands", "config", "database.sqlite3", "plugins"}
+        manifest02 = manifest01 | {"client.sock"}
 
-        if os.listdir(saxo_test) == manifest01:
+        if set(os.listdir(saxo_test)) == manifest01:
             shutil.rmtree(saxo_test)
-        elif os.listdir(saxo_test) == manifest02:
+        elif set(os.listdir(saxo_test)) == manifest02:
             outgoing.put("Warning: client.sock was not removed")
             shutil.rmtree(saxo_test)
         else:

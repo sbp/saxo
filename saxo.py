@@ -95,9 +95,16 @@ def event(command="*", synchronous=False):
 
 # TODO: pipe is somewhat of a misnomer since it uses argv[1] now
 def pipe(function):
-    # This gives you concise code, clean exiting, and a custom error wrapper
+    # This gives you:
+    # * concise code
+    # * clean exiting
+    # * input surrogate decoding
+    # * output encoding
+    # * a custom error wrapper
+
     # TODO: Would like to run this in caller __name__ == "__main__"
     # __name__ here is "saxo"
+    import os
     import sys
 
     # Save PEP 3122!
@@ -107,7 +114,11 @@ def pipe(function):
         import generic
 
     generic.exit_cleanly()
+    # TODO: Read from stdin if there is no sys.argv[1]?
     arg = sys.argv[1]
+    # We have to do this because python converts the commands to surrogates
+    # http://stackoverflow.com/a/7077803
+    arg = os.fsencode(arg).decode("utf-8")
 
     try: result = function(arg)
     except Exception as err:
@@ -121,7 +132,12 @@ def pipe(function):
         result = python + " " + where
 
     if result is not None:
-        sys.stdout.write(result + "\n")
+        if not isinstance(result, str):
+            print("Error")
+            return
+        result = result.encode("utf-8", "replace")
+        sys.stdout.buffer.write(result + b"\n")
+        sys.stdout.flush()
 
 def request(*args, **kargs):
     # Save PEP 3122!
