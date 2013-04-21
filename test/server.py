@@ -9,11 +9,10 @@ import socketserver
 import sys
 import time
 
-if not os.path.isfile("saxo"):
-    print("Error: Not running in the saxo directory")
-    sys.exit(1)
+scripts = os.path.dirname(sys.modules["__main__"].__file__)
+scripts = os.path.abspath(scripts)
 
-sys.path[:0] = [os.getcwd()]
+sys.path[:0] = [scripts, os.getcwd()]
 
 connections = 0
 test_counter = 0
@@ -38,7 +37,7 @@ def test_initial_ping(conn):
     conn.send("PING", "VALUE")
     msg = conn.recv()
 
-with open("test/tests.txt", encoding="utf-8") as f:
+with open(os.path.join(scripts, "tests.txt"), encoding="utf-8") as f:
     text = f.read()
 
 for lines in text.split("\n\n"):

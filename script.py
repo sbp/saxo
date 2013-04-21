@@ -2,7 +2,7 @@
 # Source: http://inamidst.com/saxo/
 
 import argparse
-import os.path
+import os
 import signal
 import sys
 import time
@@ -160,6 +160,111 @@ def stop(args):
     # os.kill(pid, signal.SIGKILL)
 
     return 0
+
+@action
+def test(args):
+    if args.directory is not None:
+        generic.error("Tests cannot be run in conjunction with a directory")
+
+    import queue
+    import shutil
+    import subprocess
+    import tempfile
+
+    # Save PEP 3122!
+    if "." in __name__:
+        from . import saxo
+    else:
+        import saxo
+
+    saxo_script = sys.modules["__main__"].__file__
+    saxo_test_server = os.path.join(saxo.path, "test", "server.py")
+
+    tmp = tempfile.gettempdir()
+    outgoing = queue.Queue()
+
+    if not sys.executable:
+        generic.error("Couldn't find the python executable")
+
+    if not os.path.isdir(tmp):
+        generic.error("There is no %s directory" % tmp)
+
+    print("python executable:", sys.executable)
+    print("saxo path:", saxo.path)
+    print("saxo script:", saxo_script)
+    print("saxo test server:", saxo_test_server)
+    print()
+
+    def run_server():
+        server = subprocess.Popen([sys.executable, "-u", saxo_test_server],
+            stdout=subprocess.PIPE)
+
+        for line in server.stdout:
+            line = line.decode("utf-8", "replace")
+            line = line.rstrip("\n")
+            outgoing.put("S: " + line)
+
+        outgoing.put("Server finished")
+
+    def run_client():
+        saxo_test = os.path.join(tmp, "saxo-test")
+        outgoing.put("Running in %s" % saxo_test)
+
+        code = subprocess.call([sys.executable, saxo_script, "create", saxo_test])
+        if code:
+            print("Error creating the client configuration")
+            sys.exit(1)
+
+        test_config = os.path.join(saxo.path, "test", "config")
+        saxo_test_config = os.path.join(saxo_test, "config")
+        shutil.copy2(test_config, saxo_test_config)
+
+        client = subprocess.Popen([sys.executable, "-u",
+                saxo_script, "-f", "start", saxo_test],
+            stdout=subprocess.PIPE)
+
+        for line in client.stdout:
+            line = line.decode("utf-8", "replace")
+            line = line.rstrip("\n")
+            outgoing.put("C: " + line)
+
+        manifest01 = ["commands", "config", "database.sqlite3", "plugins"]
+        manifest02 = ["client.sock", "commands", "config", "database.sqlite3", "plugins"]
+
+        if os.listdir(saxo_test) == manifest01:
+            shutil.rmtree(saxo_test)
+        elif os.listdir(saxo_test) == manifest02:
+            outgoing.put("Warning: client.sock was not removed")
+            shutil.rmtree(saxo_test)
+        else:
+            outgoing.put("Refusing to delete the saxo test directory")
+            outgoing.put("Data was found which does not match the manifest")
+            outgoing.put(saxo_test)
+
+    generic.thread(run_server)
+    generic.thread(run_client)
+
+    client_buffer = []
+    while True:
+        line = outgoing.get()
+
+        if line.startswith("S: "):
+            print(line)
+            if not line.startswith("S: Test"):
+                for c in client_buffer:
+                    print(c)
+            del client_buffer[:]
+
+        elif line.startswith("C: "):
+            client_buffer.append(line)
+
+        else:
+            print(line)
+
+        sys.stdout.flush()
+
+        if line == "Server finished":
+            break
 
 def main(argv, v):
     # NOTE: No default for argv, because what script name would we use?

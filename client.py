@@ -465,6 +465,7 @@ populate it with the core plugin that it needs to work.
 """
 
 def start(base):
+    # TODO: Check when two clients are running
     generic.exit_cleanly()
     # http://stackoverflow.com/questions/11423225
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
