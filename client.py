@@ -117,8 +117,8 @@ def socket_receive(sock):
     incoming.put(("disco_receiving",))
 
 # threaded
-def socket_send(sock):
-    def sending(sock):
+def socket_send(sock, flood=False):
+    def sending(sock, flood=False):
         with sock.makefile("wb") as s:
             incoming.put(("sending",))
             while True:
@@ -129,8 +129,11 @@ def socket_send(sock):
                 debug("->", repr(octets.decode("utf-8", "replace")))
                 s.write(octets)
                 s.flush()
+                if not flood:
+                    # TODO: Allow two or three burst lines
+                    time.sleep(1)
 
-    try: sending(sock)
+    try: sending(sock, flood)
     except Exception as err:
         # Usually BrokenPipeError
         ...
@@ -219,7 +222,7 @@ class Saxo(object):
         self.first = True
 
         generic.thread(socket_receive, self.sock)
-        generic.thread(socket_send, self.sock)
+        generic.thread(socket_send, self.sock, "flood" in self.opt["client"])
 
     def handle(self):
         while True:
@@ -421,6 +424,7 @@ class Saxo(object):
         generic.thread(process, path, arg)
 
     def send(self, *args):
+        # TODO: Loop detection
         if len(args) > 1:
             args = args[:-1] + (":" + args[-1],)
         text = re.sub(r"[\r\n]", "", " ".join(args))
