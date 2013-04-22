@@ -49,7 +49,7 @@ Which we would put in the same place, `commands/hello`. We could even write it i
 #include <stdio.h>
 
 int main(void) {
-    printf("Goodbye, World!\n");
+    printf("Hello, world!\n");
     return EXIT_SUCCESS;
 }
 ```
@@ -73,8 +73,8 @@ uptime
 
 Or even get something from the web and display information about that. But eventually you'll probably want to do more than just print output. The most common thing you'll want to do is receive input from the user, obtaining the *argument* that was sent along with the command. You can do this in either of two ways:
 
-* Read the first positional argument given to the problem, argv[1]
-* Read a line from stdin
+* Read the first positional argument given to the problem, **argv[1]**
+* Read a line from **stdin**
 
 The following commands all do the same thing, simply printing out the argument passed from the user:
 
@@ -191,3 +191,64 @@ Here are some environment variables you can use:
 * `SAXO_SENDER` — the channel where the command was issued
 * `SAXO_BOT` — the nickname that saxo is using itself
 * `SAXO_URL` — the most recently mentioned URL in the channel where the command was issued
+
+Using `SAXO_COMMANDS` makes it possible to call commands in other commands. Because they're just shell scripts and use a simple **argv[1]** or **stdin** interface, you can easily make commands that work together nicely.
+
+```bash
+#!/bin/bash
+echo "https://duckduckgo.com/?q="$($SAXO_COMMANDS/quote-url "$1")
+```
+
+— `commands/duck-url`
+
+```python
+#!/usr/bin/env python3
+import saxo
+import urllib.parse
+
+@saxo.pipe
+def quote_url(url):
+    return urllib.parse.quote(url)
+```
+
+— `commands/quote-url`
+
+```
+<user> .duck-url café wha?
+<saxo> https://duckduckgo.com/?q=caf%C3%A9%20wha%3F
+```
+
+Because commands are just simple scripts, you can also run them from the command line:
+
+```
+§ commands/duck-url 'café wha?'
+https://duckduckgo.com/?q=caf%C3%A9%20wha%3F
+```
+
+## The communication nation
+
+Sometimes you may want to do something a bit more advanced, such as set a channel topic. You can do this by communicating with saxo using a socket as IPC. If you use python3, you can import the saxo module and do this with ease:
+
+```python
+#!/usr/bin/env python3
+
+import os
+import saxo
+
+@saxo.pipe
+def topic(arg):
+    channel = os.environ["SAXO_SENDER"]
+    if channel.startswith("#"):
+        saxo.communicate("send", ("TOPIC",  channel, arg))
+    else:
+        return "Sorry, you're not in a channel"
+```
+
+TODO: Sending without pickling.
+
+TODO: Returning `False` from a `saxo.pipe` to suppress response?
+
+## Hints and tips
+
+* Once a module is loaded, you don't have to reload it once you change it
+* C startup speed is negligably slower than python
