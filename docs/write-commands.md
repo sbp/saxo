@@ -1,5 +1,23 @@
 # Write saxo commands
 
+## Summary
+
+Add new commands by creating scripts in the `commands` directory. This script, for example:
+
+```sh
+#!/bin/sh
+echo "Hello $SAXO_NICK"
+```
+
+Saved into `commands/hello` gives this output when used:
+
+```
+<user> .hello
+<saxo> Hello user
+```
+
+## What are commands?
+
 When users interact with saxo, they normally do so with commands. Commands are invoked using a prefix character, the name of the command, and then some optional arguments. Some examples of commands:
 
 ```
@@ -9,7 +27,7 @@ When users interact with saxo, they normally do so with commands. Commands are i
 
 These commands are called `in` and `to`, and their arguments are `3m the egg is cooked` and `sbp this message system is great`. The code behind the commands will make the bot give a reminder in three minutes and send a message to the user `sbp` respectively.
 
-## Where commands live
+### Where commands live
 
 Commands in saxo can be written in any language. They live in the `commands` directory in the saxo base directory. The base directory is the one created by the user by running `saxo create`, and is `~/.saxo` by default, so usually commands live in `~/.saxo/commands`.
 
@@ -64,7 +82,7 @@ $ mv -p hello ~/.saxo/commands/hello
 
 ## Getting into arguments
 
-Saxo takes the first line (only) of the output from a command script, and uses that as the response from the command. You can already do a great deal from this. For example, you could write a script that displays the current uptime on your system:
+Saxo takes the first line (only) of the output from a command script, and uses that as the response from the command. You can already do a great deal with this. For example, you could write a script that displays the current uptime on your system:
 
 ```sh
 #!/bin/sh
@@ -73,7 +91,7 @@ uptime
 
 Or even get something from the web and display information about that. But eventually you'll probably want to do more than just print output. The most common thing you'll want to do is receive input from the user, obtaining the *argument* that was sent along with the command. You can do this in either of two ways:
 
-* Read the first positional argument given to the problem, **argv[1]**
+* Read the first positional argument given to the program, **argv[1]**
 * Read a line from **stdin**
 
 The following commands all do the same thing, simply printing out the argument passed from the user:
@@ -196,7 +214,7 @@ Using `SAXO_COMMANDS` makes it possible to call commands in other commands. Beca
 
 ```bash
 #!/bin/bash
-echo "https://duckduckgo.com/?q="$($SAXO_COMMANDS/quote-url "$1")
+echo "https://duckduckgo.com/?q=$($SAXO_COMMANDS/quote-url "$1")"
 ```
 
 — `commands/duck-url`

@@ -144,7 +144,6 @@ class Saxo(object):
         self.base = base
         self.opt = opt
         self.events = {}
-        self.commands = {}
         self.address = None
         self.discotimer = None
         self.receiving = False
@@ -195,14 +194,6 @@ class Saxo(object):
             # debug("Loaded module:", name)
 
         sys.path[:1] = []
-
-        # Load commands
-        commands = os.path.join(self.base, "commands")
-        if os.path.isdir(commands):
-            self.commands.clear()
-            for name in os.listdir(commands):
-                # debug("Loaded command:", name)
-                self.commands[name] = os.path.join(commands, name)
 
     def connect(self):
         host = self.opt["server"]["host"]
@@ -276,7 +267,9 @@ class Saxo(object):
         outgoing.put(None) # Closes the send thread
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
-        os._exit(0) # sys.exit() won't work, not sure why
+        # TODO: Sometimes sys.exit doesn't work, not sure why
+        # os._exit(0)
+        sys.exit()
 
     def instruction_receiving(self):
         self.receiving = True
@@ -334,8 +327,7 @@ class Saxo(object):
                 else:
                     cmd, arg = privmsg, ""
 
-                if cmd in self.commands:
-                    self.command(prefix, parameters[0], cmd, arg)
+                self.command(prefix, parameters[0], cmd, arg)
 
         elif command == "PONG":
             if self.discotimer is not None:
@@ -390,7 +382,10 @@ class Saxo(object):
                 ...
 
     def command(self, prefix, sender, cmd, arg):
-        path = self.commands[cmd]
+        if ("\x00" in cmd) or ("/" in cmd) or ("." in cmd):
+            return
+
+        path = os.path.join(self.base, "commands", cmd)
 
         def process(path, arg):
             ### TODO: Cache this
@@ -407,21 +402,28 @@ class Saxo(object):
 
             octets = arg.encode("utf-8", "replace")
             # path can't be injected into since it's created in self.load
-            # TODO: Catch PermissionError
-            proc = subprocess.Popen([path, octets], env=env,
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
-            try: outs, errs = proc.communicate(octets + b"\n", timeout=6)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                outs = "Sorry, .%s took too long" % cmd
+            try: proc = subprocess.Popen([path, octets], env=env,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            except PermissionError:
+                outs = "The file for this command does not have executable permissions"
+            except FileNotFoundError:
+                # Might have been removed just after running this thread
+                return
             else:
-                outs = outs.decode("utf-8", "replace")
-            if not outs:
-                outs = "Sorry, .%s did not respond" % cmd
+                try: outs, errs = proc.communicate(octets + b"\n", timeout=6)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    outs = "Sorry, .%s took too long" % cmd
+                else:
+                    outs = outs.decode("utf-8", "replace")
+                if not outs:
+                    outs = "Sorry, .%s did not respond" % cmd
 
             self.send("PRIVMSG", sender, outs)
-        generic.thread(process, path, arg)
+
+        if os.path.isfile(path):
+            generic.thread(process, path, arg)
 
     def send(self, *args):
         # TODO: Loop detection
