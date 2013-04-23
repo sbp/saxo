@@ -1,7 +1,7 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
-version = "0.2.000"
+version = "0.2.001"
 # WARNING: If updating anything before this message,
 # change the offset in setup.py
 
