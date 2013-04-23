@@ -20,7 +20,7 @@ Ask in `#saxo` on [freenode](http://freenode.net/), or tweet [@sbp](https://twit
 
 ## Documentation
 
-Try the [docs/](tree/master/docs) directory.
+Try the [docs/](docs) directory.
 
 ## License
 
