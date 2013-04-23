@@ -382,24 +382,21 @@ class Saxo(object):
         def safe(function, irc):
             try: function(irc)
             except Exception as err:
-                debug(err)
+                debug("Thread error:", function.__name__, err)
 
-        # TODO: Remove duplication below
-        if self.first is True:
-            if ":1st" in self.events:
-                for function in self.events[":1st"]:
+        def run(name, safe, irc):
+            if name in self.events:
+                for function in self.events[name]:
                     if not function.saxo_synchronous:
                         common.thread(safe, function, irc)
                     else:
                         safe(function, irc)
-            self.first = False
 
-        if command in self.events:
-            for function in self.events[command]:
-                if not function.saxo_synchronous:
-                    common.thread(safe, function, irc)
-                else:
-                    safe(function, irc)
+        if self.first is True:
+            run(":1st", safe, irc)
+            self.first = False
+        run(command, safe, irc)
+        run("*", safe, irc)
 
     def instruction_schedule(self, unixtime, command, args):
         command = command.encode("ascii")
@@ -438,7 +435,9 @@ class Saxo(object):
                     if "\n" in outs:
                         outs = outs.splitlines()[0]
 
-                if (proc.returncode > 0) and (not outs):
+                code = proc.returncode or 0
+                # Otherwise: TypeError: unorderable types: NoneType() > int()
+                if (code > 0) and (not outs):
                     outs = "Sorry, .%s responded with an error" % cmd
 
             if outs:

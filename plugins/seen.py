@@ -46,12 +46,13 @@ def seen(irc):
                         private = True
                         break
                 if not private:
-                    irc.say("%s %s %s" % (nick, unixtime, channel))
+                    formatted = time.ctime(unixtime)
+                    irc.say("%s was on %s at %s" % (nick, channel, formatted))
                 else:
                     irc.say("Sorry, there is no available data")
                 break
         else:
-            return "Sorry, there is no saxo_seen database table"
+            irc.say("Sorry, there is no saxo_seen database table")
 
 @saxo.command("private-channel")
 def private_channel(irc):

@@ -30,6 +30,8 @@ def etymology(term, limit=None):
         raise Exception("No definitions found in %s" % page["url"])
 
     definition = regex_tag.sub("", definitions[0])
+    definition = definition.replace("\r", "")
+    definition = definition.replace("\n", " ")
     limit = limit - len(page["url"]) - 3
     definition = definition[:limit] + "..."
     definition = definition.replace('"', "'")
