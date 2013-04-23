@@ -30,7 +30,7 @@ def to(arg):
     if not regex_nickname.match(recipient):
         return "Sorry, %r is not a valid nickname" % recipient
 
-    with saxo.db() as db:
+    with saxo.database() as db:
         channel = os.environ["SAXO_SENDER"]
         now = int(time.time())
         db["saxo_to"].insert((nick, recipient, now, channel, message))

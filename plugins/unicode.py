@@ -107,17 +107,17 @@ def delete_table(db):
 @saxo.setup
 def setup(irc):
     path = os.path.join(irc.base, "database.sqlite3")
-    with saxo.db(path) as db:
+    with saxo.database(path) as db:
         if "saxo_unicode" not in db:
             create_table(db)
             populate_table_python(db)
 
 @saxo.command("update-unicode-data")
 def update_unicode_data(irc):
-    if "owner" in irc.client:
-        if irc.prefix == irc.client["owner"]:
+    if "owner" in irc.config:
+        if irc.prefix == irc.config["owner"]:
             path = os.path.join(irc.base, "database.sqlite3")
-            with saxo.db(path) as db:
+            with saxo.database(path) as db:
                 if "saxo_unicode" in db:
                     delete_table(db)
                 create_table(db)
@@ -127,10 +127,10 @@ def update_unicode_data(irc):
 
 @saxo.command("remove-unicode-data")
 def remove_unicode_data(irc):
-    if "owner" in irc.client:
-        if irc.prefix == irc.client["owner"]:
+    if "owner" in irc.config:
+        if irc.prefix == irc.config["owner"]:
             path = os.path.join(irc.base, "database.sqlite3")
-            with saxo.db(path) as db:
+            with saxo.database(path) as db:
                 if "saxo_unicode" in db:
                     delete_table(db)
                     irc.say("Removed saxo_unicode from database.sqlite3")

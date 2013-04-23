@@ -85,6 +85,6 @@ def main(arg):
         message = nick + "!"
 
     args = (unixtime, "msg", (sender, message))
-    saxo.communicate("schedule", args)
+    saxo.client("schedule", *args)
 
     return "%s: Will remind at %s" % (nick, time.ctime(unixtime))

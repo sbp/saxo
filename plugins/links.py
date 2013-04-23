@@ -11,4 +11,4 @@ def link(irc):
     search = regex_link.search(irc.text)
     if search:
         if irc.sender.startswith("#"):
-            irc.queue(("link", irc.sender, search.group(1)))
+            irc.client("link", irc.sender, search.group(1))

@@ -5,12 +5,12 @@ import saxo
 
 @saxo.command("quit")
 def quit(irc):
-    if "owner" in irc.client:
-        if irc.prefix == irc.client["owner"]:
-            irc.queue(("quit",))
+    if "owner" in irc.config:
+        if irc.prefix == irc.config["owner"]:
+            irc.client("quit")
 
 @saxo.command("reload")
 def reload(irc):
-    if "owner" in irc.client:
-        if irc.prefix == irc.client["owner"]:
-            irc.queue(("reload", irc.sender))
+    if "owner" in irc.config:
+        if irc.prefix == irc.config["owner"]:
+            irc.client("reload", irc.sender)

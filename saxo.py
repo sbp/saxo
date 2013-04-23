@@ -1,7 +1,7 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
-version = "0.1.005"
+version = "0.2.000"
 # WARNING: If updating anything before this message,
 # change the offset in setup.py
 
@@ -62,34 +62,14 @@ if "__path__" in vars():
 #
 # Other:
 #
-# saxo.communicate(command, args, base=None)
-# saxo.db(name=None)
+# saxo.client(command, *args, base=None)
+# saxo.database(name=None)
 # saxo.request(*args, **kargs)
 # saxo.script(argv)
 
 # TODO: environment modification?
 
-def command(name):
-    def decorate(function):
-        @event("PRIVMSG")
-        def inner(irc):
-            prefix = irc.client["prefix"]
-            if irc.text.startswith(prefix):
-                length = len(prefix)
-                text = irc.text[length:]
-
-                if " " in text:
-                    cmd, arg = text.split(" ", 1)
-                else:
-                    cmd, arg = text, ""
-
-                if cmd == name:
-                    irc.arg = arg
-                    function(irc)
-        return inner
-    return decorate
-
-def communicate(command, args, base=None):
+def client(command, *args, base=None):
     import base64
     import os
     import pickle
@@ -107,15 +87,34 @@ def communicate(command, args, base=None):
     client.send(command + b" " + base64.b64encode(pickled) + b"\n")
     client.close()
 
-# TODO: Can't call this saxo.database, because the import sets that attribute
-def db(name=None):
+def command(name):
+    def decorate(function):
+        @event("PRIVMSG")
+        def inner(irc):
+            prefix = irc.config["prefix"]
+            if irc.text.startswith(prefix):
+                length = len(prefix)
+                text = irc.text[length:]
+
+                if " " in text:
+                    cmd, arg = text.split(" ", 1)
+                else:
+                    cmd, arg = text, ""
+
+                if cmd == name:
+                    irc.arg = arg
+                    function(irc)
+        return inner
+    return decorate
+
+def database(name=None):
     import os
 
     # Save PEP 3122!
     if "." in __name__:
-        from .database import Database
+        from .sqlite import Database
     else:
-        from database import Database
+        from sqlite import Database
 
     if name is None:
         base = os.environ["SAXO_BASE"]

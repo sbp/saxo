@@ -7,7 +7,7 @@ import saxo
 @saxo.setup
 def setup(irc):
     path = os.path.join(irc.base, "database.sqlite3")
-    with saxo.db(path) as db:
+    with saxo.database(path) as db:
         if "saxo_to" not in db:
             db["saxo_to"].create(
                 ("sender", str),
@@ -20,7 +20,7 @@ def setup(irc):
 @saxo.event("PRIVMSG")
 def deliver(irc):
     path = os.path.join(irc.base, "database.sqlite3")
-    with saxo.db(path) as db:
+    with saxo.database(path) as db:
         query = "SELECT * FROM saxo_to WHERE recipient = ?"
         for row in db.query(query, irc.nick):
             print(row)

@@ -43,7 +43,7 @@ def u(arg):
     if not arg:
         return "Search for Unicode characters"
 
-    with saxo.db() as db:
+    with saxo.database() as db:
         if not "saxo_unicode" in db:
             return "Get an admin to run .update-unicode-data first"
 

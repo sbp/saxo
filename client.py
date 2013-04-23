@@ -59,7 +59,8 @@ def parse(octets):
 
 class ThreadSafeEnvironment(object):
     def __init__(self, saxo, prefix, command, parameters):
-        self.base = saxo.base
+        self.base = saxo.base[:]
+        self.config = saxo.config_cache.copy()
 
         self.nick = prefix[0]
         self.user = prefix[1]
@@ -71,13 +72,10 @@ class ThreadSafeEnvironment(object):
         self.command = command
         self.parameters = parameters
 
-        for key in saxo.opt:
-            setattr(self, key, dict(saxo.opt[key]))
-
         if command == "PRIVMSG":
             self.sender = self.parameters[0]
             self.text = self.parameters[1]
-            self.private = self.sender == self.client["nick"]
+            self.private = self.sender == self.config["nick"]
             if saxo.address:
                 # TODO: Why was this 498 for duxlot?
                 self.limit = 493 - len(self.sender + saxo.address)
@@ -91,19 +89,17 @@ class ThreadSafeEnvironment(object):
         self.msg = msg
 
         if hasattr(self, "sender"):
-            # @staticmethod
             def say(text):
                 saxo.send("PRIVMSG", self.sender, text)
             self.say = say
 
         if hasattr(self, "nick") and hasattr(self, "sender"):
-            # @staticmethod
             def reply(text):
                 saxo.send("PRIVMSG", self.sender, self.nick + ": " + text)
             self.reply = reply
 
-    def queue(self, item):
-        incoming.put(item)
+    def client(self, *args):
+        incoming.put(args)
 
 # threaded
 def socket_receive(sock):
@@ -162,6 +158,25 @@ class Saxo(object):
         self.environment_cache["SAXO_BASE"] = base
         self.environment_cache["SAXO_COMMANDS"] = \
             os.path.join(self.base, "commands")
+
+        self.config_cache = {}
+        client_options = {
+            "channels", # Channels to join on startup
+            "nick", # Nickname of the bot, variable
+            "owner", # Full address of the owner
+            "prefix" # Command prefix
+        }
+
+        for option in opt["client"]:
+            if option in client_options:
+                self.config_cache[option] = opt["client"].get(option)
+            else:
+                debug("Unknown option: %s" % option)
+
+        for section in opt:
+            if section == "client":
+                continue
+            self.config_cache[section] = dict(opt[section])
 
     def run(self):
         self.load()

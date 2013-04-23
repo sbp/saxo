@@ -9,17 +9,17 @@ import time
 
 # Save PEP 3122!
 if "." in __name__:
-    from . import database
+    from . import sqlite
     from . import common
 else:
-    import database
+    import sqlite
     import common
 
 incoming = queue.Queue()
 
 def start(base, client):
     database_filename = os.path.join(base, "database.sqlite3")
-    with database.Database(database_filename) as db:
+    with sqlite.Database(database_filename) as db:
         if not "saxo_periodic" in db:
             db["saxo_periodic"].create(
                 ("period", int),

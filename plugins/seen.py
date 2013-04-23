@@ -8,7 +8,7 @@ import time
 @saxo.setup
 def setup(irc):
     path = os.path.join(irc.base, "database.sqlite3")
-    with saxo.db(path) as db:
+    with saxo.database(path) as db:
         if "saxo_seen" not in db:
             db["saxo_seen"].create(
                 ("nick", "TEXT PRIMARY KEY"),
@@ -24,7 +24,7 @@ def setup(irc):
 def record(irc):
     if irc.sender.startswith("#"):
         path = os.path.join(irc.base, "database.sqlite3")
-        with saxo.db(path) as db:
+        with saxo.database(path) as db:
             if "saxo_seen" in db:
                 # TODO: db["saxo_seen"].replace
                 command = "INSERT OR REPLACE INTO saxo_seen" + \
@@ -35,7 +35,7 @@ def record(irc):
 @saxo.command("seen")
 def seen(irc):
     path = os.path.join(irc.base, "database.sqlite3")
-    with saxo.db(path) as db:
+    with saxo.database(path) as db:
         if "saxo_seen" in db:
             query = "SELECT * FROM saxo_seen WHERE nick = ?"
             for (nick, unixtime, channel) in db.query(query, irc.arg):
@@ -55,10 +55,10 @@ def seen(irc):
 
 @saxo.command("private-channel")
 def private_channel(irc):
-    if "owner" in irc.client:
-        if irc.prefix == irc.client["owner"]:
+    if "owner" in irc.config:
+        if irc.prefix == irc.config["owner"]:
             path = os.path.join(irc.base, "database.sqlite3")
-            with saxo.db(path) as db:
+            with saxo.database(path) as db:
                 if "saxo_private" in db:
                     command = "INSERT OR REPLACE INTO saxo_private" + \
                         " (channel) VALUES(?)"
@@ -68,10 +68,10 @@ def private_channel(irc):
 
 @saxo.command("public-channel")
 def public_channel(irc):
-    if "owner" in irc.client:
-        if irc.prefix == irc.client["owner"]:
+    if "owner" in irc.config:
+        if irc.prefix == irc.config["owner"]:
             path = os.path.join(irc.base, "database.sqlite3")
-            with saxo.db(path) as db:
+            with saxo.database(path) as db:
                 if "saxo_private" in db:
                     deleted = False
                     query = "SELECT * FROM saxo_private WHERE channel = ?"
