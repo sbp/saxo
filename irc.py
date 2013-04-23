@@ -435,7 +435,8 @@ class Saxo(object):
                     outs = "Sorry, .%s took too long" % cmd
                 else:
                     outs = outs.decode("utf-8", "replace")
-                    outs = outs.splitlines()[0]
+                    if "\n" in outs:
+                        outs = outs.splitlines()[0]
 
                 if (proc.returncode > 0) and (not outs):
                     outs = "Sorry, .%s responded with an error" % cmd
