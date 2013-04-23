@@ -239,7 +239,15 @@ def quote_url(url):
 Because commands are just simple scripts, you can also run them from the command line:
 
 ```
-§ commands/duck-url 'café wha?'
+$ commands/duck-url 'café wha?'
+https://duckduckgo.com/?q=caf%C3%A9%20wha%3F
+```
+
+You could even add the commands to your `$PATH`:
+
+```
+$ export PATH=~/.saxo/commands:$PATH
+$ duck-url 'café wha?'
 https://duckduckgo.com/?q=caf%C3%A9%20wha%3F
 ```
 

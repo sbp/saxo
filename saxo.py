@@ -7,8 +7,6 @@ version = "0.2.001"
 
 # TODO list:
 # - Think about folding common.py into saxo.py
-# - Note the use of [plugins] in the config
-# - Document all of the available config variables
 # - Allow wildcards in [client].owner
 # - Implement [plugins].sync, copy or symlink as options
 # - Make .seen give nicely formatted dates

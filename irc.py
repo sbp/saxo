@@ -157,7 +157,7 @@ class Saxo(object):
         self.environment_cache["SAXO_BOT"] = opt["client"]["nick"]
         self.environment_cache["SAXO_BASE"] = base
         self.environment_cache["SAXO_COMMANDS"] = \
-            os.path.join(self.base, "commands")
+            os.path.join(base, "commands")
 
         self.config_cache = {}
         client_options = {
@@ -435,10 +435,13 @@ class Saxo(object):
                     outs = "Sorry, .%s took too long" % cmd
                 else:
                     outs = outs.decode("utf-8", "replace")
-                if not outs:
-                    outs = "Sorry, .%s did not respond" % cmd
+                    outs = outs.splitlines()[0]
 
-            self.send("PRIVMSG", sender, outs)
+                if (proc.returncode > 0) and (not outs):
+                    outs = "Sorry, .%s responded with an error" % cmd
+
+            if outs:
+                self.send("PRIVMSG", sender, outs)
 
         if os.path.isfile(path):
             env = self.environment_cache.copy()
