@@ -1,7 +1,7 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
-# You know your code is good when you have a generic module
+# You know your code is good when you don't have a generic module
 
 import base64
 import os

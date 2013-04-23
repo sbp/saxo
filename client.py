@@ -17,11 +17,11 @@ import time
 
 # Save PEP 3122!
 if "." in __name__:
-    from . import generic
+    from . import common
     from . import scheduler
     from .saxo import path as saxo_path
 else:
-    import generic
+    import common
     import scheduler
     from saxo import path as saxo_path
 
@@ -170,7 +170,7 @@ class Saxo(object):
 
     def load(self):
         # Update symlinks
-        generic.populate(saxo_path, self.base)
+        common.populate(saxo_path, self.base)
 
         # Load events
         self.events.clear()
@@ -224,8 +224,8 @@ class Saxo(object):
         self.sock.connect((host, port))
         self.first = True
 
-        generic.thread(socket_receive, self.sock)
-        generic.thread(socket_send, self.sock, "flood" in self.opt["client"])
+        common.thread(socket_receive, self.sock)
+        common.thread(socket_send, self.sock, "flood" in self.opt["client"])
 
     def disconnect(self):
         outgoing.put(None) # Closes the send thread
@@ -374,7 +374,7 @@ class Saxo(object):
             if ":1st" in self.events:
                 for function in self.events[":1st"]:
                     if not function.saxo_synchronous:
-                        generic.thread(safe, function, irc)
+                        common.thread(safe, function, irc)
                     else:
                         safe(function, irc)
             self.first = False
@@ -382,13 +382,13 @@ class Saxo(object):
         if command in self.events:
             for function in self.events[command]:
                 if not function.saxo_synchronous:
-                    generic.thread(safe, function, irc)
+                    common.thread(safe, function, irc)
                 else:
                     safe(function, irc)
 
     def instruction_schedule(self, unixtime, command, args):
         command = command.encode("ascii")
-        args = generic.b64pickle(args)
+        args = common.b64pickle(args)
         scheduler.incoming.put((unixtime, command, args))
 
     def instruction_send(self, *args):
@@ -431,7 +431,7 @@ class Saxo(object):
             env["SAXO_SENDER"] = sender
             if sender in self.links:
                 env["SAXO_URL"] = self.links[sender]
-            generic.thread(process, env, path, arg)
+            common.thread(process, env, path, arg)
 
     def send(self, *args):
         # TODO: Loop detection
@@ -460,7 +460,7 @@ def serve(sockname, incoming):
 
                             if " " in text:
                                 instruction, data = text.split(" ", 1)
-                                args = generic.b64unpickle(data)
+                                args = common.b64unpickle(data)
                             else:
                                 instruction, args = text, tuple()
 
@@ -469,8 +469,8 @@ def serve(sockname, incoming):
                             debug("ERROR!", err.__class__.__name__, err)
                 finally:
                     connection.close()
-            generic.thread(handle, connection, client)
-    generic.thread(listen, sock)
+            common.thread(handle, connection, client)
+    common.thread(listen, sock)
 
 E_NO_PLUGINS = """
 The plugins directory is necessary for saxo to work. If it was deleted
@@ -480,16 +480,16 @@ populate it with the core plugin that it needs to work.
 
 def start(base):
     # TODO: Check when two clients are running
-    generic.exit_cleanly()
+    common.exit_cleanly()
     # http://stackoverflow.com/questions/11423225
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
     plugins = os.path.join(base, "plugins")
     if not os.path.isdir(plugins):
-        generic.error("no plugins directory: `%s`" % plugins, E_NO_PLUGINS)
+        common.error("no plugins directory: `%s`" % plugins, E_NO_PLUGINS)
 
     # TODO: Check for broken symlinks
-    generic.populate(saxo_path, base)
+    common.populate(saxo_path, base)
 
     opt = configparser.ConfigParser()
     config = os.path.join(base, "config")
@@ -507,7 +507,7 @@ def start(base):
             os.remove(sockname)
     atexit.register(remove_sock, sockname)
 
-    generic.thread(scheduler.start, base, incoming)
+    common.thread(scheduler.start, base, incoming)
 
     saxo = Saxo(base, opt)
     saxo.run()

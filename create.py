@@ -7,10 +7,10 @@ import sys
 
 # Save PEP 3122!
 if "." in __name__:
-    from . import generic
+    from . import common
     from .saxo import path as saxo_path
 else:
-    import generic
+    import common
     from saxo import path as saxo_path
 
 DEFAULT_CONFIG = """\
@@ -54,12 +54,12 @@ def default(base=None):
         base = os.path.expanduser("~/.saxo")
 
     if os.path.isdir(base):
-        generic.error("the directory `%s` already exists" % base,
+        common.error("the directory `%s` already exists" % base,
             E_DIRECTORY_EXISTS)
 
     try: os.makedirs(base)
     except Exception as err:
-        generic.error("could not create the directory `%s`" % base,
+        common.error("could not create the directory `%s`" % base,
             E_UNMAKEABLE_DIRECTORY, err)
 
     config = os.path.join(base, "config")
@@ -68,7 +68,7 @@ def default(base=None):
             # Generates a random bot name, from saxo00000 to saxo99999 inclusive
             f.write(DEFAULT_CONFIG % random.randrange(0, 100000))
     except Exception as err:
-        generic.error("could not write the config file `%s`" % config,
+        common.error("could not write the config file `%s`" % config,
             E_UNWRITEABLE_CONFIG, err)
 
     plugins = os.path.join(base, "plugins")
@@ -77,7 +77,7 @@ def default(base=None):
     commands = os.path.join(base, "commands")
     os.mkdir(commands)
 
-    generic.populate(saxo_path, base)
+    common.populate(saxo_path, base)
 
     print("Created %s" % config)
     print("Modify this file with your own settings, and then run:")

@@ -10,9 +10,9 @@ import time
 
 # Save PEP 3122!
 if "." in __name__:
-    from . import generic
+    from . import common
 else:
-    import generic
+    import common
 
 sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
@@ -40,7 +40,7 @@ else:
         sys.exit(1)
 
 if sys.version_info < (3, 3):
-    generic.error("requires python 3.3 or later", E_PYTHON_VERSION)
+    common.error("requires python 3.3 or later", E_PYTHON_VERSION)
 
 def action(function):
     action.names[function.__name__] = function
@@ -153,7 +153,7 @@ def stop(args):
 
     pidfile = os.path.join(directory, "pid")
     if not os.path.exists(pidfile):
-        generic.error("There is no bot currently running")
+        common.error("There is no bot currently running")
 
     with open(pidfile, encoding="ascii") as f:
         text = f.read()
@@ -168,7 +168,7 @@ def stop(args):
 @action
 def test(args):
     if args.directory is not None:
-        generic.error("Tests cannot be run in conjunction with a directory")
+        common.error("Tests cannot be run in conjunction with a directory")
 
     import queue
     import shutil
@@ -188,10 +188,10 @@ def test(args):
     outgoing = queue.Queue()
 
     if not sys.executable:
-        generic.error("Couldn't find the python executable")
+        common.error("Couldn't find the python executable")
 
     if not os.path.isdir(tmp):
-        generic.error("There is no %s directory" % tmp)
+        common.error("There is no %s directory" % tmp)
 
     print("python executable:", sys.executable)
     print("saxo path:", saxo.path)
@@ -245,8 +245,8 @@ def test(args):
             outgoing.put("Data was found which does not match the manifest")
             outgoing.put(saxo_test)
 
-    generic.thread(run_server)
-    generic.thread(run_client)
+    common.thread(run_server)
+    common.thread(run_client)
 
     client_buffer = []
     while True:
@@ -308,7 +308,7 @@ def main(argv, v):
             if isinstance(code, int):
                 sys.exit(code)
         else:
-            generic.error("unrecognised action: %s" % args.action, code=2)
+            common.error("unrecognised action: %s" % args.action, code=2)
 
     else:
         usage(args, v)

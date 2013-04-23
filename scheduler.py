@@ -10,10 +10,10 @@ import time
 # Save PEP 3122!
 if "." in __name__:
     from . import database
-    from . import generic
+    from . import common
 else:
     import database
-    import generic
+    import common
 
 incoming = queue.Queue()
 
@@ -64,7 +64,7 @@ def start(base, client):
                 if when < start:
                     # Calling this command causes the following del to fail
                     cmd = command.decode("ascii")
-                    client.put((cmd,) + generic.b64unpickle(args))
+                    client.put((cmd,) + common.b64unpickle(args))
                     periodic[(period, command, args)] += period
 
             # Scheduled commands
@@ -74,7 +74,7 @@ def start(base, client):
                     break
                 # Calling this command causes the following del to fail
                 cmd = command.decode("ascii")
-                client.put((cmd,) + generic.b64unpickle(args))
+                client.put((cmd,) + common.b64unpickle(args))
                 del db["saxo_schedule"][(unixtime, command, args)]
 
             elapsed = time.time() - start

@@ -147,11 +147,11 @@ def pipe(function):
 
     # Save PEP 3122!
     if "." in __name__:
-        from . import generic
+        from . import common
     else:
-        import generic
+        import common
 
-    generic.exit_cleanly()
+    common.exit_cleanly()
 
     if len(sys.argv) > 1:
         arg = sys.argv[1]
