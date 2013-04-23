@@ -14,7 +14,7 @@ else:
     from saxo import path as saxo_path
 
 DEFAULT_CONFIG = """\
-# See TODO for more options
+# See docs/config.md for more options
 
 [server]
     host = irc.freenode.net

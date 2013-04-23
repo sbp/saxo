@@ -14,6 +14,14 @@ Edit your `~/.saxo/config` file in a text editor. Then start the bot:
 
     ./saxo -f start
 
+## Support
+
+Ask in `#saxo` on [freenode](http://freenode.net/), or tweet [@sbp](https://twitter.com/sbp).
+
+## Documentation
+
+Try the [docs/](tree/master/docs) directory.
+
 ## License
 
 To be decided. Will be a [FLOSS](https://en.wikipedia.org/wiki/Free_and_open-source_software#FLOSS) license.
