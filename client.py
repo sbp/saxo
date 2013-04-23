@@ -302,9 +302,9 @@ class Saxo(object):
         # Never call this from a thread, otherwise this can give an OSError
         self.send("QUIT")
         self.disconnect()
-        # TODO: Sometimes sys.exit doesn't work, not sure why
-        # os._exit(0)
         sys.exit()
+        # TODO: Sometimes sys.exit doesn't work, not sure why
+        os._exit(0)
 
     def instruction_receiving(self):
         self.receiving = True

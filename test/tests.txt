@@ -10,8 +10,8 @@ http://www.reddit.com/
 .gc gombuc
 <[0-9,]+>
 
-.gcs [a b c] "d e f" g h i
-i (<[0-9,]+>), h (<[0-9,]+>), g (<[0-9,]+>), [a b c] (<[0-9,]+>), "d e f" (<[0-9,]+>)
+.gcs [python irc] "a b c" common xrare
+common (<[0-9,]+>), "a b c" (<[0-9,]+>), [python irc] (<[0-9,]+>), xrare (<[0-9,]+>)
 
 .img rongorongo
 http://<.*>
@@ -53,6 +53,12 @@ Juhu, mache nächste Woche also was mit maxi :3 (@Einhornkotze2)
 
 .tw https://twitter.com/Einhornkotze2/status/241314011524788225
 Juhu, mache nächste Woche also was mit maxi :3 (@Einhornkotze2)
+
+.u control
+U+0001 <.>control<.> (␁)
+
+.u small circum
+U+00E2 LATIN SMALL LETTER A WITH CIRCUMFLEX (â)
 
 .upper abc
 ABC

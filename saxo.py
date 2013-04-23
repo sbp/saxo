@@ -6,14 +6,13 @@ version = "0.1.005"
 # change the offset in setup.py
 
 # TODO list:
-# - Think about folding generic.py into saxo.py
+# - Think about folding common.py into saxo.py
 # - Note the use of [plugins] in the config
 # - Document all of the available config variables
 # - Allow wildcards in [client].owner
 # - Implement [plugins].sync, copy or symlink as options
 # - Make .seen give nicely formatted dates
 # - Write documentation about basic bot operation
-# - Make .u work without having to be downloaded, using unicodedata
 # - Normalise irc.queue and saxo.communicate
 # - Document the saxo, irc, self, and instruction interfaces
 # - Implement .join and .part, with persistent config writing
@@ -23,7 +22,6 @@ version = "0.1.005"
 # - Allow JSON submission to the socket IPC interface
 # - Survey commands to see if splitting or joining args is most common
 # - Write docstrings for all the public interfaces
-# - Rename generic.py to common.py?
 # - Return False to suppress error message from saxo.pipe?
 # - Allow multiple, possibly configurable, lines of output from commands?
 # - Track and mention the exit codes of command processes
@@ -31,6 +29,7 @@ version = "0.1.005"
 # - Plugins for pre_exec?
 # - Mode for accessing commands? ./saxo command example
 # - Make it possible to set periodic commands
+# - Make sure the test server exits correctly
 
 path = None
 
