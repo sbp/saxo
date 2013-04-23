@@ -257,7 +257,7 @@ import saxo
 def topic(arg):
     channel = os.environ["SAXO_SENDER"]
     if channel.startswith("#"):
-        saxo.communicate("send", ("TOPIC",  channel, arg))
+        saxo.client("send", "TOPIC",  channel, arg)
     else:
         return "Sorry, you're not in a channel"
 ```
