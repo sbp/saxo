@@ -5,6 +5,33 @@ version = "0.1.005"
 # WARNING: If updating anything before this message,
 # change the offset in setup.py
 
+# TODO list:
+# - Think about folding generic.py into saxo.py
+# - Note the use of [plugins] in the config
+# - Document all of the available config variables
+# - Allow wildcards in [client].owner
+# - Implement [plugins].sync, copy or symlink as options
+# - Make .seen give nicely formatted dates
+# - Write documentation about basic bot operation
+# - Make .u work without having to be downloaded, using unicodedata
+# - Normalise irc.queue and saxo.communicate
+# - Document the saxo, irc, self, and instruction interfaces
+# - Implement .join and .part, with persistent config writing
+# - Implement .visit and .part-analogue-with-visit
+# - Think about a packaging system
+# - Maybe write up a little guide to installing py3.3 with sqlite support
+# - Allow JSON submission to the socket IPC interface
+# - Survey commands to see if splitting or joining args is most common
+# - Write docstrings for all the public interfaces
+# - Rename generic.py to common.py?
+# - Return False to suppress error message from saxo.pipe?
+# - Allow multiple, possibly configurable, lines of output from commands?
+# - Track and mention the exit codes of command processes
+# - Handle events with commands set to "*"
+# - Plugins for pre_exec?
+# - Mode for accessing commands? ./saxo command example
+# - Make it possible to set periodic commands
+
 path = None
 
 if "__file__" in vars():
@@ -27,9 +54,21 @@ if "__path__" in vars():
 
         del directory
 
-# monitor (post) - event priority low?
-# doesn't really matter since they're threaded...
-# environment
+# Decorators:
+#
+# saxo.command(name)
+# saxo.event(command="*", synchronous=False)
+# saxo.pipe(function)
+# saxo.setup(function)
+#
+# Other:
+#
+# saxo.communicate(command, args, base=None)
+# saxo.db(name=None)
+# saxo.request(*args, **kargs)
+# saxo.script(argv)
+
+# TODO: environment modification?
 
 def command(name):
     def decorate(function):
@@ -93,7 +132,6 @@ def event(command="*", synchronous=False):
         return function
     return decorate
 
-# TODO: pipe is somewhat of a misnomer since it uses argv[1] now
 def pipe(function):
     # This gives you:
     # * concise code
@@ -114,11 +152,15 @@ def pipe(function):
         import generic
 
     generic.exit_cleanly()
-    # TODO: Read from stdin if there is no sys.argv[1]?
-    arg = sys.argv[1]
-    # We have to do this because python converts the commands to surrogates
-    # http://stackoverflow.com/a/7077803
-    arg = os.fsencode(arg).decode("utf-8")
+
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+        # We have to do this because python converts arguments to surrogates
+        # http://stackoverflow.com/a/7077803
+        arg = os.fsencode(arg).decode("utf-8")
+    else:
+        arg = sys.stdin.buffer.readline()
+        arg = arg.rstrip(b"\r\n")
 
     try: result = function(arg)
     except Exception as err:

@@ -270,3 +270,4 @@ TODO: Returning `False` from a `saxo.pipe` to suppress response?
 
 * Once a module is loaded, you don't have to reload it once you change it
 * C startup speed is negligably slower than python
+* Case-sensitivity of commands depends on your filesystem

@@ -11,7 +11,16 @@ import socket
 import sys
 import threading
 
+# Usage as of 534f8c68:
+# b64pickle: client
+# b64unpickle: client, scheduler
+# error: client, create, script
+# exit_cleanly: client, saxo
+# populate: client, create
+# thread: client, script
+
 def console():
+    # TODO: This should probably be moved to saxo.py
     client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     client_sock = os.path.expanduser("~/.saxo/client.sock")
     client.connect(client_sock)
@@ -56,10 +65,6 @@ def exit_cleanly():
 
     signal.signal(signal.SIGINT, quit)
     signal.signal(signal.SIGTERM, quit)
-
-def instruction(outgoing, name, *args):
-    data = b64pickle(args)
-    outgoing.put(name.encode("ascii") + b" " + data)
 
 def populate(saxo_path, base):
     plugins = os.path.join(base, "plugins")

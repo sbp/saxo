@@ -39,7 +39,7 @@ def debug(*args, **kargs):
 # client.receive
 # client.send
 # every plugin function
-# every process command, as a communication wrapper
+# every process command, as a communication wrapper
 # scheduler
 # serve.listen
 # every serve.connection instance
@@ -85,6 +85,10 @@ class ThreadSafeEnvironment(object):
         def send(*args):
             saxo.send(*args)
         self.send = send
+
+        def msg(*args):
+            saxo.send("PRIVMSG", *args)
+        self.msg = msg
 
         if hasattr(self, "sender"):
             # @staticmethod
@@ -151,13 +155,21 @@ class Saxo(object):
         self.user_reconnection = False
         self.links = {}
 
+        self.environment_cache = os.environ.copy()
+        self.environment_cache["PYTHONPATH"] = saxo_path
+        # TODO: This needs to be changed when setting nick
+        self.environment_cache["SAXO_BOT"] = opt["client"]["nick"]
+        self.environment_cache["SAXO_BASE"] = base
+        self.environment_cache["SAXO_COMMANDS"] = \
+            os.path.join(self.base, "commands")
+
     def run(self):
         self.load()
         self.connect()
         self.handle()
 
     def load(self):
-        # Update symlinks
+        # Update symlinks
         generic.populate(saxo_path, self.base)
 
         # Load events
@@ -215,6 +227,11 @@ class Saxo(object):
         generic.thread(socket_receive, self.sock)
         generic.thread(socket_send, self.sock, "flood" in self.opt["client"])
 
+    def disconnect(self):
+        outgoing.put(None) # Closes the send thread
+        self.sock.shutdown(socket.SHUT_RDWR)
+        self.sock.close()
+
     def handle(self):
         while True:
             instruction_args = incoming.get()
@@ -244,6 +261,23 @@ class Saxo(object):
             for function in self.events[":connected"]:
                 function(self, None, None)
 
+    def instruction_disco_receiving(self):
+        self.receiving = False
+        if not self.user_reconnection:
+            if self.sending:
+                outgoing.put(None)
+            else:
+                incoming.put(("reconnect", False))
+
+    def instruction_disco_sending(self):
+        self.sending = False
+        if not self.user_reconnection:
+            if not self.receiving:
+                incoming.put(("reconnect", False))
+            else:
+                # TODO: Close the socket?
+                ...
+
     def instruction_link(self, channel, link):
         self.links[channel] = link
 
@@ -261,12 +295,13 @@ class Saxo(object):
         self.discotimer = threading.Timer(30, reconnect)
         self.discotimer.start()
 
+    def instruction_propagate(self, kind="both"):
+        ...
+
     def instruction_quit(self):
-        # Never call this from a thread, otherwise the following can give an OSError
+        # Never call this from a thread, otherwise this can give an OSError
         self.send("QUIT")
-        outgoing.put(None) # Closes the send thread
-        self.sock.shutdown(socket.SHUT_RDWR)
-        self.sock.close()
+        self.disconnect()
         # TODO: Sometimes sys.exit doesn't work, not sure why
         # os._exit(0)
         sys.exit()
@@ -274,21 +309,11 @@ class Saxo(object):
     def instruction_receiving(self):
         self.receiving = True
 
-    def instruction_disco_receiving(self):
-        self.receiving = False
-        if not self.user_reconnection:
-            if self.sending:
-                outgoing.put(None)
-            else:
-                incoming.put(("reconnect", False))
-
     def instruction_reconnect(self, close=True):
         if close:
             self.user_reconnection = True
-            # Never call this from a thread, otherwise the following can give an OSError
-            outgoing.put(None) # Closes the send thread
-            self.sock.shutdown(socket.SHUT_RDWR)
-            self.sock.close()
+            # Never call this from a thread, otherwise this can give an OSError
+            self.disconnect()
 
         if not self.opt["client"]["flood"]:
             time.sleep(3)
@@ -372,41 +397,19 @@ class Saxo(object):
     def instruction_sending(self):
         self.sending = True
 
-    def instruction_disco_sending(self):
-        self.sending = False
-        if not self.user_reconnection:
-            if not self.receiving:
-                incoming.put(("reconnect", False))
-            else:
-                # TODO: Close the socket?
-                ...
-
     def command(self, prefix, sender, cmd, arg):
-        if ("\x00" in cmd) or ("/" in cmd) or ("." in cmd):
+        if ("\x00" in cmd) or (os.sep in cmd) or ("." in cmd):
             return
 
         path = os.path.join(self.base, "commands", cmd)
 
-        def process(path, arg):
-            ### TODO: Cache this
-            env = os.environ.copy()
-            env["PYTHONPATH"] = saxo_path
-            env["SAXO_BASE"] = self.base
-            env["SAXO_COMMANDS"] = os.path.join(self.base, "commands")
-            ###
-            env["SAXO_NICK"] = prefix[0]
-            env["SAXO_SENDER"] = sender
-            env["SAXO_BOT"] = self.opt["client"]["nick"]
-            if sender in self.links:
-                env["SAXO_URL"] = self.links[sender]
-
+        def process(env, path, arg):
             octets = arg.encode("utf-8", "replace")
-            # path can't be injected into since it's created in self.load
 
             try: proc = subprocess.Popen([path, octets], env=env,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE)
             except PermissionError:
-                outs = "The file for this command does not have executable permissions"
+                outs = "The command file does not have executable permissions"
             except FileNotFoundError:
                 # Might have been removed just after running this thread
                 return
@@ -423,7 +426,12 @@ class Saxo(object):
             self.send("PRIVMSG", sender, outs)
 
         if os.path.isfile(path):
-            generic.thread(process, path, arg)
+            env = self.environment_cache.copy()
+            env["SAXO_NICK"] = prefix[0]
+            env["SAXO_SENDER"] = sender
+            if sender in self.links:
+                env["SAXO_URL"] = self.links[sender]
+            generic.thread(process, env, path, arg)
 
     def send(self, *args):
         # TODO: Loop detection
@@ -486,18 +494,17 @@ def start(base):
     opt = configparser.ConfigParser()
     config = os.path.join(base, "config")
     opt.read(config)
-    # TODO: defaulting?
-
-    scripts = os.path.dirname(sys.modules["__main__"].__file__)
-    scripts = os.path.abspath(scripts)
+    # TODO: Defaulting?
+    # TODO: Warn if the config file is widely readable?
 
     sockname =  os.path.join(base, "client.sock")
     serve(sockname, incoming)
     os.chmod(sockname, 0o600)
 
-    # TODO: Find out why this doesn't always work
+    # NOTE: If using os._exit, this doesn't work
     def remove_sock(sockname):
-        os.remove(sockname)
+        if os.path.exists(sockname):
+            os.remove(sockname)
     atexit.register(remove_sock, sockname)
 
     generic.thread(scheduler.start, base, incoming)

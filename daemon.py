@@ -3,6 +3,7 @@
 
 import atexit
 import os
+import signal
 import sys
 
 def writeable(path):
@@ -59,7 +60,8 @@ def start(pidfile, output):
     def delete_pidfile():
         if os.path.isfile(pidfile):
             os.remove(pidfile)
-
     atexit.register(delete_pidfile)
+
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     return pid

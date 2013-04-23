@@ -3,8 +3,13 @@
 
 import saxo
 
-@saxo.event(":1st")
+@saxo.event(":connected")
 def connected(irc):
+    if "password" in irc.server:
+        irc.send("PASS", irc.server["password"])
+
+@saxo.event(":1st")
+def first(irc):
     irc.send("NICK", irc.client["nick"])
     irc.send("USER", irc.client["nick"], "+iw", irc.client["nick"], "saxo")
     for channel in irc.client["channels"].split(" "):
