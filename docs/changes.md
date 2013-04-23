@@ -6,6 +6,7 @@
 
 * `saxo.communicate` is now `saxo.client`
 * `irc.queue` is now `irc.client`
+* `saxo.db` is now `saxo.database`
 * `irc.client` is now split into items in `irc.config`
 * `irc.server` is now `irc.config["server"]`
 

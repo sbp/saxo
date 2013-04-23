@@ -13,7 +13,6 @@ version = "0.2.000"
 # - Implement [plugins].sync, copy or symlink as options
 # - Make .seen give nicely formatted dates
 # - Write documentation about basic bot operation
-# - Normalise irc.queue and saxo.communicate
 # - Document the saxo, irc, self, and instruction interfaces
 # - Implement .join and .part, with persistent config writing
 # - Implement .visit and .part-analogue-with-visit

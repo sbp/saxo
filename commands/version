@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+
+import saxo
+
+@saxo.pipe
+def version(arg):
+    return "saxo " + saxo.version

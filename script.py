@@ -137,11 +137,11 @@ def start(args):
 
     # Save PEP 3122!
     if "." in __name__:
-        from . import client
+        from . import irc
     else:
-        import client
+        import irc
 
-    client.start(directory)
+    irc.start(directory)
     return 0
 
 @action
