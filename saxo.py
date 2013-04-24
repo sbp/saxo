@@ -18,11 +18,12 @@ version = "0.2.001"
 # - Allow JSON submission to the socket IPC interface
 # - Write docstrings for all the public interfaces
 # - Allow multiple, possibly configurable, lines of output from commands?
-# - Handle events with commands set to "*"
 # - Plugins for pre_exec?
 # - Mode for accessing commands? ./saxo command example
 # - Make it possible to set periodic commands
 # - Make sure the test server exits correctly
+# - Dump a copy of the initialised config to the database
+# - Document the database tables
 
 path = None
 
@@ -166,7 +167,7 @@ def pipe(function):
 
     if result is not None:
         if not isinstance(result, str):
-            print("Error")
+            print("Error: expected str, got %s" % type(result))
             return
         result = result.encode("utf-8", "replace")
         sys.stdout.buffer.write(result + b"\n")

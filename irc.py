@@ -76,6 +76,8 @@ class ThreadSafeEnvironment(object):
             self.sender = self.parameters[0]
             self.text = self.parameters[1]
             self.private = self.sender == self.config["nick"]
+            if self.private:
+                self.sender = self.nick
             if saxo.address:
                 # TODO: Why was this 498 for duxlot?
                 self.limit = 493 - len(self.sender + saxo.address)
@@ -367,7 +369,11 @@ class Saxo(object):
                 else:
                     cmd, arg = privmsg, ""
 
-                self.command(prefix, parameters[0], cmd, arg)
+                sender = parameters[0]
+                if sender == self.opt["client"]["nick"]:
+                    sender = prefix[0]
+
+                self.command(prefix, sender, cmd, arg)
 
         elif command == "PONG":
             if self.discotimer is not None:
@@ -509,7 +515,7 @@ def start(base):
     # TODO: Check for broken symlinks
     common.populate(saxo_path, base)
 
-    opt = configparser.ConfigParser()
+    opt = configparser.ConfigParser(interpolation=None)
     config = os.path.join(base, "config")
     opt.read(config)
     # TODO: Defaulting?
