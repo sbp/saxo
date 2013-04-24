@@ -272,10 +272,10 @@ def topic(arg):
 
 TODO: Sending without pickling.
 
-TODO: Returning `False` from a `saxo.pipe` to suppress response?
-
 ## Hints and tips
 
 * Once a module is loaded, you don't have to reload it once you change it
 * C startup speed is negligably slower than python
 * Case-sensitivity of commands depends on your filesystem
+* Returning nothing from a command will mean there is no output, as long as the exit code is `0`.
+* You can't presently return more than one line from a command; use `saxo.client` to do that.

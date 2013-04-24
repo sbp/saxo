@@ -20,7 +20,13 @@ Ask in `#saxo` on [freenode](http://freenode.net/), or tweet [@sbp](https://twit
 
 ## Documentation
 
-Try the [docs/](docs) directory.
+Try the [docs](docs) directory:
+
+* [Getting started](docs/getting-started.md)
+* [Saxo config](docs/config.md)
+* [List of saxo commands](docs/commands.md)
+* [Write saxo commands](docs/write-commands.md)
+* [Changes](docs/changes.md)
 
 ## License
 
