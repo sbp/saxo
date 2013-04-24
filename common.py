@@ -73,15 +73,20 @@ def populate(saxo_path, base):
     commands = os.path.join(base, "commands")
     saxo_commands = os.path.join(saxo_path, "commands")
 
+    def symlink(source, dest):
+        try: os.symlink(source, dest)
+        except FileExistsError:
+            ...
+
     for name in os.listdir(saxo_plugins):
         dest = os.path.join(plugins, name)
-        if not os.path.exists(dest):
-            os.symlink(os.path.join(saxo_plugins, name), dest)
+        if not (os.path.exists(dest) or os.path.islink(dest)):
+            symlink(os.path.join(saxo_plugins, name), dest)
 
     for name in os.listdir(saxo_commands):
         dest = os.path.join(commands, name)
-        if not os.path.exists(dest):
-            os.symlink(os.path.join(saxo_commands, name), dest)
+        if not (os.path.exists(dest) or os.path.islink(dest)):
+            symlink(os.path.join(saxo_commands, name), dest)
 
     # Clean up any broken symlinks
     for directory in (plugins, commands):
