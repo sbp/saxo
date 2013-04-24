@@ -11,8 +11,6 @@ version = "0.2.001"
 # - Implement [plugins].sync, copy or symlink as options
 # - Write documentation about basic bot operation
 # - Document the saxo, irc, self, and instruction interfaces
-# - Implement .join and .part, with persistent config writing
-# - Implement .visit and .part-analogue-with-visit
 # - Think about a packaging system
 # - Maybe write up a little guide to installing py3.3 with sqlite support
 # - Allow JSON submission to the socket IPC interface

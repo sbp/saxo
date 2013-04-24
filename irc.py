@@ -295,6 +295,20 @@ class Saxo(object):
                 # TODO: Close the socket?
                 ...
 
+    def instruction_join(self, channel):
+        # NOTE: .visit can still be followed by .join
+        # The JOIN will just fail on the server
+
+        channels = self.opt["client"]["channels"].split(" ")
+        if channel in channels:
+            # TODO: .visit it back?
+            return
+        channels.append(channel)
+        channels = " ".join(channels)
+
+        self.update_config("client", "channels", channels)
+        self.send("JOIN", channel)
+
     def instruction_link(self, channel, link):
         self.links[channel] = link
 
@@ -304,6 +318,20 @@ class Saxo(object):
     def instruction_msg(self, destination, text):
         self.send("PRIVMSG", destination, text)
 
+    def instruction_part(self, channel):
+        # NOTE: .leave can still be followed by .part
+        # The PART will just fail on the server
+
+        channels = self.opt["client"]["channels"].split(" ")
+        if channel not in channels:
+            # TODO: .leave it anyway?
+            return
+        channels.remove(channel)
+        channels = " ".join(channels)
+
+        self.update_config("client", "channels", channels)
+        self.send("PART", channel)
+
     def instruction_ping(self):
         self.send("PING", self.opt["client"]["nick"])
 
@@ -312,6 +340,9 @@ class Saxo(object):
         self.discotimer = threading.Timer(30, reconnect)
         self.discotimer.start()
 
+    def instruction_prefix(self, pfx):
+        self.update_config("client", "prefix", pfx)
+
     def instruction_propagate(self, kind="both"):
         ...
 
@@ -319,7 +350,7 @@ class Saxo(object):
         # Never call this from a thread, otherwise this can give an OSError
         self.send("QUIT")
         self.disconnect()
-        sys.exit()
+        # sys.exit()
         # TODO: Sometimes sys.exit doesn't work, not sure why
         os._exit(0)
 
@@ -456,6 +487,17 @@ class Saxo(object):
             if sender in self.links:
                 env["SAXO_URL"] = self.links[sender]
             common.thread(process, env, path, arg)
+
+    def update_config(self, section, option, value):
+        self.opt[section][option] = value
+        config = os.path.join(self.base, "config")
+        with open(config, "w", encoding="utf-8") as f:
+            self.opt.write(f)
+        if section == "client":
+            self.config_cache[option] = value
+        else:
+            self.config_cache[section][option] = value
+        # TODO: Change the database
 
     def send(self, *args):
         # TODO: Loop detection
