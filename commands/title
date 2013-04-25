@@ -3,7 +3,6 @@
 # Copyright 2012-3, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
-import os
 import re
 import saxo
 
@@ -14,15 +13,16 @@ regex_tag = re.compile(r"<[^>]+>")
 def title(arg):
     if not arg:
         # TODO: Could put this logic in saxo.pipe
-        if "SAXO_URL" in os.environ:
-            arg = os.environ["SAXO_URL"]
-        else:
+        arg = saxo.env("url")
+        if arg is None:
             return "Show the title of an HTML web page"
-
     # TODO: follow is not working
     page = saxo.request(arg, limit=262144)
     search = regex_title.search(page["text"])
     if search:
         title = search.group(1)
-        return regex_tag.sub("", title)
+        title = regex_tag.sub("", title)
+        title = title.replace("\r", "")
+        title = title.replace("\n", "")
+        return title.strip()
     return "No title found"

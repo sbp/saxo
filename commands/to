@@ -3,7 +3,6 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
-import os
 import re
 import saxo
 import time
@@ -19,19 +18,24 @@ def to(arg):
     if " " not in arg:
         return "Syntax: .to recipient <your message here>"
 
-    nick = os.environ["SAXO_NICK"]
+    nick = saxo.env("nick")
+    if nick is None:
+        return "Sorry, I don't know your nickname"
 
     recipient, message = arg.split(" ", 1)
     if recipient == nick:
         return "You can tell yourself that"
-    if recipient == os.environ["SAXO_BOT"]:
+    if recipient == saxo.env("bot"):
         return "Thanks, noted"
 
     if not regex_nickname.match(recipient):
         return "Sorry, %r is not a valid nickname" % recipient
 
+    channel = saxo.env("sender")
+    if channel is None:
+        return "Sorry, I don't know what channel you're on"
+
     with saxo.database() as db:
-        channel = os.environ["SAXO_SENDER"]
         now = int(time.time())
         db["saxo_to"].insert((nick, recipient, now, channel, message))
         return "Okay, I'll pass that message along to %s" % recipient

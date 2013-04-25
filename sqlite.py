@@ -115,7 +115,6 @@ class Database(object):
     def commit(self):
         self.connection.commit()
 
-
     def execute(self, text, *args):
         cursor = self.connection.cursor()
         if not args:

@@ -9,7 +9,6 @@ version = "0.2.002"
 # - Think about folding common.py into saxo.py
 # - Allow wildcards in [client].owner
 # - Implement [plugins].sync, copy or symlink as options
-# - Write documentation about basic bot operation
 # - Document the saxo, irc, self, and instruction interfaces
 # - Think about a packaging system
 # - Maybe write up a little guide to installing py3.3 with sqlite support
@@ -17,11 +16,11 @@ version = "0.2.002"
 # - Write docstrings for all the public interfaces
 # - Allow multiple, possibly configurable, lines of output from commands?
 # - Plugins for pre_exec?
-# - Mode for accessing commands? ./saxo command example
 # - Make it possible to set periodic commands
 # - Make sure the test server exits correctly
 # - Dump a copy of the initialised config to the database
 # - Document the database tables
+# - Delete and select methods for sqlite.Table
 
 path = None
 
@@ -56,6 +55,7 @@ if "__path__" in vars():
 #
 # saxo.client(command, *args, base=None)
 # saxo.database(name=None)
+# saxo.env(name)
 # saxo.request(*args, **kargs)
 # saxo.script(argv)
 
@@ -99,6 +99,15 @@ def command(name):
         return inner
     return decorate
 
+# saxo_event
+# saxo_periodic
+# saxo_private
+# saxo_schedule
+# saxo_seen
+# saxo_setup
+# saxo_to
+# saxo_unicode
+
 def database(name=None):
     import os
 
@@ -113,6 +122,17 @@ def database(name=None):
         name = os.path.join(base, "database.sqlite3")
 
     return Database(name)
+
+# saxo.env("base")
+# saxo.env("bot")
+# saxo.env("commands")
+# saxo.env("nick")
+# saxo.env("sender")
+# saxo.env("url")
+
+def env(name, alternative=None):
+    import os
+    return os.environ.get("SAXO_%s" % name.upper(), alternative)
 
 # TODO: priority?
 def event(command="*", synchronous=False):

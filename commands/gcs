@@ -38,30 +38,34 @@ def gcs(arg):
 
     phrases = terms(arg)
     results = queue.Queue()
+    commands = saxo.env("commands")
+    if not commands:
+        return "Can't find the gc command"
+
     for phrase in phrases:
-            path = os.path.join(os.environ["SAXO_COMMANDS"], "gc")
-            octets = phrase.encode("utf-8")
-            def gc(path, phrase, octets):
-                proc = subprocess.Popen([path, octets],
-                    stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        path = os.path.join(commands, "gc")
+        octets = phrase.encode("utf-8")
+        def gc(path, phrase, octets):
+            proc = subprocess.Popen([path, octets],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
-                try: outs, errs = proc.communicate(octets + b"\n", timeout=3)
-                except subprocess.TimeoutExpired:
-                    proc.kill()
-                    outs = "[timeout]"
-                    size = None
-                else:
-                    outs = outs.decode("utf-8", "replace")
-                    outs = outs.rstrip("\r\n")
-                    size = int(outs.replace(",", ""))
+            try: outs, errs = proc.communicate(octets + b"\n", timeout=3)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                outs = "[timeout]"
+                size = None
+            else:
+                outs = outs.decode("utf-8", "replace")
+                outs = outs.rstrip("\r\n")
+                size = int(outs.replace(",", ""))
 
-                if not outs:
-                    outs = "[no response]"
-                    size = None
+            if not outs:
+                outs = "[no response]"
+                size = None
 
-                # TODO: Probably not thread-safe
-                results.put((size, phrase, outs))
-            thread(gc, path, phrase, octets)
+            # TODO: Probably not thread-safe
+            results.put((size, phrase, outs))
+        thread(gc, path, phrase, octets)
 
     expect = len(phrases)
     res = []

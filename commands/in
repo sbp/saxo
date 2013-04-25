@@ -3,7 +3,6 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
-import os
 import re
 import saxo
 import sys
@@ -77,8 +76,8 @@ def main(arg):
     if not seconds:
         return "Couldn't understand your duration. Use units?"
 
-    nick = os.environ["SAXO_NICK"]
-    sender = os.environ["SAXO_SENDER"]
+    nick = saxo.env("nick")
+    sender = saxo.env("sender")
     if message:
         message = nick + ": " + message
     else:

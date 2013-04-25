@@ -112,11 +112,40 @@ def create(args):
     return 0
 
 @action
+def shell(args):
+    if args.directory is None:
+        base = os.path.expanduser("~/.saxo")
+    else:
+        base = args.directory
+
+    # Save PEP 3122!
+    if "." in __name__:
+        from .saxo import path as saxo_path
+    else:
+        from saxo import path as saxo_path
+
+    def subshell(base, commands):
+        path = os.environ.get("PATH", "")
+        os.environ["PATH"] = commands + os.pathsep + path
+        os.environ["PYTHONPATH"] = saxo_path
+        os.environ["SAXO_SHELL"] = "1"
+        os.environ["SAXO_BASE"] = base
+        os.environ["SAXO_BOT"] = "saxo"
+        os.environ["SAXO_COMMANDS"] = commands
+        os.environ["SAXO_NICK"] = os.environ["USER"]
+        os.environ["SAXO_SENDER"] = os.environ["USER"]
+        shell = os.environ.get("SHELL", "sh")
+        os.system(shell)
+
+    commands = os.path.join(base, "commands")
+    subshell(base, commands)
+
+@action
 def start(args):
     if args.directory is None:
-        directory = os.path.expanduser("~/.saxo")
+        base = os.path.expanduser("~/.saxo")
     else:
-        directory = args.directory
+        base = args.directory
 
     if not args.foreground:
         # Save PEP 3122!
@@ -132,7 +161,7 @@ def start(args):
         else:
             output = open(args.output, "w")
 
-        pidfile = os.path.join(directory, "pid")
+        pidfile = os.path.join(base, "pid")
         daemon.start(pidfile, output)
 
     # Save PEP 3122!
@@ -141,17 +170,17 @@ def start(args):
     else:
         import irc
 
-    irc.start(directory)
+    irc.start(base)
     return 0
 
 @action
 def stop(args):
     if args.directory is None:
-        directory = os.path.expanduser("~/.saxo")
+        base = os.path.expanduser("~/.saxo")
     else:
-        directory = args.directory
+        base = args.directory
 
-    pidfile = os.path.join(directory, "pid")
+    pidfile = os.path.join(base, "pid")
     if not os.path.exists(pidfile):
         common.error("There is no bot currently running")
 

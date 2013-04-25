@@ -5,6 +5,7 @@ import saxo
 
 @saxo.pipe
 def url(arg):
-    if "SAXO_URL" in os.environ:
-       return os.environ["SAXO_URL"]
-    return "Sorry, no URL was found"
+    url = saxo.env("url")
+    if url is None:
+        return "Sorry, no URL was found"
+    return url
