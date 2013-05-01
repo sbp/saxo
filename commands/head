@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# Copyright 2013, David P. Kendal
+# Modified and distributed with saxo by Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+url="$(echo $1 | awk '{print $1}')"
+field="$(echo $1 | awk '{print $2}')"
+
+if [ -z "$(echo "$url" | grep '[./:]')" ]
+then field="$url"
+     url="$SAXO_URL"
+fi
+
+case $url in
+    *//localhost*) echo "Sorry, disallowed query"; exit 1;;
+    *//127.0.0*) echo "Sorry, disallowed query"; exit 1;;
+esac
+
+curl --proto -all,http,+https -sI "$url" | tr -d '\015' | if [ -z $field ]
+then awk -F': ' '
+    BEGIN { ORS="" }
+    {
+        fieldname = tolower($1);
+        if (match($0, /^HTTP\/[0-9]\.[0-9] /)) {
+            print substr($0, 10, 3);
+        } else if (fieldname == "content-type") {
+            print ", " $2;
+        } else if (fieldname == "content-length") {
+            print ", " $2 " bytes";
+        }
+    }
+    END { print "\n"; }
+    '
+else awk -F': ' -v field="$field" '
+    {
+        if (tolower(field) == tolower($1)) {
+            print $2;
+        }
+    }
+    # Oh look, a real hax:
+    END { print "Sorry, there was no " field " field in the response" }
+    ' | head -1
+fi

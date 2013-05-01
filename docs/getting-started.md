@@ -34,6 +34,8 @@ Then, optionally:
 
 Which will additionally give a `saxo` command.
 
+You could also run these in a [virtualenv](http://www.virtualenv.org/).
+
 ## Usage
 
 ### Create an bot instance

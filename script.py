@@ -139,6 +139,7 @@ def shell(args):
 
     commands = os.path.join(base, "commands")
     subshell(base, commands)
+    return 0
 
 @action
 def start(args):

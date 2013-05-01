@@ -275,7 +275,7 @@ TODO: Sending without pickling.
 ## Hints and tips
 
 * Once a module is loaded, you don't have to reload it once you change it
-* C startup speed is negligably slower than python
+* Python startup speed is negligibly slower than C
 * Case-sensitivity of commands depends on your filesystem
 * Returning nothing from a command will mean there is no output, as long as the exit code is `0`.
 * You can't presently return more than one line from a command; use `saxo.client` to do that.

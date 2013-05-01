@@ -363,10 +363,11 @@ class Saxo(object):
             # Never call this from a thread, otherwise this can give an OSError
             self.disconnect()
 
-        if not self.opt["client"]["flood"]:
+        flood = "flood" in self.opt["client"]
+        if not flood:
             time.sleep(3)
         for attempt in range(7):
-            if not self.opt["client"]["flood"]:
+            if not flood:
                 if self.receiving or self.sending:
                     time.sleep(1)
                 # TODO: If the threads are still active, they should be killed
@@ -466,7 +467,8 @@ class Saxo(object):
                 try: outs, errs = proc.communicate(octets + b"\n", timeout=6)
                 except subprocess.TimeoutExpired:
                     proc.kill()
-                    outs = "Sorry, .%s took too long" % cmd
+                    # TODO: Use actual prefix
+                    outs = "Sorry, %s took too long" % cmd
                 else:
                     outs = outs.decode("utf-8", "replace")
                     if "\n" in outs:
@@ -475,7 +477,8 @@ class Saxo(object):
                 code = proc.returncode or 0
                 # Otherwise: TypeError: unorderable types: NoneType() > int()
                 if (code > 0) and (not outs):
-                    outs = "Sorry, .%s responded with an error" % cmd
+                    # TODO: Use actual prefix
+                    outs = "Sorry, %s responded with an error" % cmd
 
             if outs:
                 self.send("PRIVMSG", sender, outs)
