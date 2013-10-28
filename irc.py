@@ -278,6 +278,9 @@ class Saxo(object):
             for function in self.events[":connected"]:
                 function(self, None, None)
 
+    def instruction_command(self, prefix, sender, cmd, arg):
+        self.command(prefix, sender, cmd, arg)
+
     def instruction_disco_receiving(self):
         self.receiving = False
         if not self.user_reconnection:
