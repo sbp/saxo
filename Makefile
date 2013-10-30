@@ -10,6 +10,6 @@ publish:
 	git push
 	git push --tags
 
-# .PHONY: test
+# .PHONY: test
 # test:
-# 	test/run
+# 	./saxo test

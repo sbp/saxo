@@ -34,7 +34,7 @@ http://<.*>
 Perhaps up Pompeii: <.{16,}>
 
 .title http://inamidst.com/
-inamidst.com, by Sean B. Palmer
+Website of Sean B. Palmer
 
 .to
 Send a message to somebody

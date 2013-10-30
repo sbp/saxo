@@ -244,7 +244,8 @@ def test(args):
         saxo_test = os.path.join(tmp, "saxo-test")
         outgoing.put("Running in %s" % saxo_test)
 
-        code = subprocess.call([sys.executable, saxo_script, "create", saxo_test])
+        cmd = [sys.executable, saxo_script, "create", saxo_test]
+        code = subprocess.call(cmd)
         if code:
             print("Error creating the client configuration")
             sys.exit(1)

@@ -267,6 +267,7 @@ class Saxo(object):
                 try: method(*args)
                 except Exception as err:
                     debug("handle error:", err)
+                    # raise err # - for debug
             else:
                 debug("Unknown instruction:", instruction)
 
@@ -275,8 +276,9 @@ class Saxo(object):
 
     def instruction_connected(self):
         if ":connected" in self.events:
+            irc = ThreadSafeEnvironment(self, ("", "", ""), "", [])
             for function in self.events[":connected"]:
-                function(self, None, None)
+                function(irc)
 
     def instruction_command(self, prefix, sender, cmd, arg):
         self.command(prefix, sender, cmd, arg)
@@ -359,6 +361,9 @@ class Saxo(object):
 
     def instruction_receiving(self):
         self.receiving = True
+        # TODO: Check that we really are connected
+        # TODO: Unit test for :connected event
+        incoming.put(("connected",))
 
     def instruction_reconnect(self, close=True):
         if close:
