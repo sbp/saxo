@@ -13,7 +13,7 @@ regex_twitter_p = re.compile(r"(?ims)(<p class=\"js-tweet-text.*?</p>)")
 regex_twitter_div = re.compile(r'(?ims)<div class="tweet-text".*?</div></div>')
 regex_twitter_tag = re.compile(r"(?ims)<[^>]+>")
 regex_twitter_anchor = re.compile(r"(?ims)(<a.*?</a>)")
-regex_twitter_exp = re.compile(r"(?ims)data-expanded-url=[\"'](.*?)[\"']")
+regex_twitter_exp = re.compile(r"(?ims)data-url=[\"'](.*?)[\"']")
 regex_twitter_whiteline = re.compile(r"(?ims)[ \t]+[\r\n]+")
 regex_twitter_breaks = re.compile(r"(?ims)[\r\n]+")
 regex_twitter_b = re.compile(r"(?ims)<b>(.+?)</b>")
@@ -42,9 +42,11 @@ def page(url, username=None):
                 username = username
                 break
 
-    shim = '<div class="content clearfix">'
-    if shim in text:
-        text = text.split(shim, 1).pop()
+    shims = ['<div class="main-tweet-container">',
+             '<div class="content clearfix">']
+    for shim in shims:
+        if shim in text:
+            text = text.split(shim, 1).pop()
 
     def expand(tweet):
         def replacement(match):

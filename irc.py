@@ -472,7 +472,7 @@ class Saxo(object):
                 # Might have been removed just after running this thread
                 return
             else:
-                try: outs, errs = proc.communicate(octets + b"\n", timeout=6)
+                try: outs, errs = proc.communicate(octets + b"\n", timeout=12)
                 except subprocess.TimeoutExpired:
                     proc.kill()
                     # TODO: Use actual prefix
