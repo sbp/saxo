@@ -11,12 +11,10 @@ def g(arg):
     if not arg:
         return "Search for a phrase on Google"
 
-    page = saxo.request("http://ajax.googleapis.com/ajax/services/search/web",
-        query={"v": "1.0", "safe": "off", "q": arg})
-    data = json.loads(page["text"])
+    page = saxo.request("https://www.google.com/search",
+        query={"q": arg, "btnI": ""},
+        headers={"Referer": "https://www.google.com/"})
 
-    if "responseData" in data:
-        if "results" in data["responseData"]:
-            if data["responseData"]["results"]:
-                if "unescapedUrl" in data["responseData"]["results"][0]:
-                    return data['responseData']['results'][0]['unescapedUrl']
+    if "Location" in page["info"]:
+        return page["info"]["Location"]
+    return "No result for %s" % arg
