@@ -168,9 +168,11 @@ def pipe(function):
         # We have to do this because python converts arguments to surrogates
         # http://stackoverflow.com/a/7077803
         arg = os.fsencode(arg).decode("utf-8")
-    else:
+    elif not sys.stdin.isatty():
         arg = sys.stdin.buffer.readline()
         arg = arg.rstrip(b"\r\n")
+    else:
+        arg = ""
 
     try: result = function(arg)
     except Exception as err:
