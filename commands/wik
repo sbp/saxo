@@ -151,6 +151,8 @@ def wik(arg):
 
         # url = page["url"]
         # term = spaced(term)
+        sentence = sentence.replace("\r", "")
+        sentence = sentence.replace("\n", "")
         return '"' + sentence + '" - ' + page["url"]
 
     return "Article not found: " + " | ".join(debug)
