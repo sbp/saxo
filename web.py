@@ -95,10 +95,7 @@ def request(url, query=None, data=None, method="GET",
 
     handlers = [ErrorHandler()]
     if follow:
-        class RedirectHandler(urllib.request.HTTPRedirectHandler):
-            def redirect_request(self, req, fp, code, msg, hdrs, newurl):
-                return None
-        handlers.append(RedirectHandler())
+        handlers.append(urllib.request.HTTPRedirectHandler())
 
     opener = urllib.request.build_opener(*handlers)
     urllib.request.install_opener(opener)
