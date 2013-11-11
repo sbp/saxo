@@ -4,7 +4,12 @@
 # Source: http://inamidst.com/saxo/
 
 import json
+import re
+import urllib.parse
+
 import saxo
+
+r_url = re.compile(r'(?ims)/url[?]q=([^&]+)')
 
 @saxo.pipe
 def g(arg):
@@ -12,9 +17,9 @@ def g(arg):
         return "Search for a phrase on Google"
 
     page = saxo.request("https://www.google.com/search",
-        query={"q": arg, "btnI": ""},
+        query={"q": arg},
         headers={"Referer": "https://www.google.com/"})
 
-    if "Location" in page["info"]:
-        return page["info"]["Location"]
+    for url in r_url.findall(page["text"]):
+        return urllib.parse.unquote(url)
     return "No result for %s" % arg
