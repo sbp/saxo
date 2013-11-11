@@ -6,6 +6,12 @@
 import re
 import saxo
 
+def search_by_char(db, char):
+    codepoint = ord(char)
+    query = "SELECT * FROM saxo_unicode WHERE codepoint = ?"
+    for row in db.query(query, codepoint):
+        return "U+%s %s (%s)" % (row[0], row[2], row[7])
+
 def search_by_name(db, search):
     regex_metachar = re.compile("[%s]" % re.escape(r"$()*+.?[\]^{|}"))
     if regex_metachar.search(search):
@@ -48,4 +54,7 @@ def u(arg):
             return "Get an admin to run .update-unicode-data first"
 
         # TODO: Search by hexcode, search by character
+        if len(arg) == 1:
+            if ord(arg) > 0x80:
+                return search_by_char(db, arg)
         return search_by_name(db, arg)
