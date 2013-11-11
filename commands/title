@@ -1,28 +1,58 @@
 #!/usr/bin/env python3
-
-# Copyright 2012-3, Sean B. Palmer
+# Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
 import re
 import saxo
 
+regex_link = re.compile(r"^(http[s]?://[^<> \"\x01]+)[,.]?$")
 regex_title = re.compile(r"(?ims)<title>(.*?)</title>")
 regex_tag = re.compile(r"<[^>]+>")
 
+def longest(input, sep):
+    longest = 0
+    result = ""
+    for part in input.split(sep):
+        if len(part) > longest:
+           longest = len(part)
+           result = part
+    return result
+
+blacklist = (
+    "github.com",
+    "swhack.com",
+    "translate.google.com",
+    "tumbolia.appspot.com",
+    "twitter.com",
+    "wikia.com",
+    "wikipedia.org"
+)
+
 @saxo.pipe
-def title(arg):
-    if not arg:
-        # TODO: Could put this logic in saxo.pipe
-        arg = saxo.env("url")
-        if arg is None:
-            return "Show the title of an HTML web page"
-    # TODO: follow is not working
-    page = saxo.request(arg, limit=262144)
+def title(url):
+    if "#" in url:
+        url = url.split("#", 1)[0]
+
+    for blacklisted in blacklist:
+        if blacklisted in url:
+            return
+
+    page = saxo.request(url, limit=262144, follow=True)
     search = regex_title.search(page["text"])
     if search:
         title = search.group(1)
         title = regex_tag.sub("", title)
         title = title.replace("\r", "")
         title = title.replace("\n", "")
+
+        title = longest(title, " : ")
+        title = longest(title, " | ")
+        title = longest(title, "| ")
+        title = longest(title, " — ")
+        if "youtube.com" not in url:
+            title = longest(title, " - ")
+        elif title.endswith(" - YouTube"):
+            title = title[:-10]
+        title = title.replace('"', "'")
         return title.strip()
-    return "No title found"
+   return "No title found"
