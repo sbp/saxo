@@ -2,6 +2,7 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+import os
 import re
 import saxo
 
@@ -30,6 +31,11 @@ blacklist = (
 
 @saxo.pipe
 def title(url):
+    if not url:
+        url = os.environ.get("SAXO_URL")
+    if not url:
+        return "Sorry, no link found to title"
+
     if "#" in url:
         url = url.split("#", 1)[0]
 
@@ -55,4 +61,4 @@ def title(url):
             title = title[:-10]
         title = title.replace('"', "'")
         return title.strip()
-   return "No title found"
+    return "No title found"
