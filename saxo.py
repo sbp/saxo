@@ -180,7 +180,7 @@ def pipe(function):
         import traceback
 
         python = err.__class__.__name__ + ": " + str(err)
-        stack = traceback.extract_tb(err.__traceback__, limit=2)
+        stack = traceback.extract_tb(err.__traceback__)
         item = stack.pop()
         where = "(%s:%s)" % (os.path.basename(item[0]), item[1])
         result = python + " " + where
