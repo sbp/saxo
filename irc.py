@@ -559,7 +559,8 @@ def start(base):
     # TODO: Check when two clients are running
     common.exit_cleanly()
     # http://stackoverflow.com/questions/11423225
-    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    # IGN rather than DFL, otherwise Popen.communicate can quit saxo
+    signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 
     plugins = os.path.join(base, "plugins")
     if not os.path.isdir(plugins):
