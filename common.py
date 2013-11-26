@@ -69,9 +69,13 @@ def exit_cleanly():
 def populate(saxo_path, base):
     plugins = os.path.join(base, "plugins")
     saxo_plugins = os.path.join(saxo_path, "plugins")
+    if not os.path.isdir(plugins):
+        os.mkdir(plugins)
 
     commands = os.path.join(base, "commands")
     saxo_commands = os.path.join(saxo_path, "commands")
+    if not os.path.isdir(commands):
+        os.mkdir(commands)
 
     def symlink(source, dest):
         try: os.symlink(source, dest)
