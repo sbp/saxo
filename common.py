@@ -96,6 +96,7 @@ def populate(saxo_path, base):
                 continue
 
             target = os.readlink(link)
+            target = os.path.join(directory, target)
             if not os.path.exists(target):
                 os.remove(link)
 
