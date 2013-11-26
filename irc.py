@@ -565,7 +565,6 @@ def start(base):
     if not os.path.isdir(plugins):
         common.error("no plugins directory: `%s`" % plugins, E_NO_PLUGINS)
 
-    # TODO: Check for broken symlinks
     common.populate(saxo_path, base)
 
     opt = configparser.ConfigParser(interpolation=None)
