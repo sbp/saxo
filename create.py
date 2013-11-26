@@ -82,6 +82,9 @@ def default(base=None):
     print("Created %s" % config)
     print("Modify this file with your own settings, and then run:")
     print("")
-    print("    %s start" % sys.argv[0])
+    if base:
+        print("    %s start %s" % (sys.argv[0], base))
+    else:
+        print("    %s start" % sys.argv[0])
 
     return True
