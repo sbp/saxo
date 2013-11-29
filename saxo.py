@@ -180,9 +180,14 @@ def pipe(function):
         import traceback
 
         python = err.__class__.__name__ + ": " + str(err)
-        stack = traceback.extract_tb(err.__traceback__, limit=2)
-        item = stack.pop()
-        where = "(%s:%s)" % (os.path.basename(item[0]), item[1])
+        stack = traceback.extract_tb(err.__traceback__)
+        # limit frame to command module
+        filename = stack[1][0]
+        line_number = None
+        for frame in stack:
+            if frame[0] == filename:
+                line_number = frame[1]
+        where = "(%s:%s)" % (os.path.basename(filename), line_number)
         result = python + " " + where
 
     if result is not None:
