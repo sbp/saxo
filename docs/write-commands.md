@@ -210,6 +210,8 @@ Here are some environment variables you can use:
 * `SAXO_BOT` — the nickname that saxo is using itself
 * `SAXO_URL` — the most recently mentioned URL in the channel where the command was issued
 
+These environment variables are only available when a command is run by the bot. If you are writing a command that also functions as a CLI script, you must check for the presence of an environment variable before using it.
+
 Using `SAXO_COMMANDS` makes it possible to call commands in other commands. Because they're just shell scripts and use a simple **argv[1]** or **stdin** interface, you can easily make commands that work together nicely.
 
 ```bash
