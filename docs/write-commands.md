@@ -206,9 +206,12 @@ Here are some environment variables you can use:
 * `SAXO_BASE` — the path of the base directory that saxo is using
 * `SAXO_COMMANDS` — the path of the commands directory. equivalent to `$SAXO_BASE/commands`
 * `SAXO_NICK` — the nickname of the user issuing the command
+* `SAXO_IDENTIFIED` — whether the user is identified with the network
 * `SAXO_SENDER` — the channel where the command was issued
 * `SAXO_BOT` — the nickname that saxo is using itself
 * `SAXO_URL` — the most recently mentioned URL in the channel where the command was issued
+
+The `SAXO_IDENTIFIED` environment variable is only present when the host IRC network supports this feature.
 
 These environment variables are only available when a command is run by the bot. If you are writing a command that also functions as a CLI script, you must check for the presence of an environment variable before using it.
 
