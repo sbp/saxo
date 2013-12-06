@@ -566,10 +566,9 @@ def serve(sockname, incoming):
             common.thread(handle, connection, client)
     common.thread(listen, sock)
 
-E_NO_PLUGINS = """
-The plugins directory is necessary for saxo to work. If it was deleted
-accidentally, just make a new empty directory and saxo will automatically
-populate it with the core plugin that it needs to work.
+E_NO_CONFIG = """
+Are you sure this is a saxo configuration directory? If you need to make a new
+configuration directory, use the saxo `create` command.
 """
 
 def start(base):
@@ -579,17 +578,15 @@ def start(base):
     # IGN rather than DFL, otherwise Popen.communicate can quit saxo
     signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 
-    plugins = os.path.join(base, "plugins")
-    if not os.path.isdir(plugins):
-        common.error("no plugins directory: `%s`" % plugins, E_NO_PLUGINS)
-
-    common.populate(saxo_path, base)
-
     opt = configparser.ConfigParser(interpolation=None)
     config = os.path.join(base, "config")
+    if not os.path.isfile(config):
+        error("missing config file in: `%s`" % config, E_NO_CONFIG)
     opt.read(config)
     # TODO: Defaulting?
     # TODO: Warn if the config file is widely readable?
+
+    common.populate(saxo_path, base)
 
     sockname =  os.path.join(base, "client.sock")
     serve(sockname, incoming)
