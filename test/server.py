@@ -86,9 +86,11 @@ for lines in text.split("\n\n"):
                             else:
                                 patterns.append(re.escape(part))
                         pattern = "^" + "".join(patterns) + "$"
-                        conn.match(pattern, got, "Expected %r, got %r" % (pattern, got))
+                        msg = "Expected %r, got %r" % (pattern, got)
+                        conn.match(pattern, got, msg)
                     else:
-                        conn.equal(line, got, "Expected %r, got %r" % (line, got))
+                        msg = "Expected %r, got %r" % (line, got)
+                        conn.equal(line, got, msg)
                 # @@ then a nowt?
     build(lines[:])
 
@@ -205,6 +207,9 @@ class Test(socketserver.StreamRequestHandler):
 
         who = self.recv()
         self.equal(who["command"], "WHO", "Expected WHO")
+
+        cap = self.recv()
+        self.equal(cap["command"], "CAP", "Expected CAP")
 
     def recv(self):
         while True:

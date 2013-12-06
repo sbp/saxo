@@ -1,5 +1,5 @@
 .c e ** (i * 2/3pi)
-0.977568548 + 0.210617505 i
+e^((i * 2) / (3 * pi)) = 0.977568548 + 0.210617505 i
 
 .ety frog
 "<.{32,}>" - http://etymonline.com/index.php?term=frog
@@ -11,7 +11,7 @@ http://www.reddit.com/
 <[0-9,]+>
 
 .gcs [python irc] "a b c" common xrare
-common (<[0-9,]+>), "a b c" (<[0-9,]+>), [python irc] (<[0-9,]+>), xrare (<[0-9,]+>)
+"a b c" (<[0-9,]+>), common (<[0-9,]+>), [python irc] (<[0-9,]+>), xrare (<[0-9,]+>)
 
 .img rongorongo
 http://<.*>
