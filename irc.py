@@ -75,7 +75,10 @@ class ThreadSafeEnvironment(object):
 
         if command == "PRIVMSG":
             self.sender = self.parameters[0]
-            self.text = self.parameters[1]
+            if self.identified:
+               self.text = self.parameters[1][1:]
+            else:
+               self.text = self.parameters[1]
             self.private = self.sender == self.config["nick"]
             if self.private:
                 self.sender = self.nick
