@@ -183,10 +183,12 @@ def pipe(function):
         stack = traceback.extract_tb(err.__traceback__)
         # limit frame to command module
         filename = stack[1][0]
-        line_number = None
+        line_number = "?"
         for frame in stack:
             if frame[0] == filename:
                 line_number = frame[1]
+            elif line_number != "?":
+                break
         where = "(%s:%s)" % (os.path.basename(filename), line_number)
         result = python + " " + where
 

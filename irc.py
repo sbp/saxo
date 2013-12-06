@@ -436,8 +436,8 @@ class Saxo(object):
                     ...
 
 
-        irc = ThreadSafeEnvironment(
-            self, prefix, command, parameters, identified)
+        args = (self, prefix, command, parameters, identified)
+        irc = ThreadSafeEnvironment(*args)
         def safe(function, irc):
             try: function(irc)
             except Exception as err:
@@ -568,7 +568,7 @@ def serve(sockname, incoming):
 
 E_NO_CONFIG = """
 Are you sure this is a saxo configuration directory? If you need to make a new
-configuration directory, use the saxo `create` command.
+configuration directory, use the `saxo create` command.
 """
 
 def start(base):
