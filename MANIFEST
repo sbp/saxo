@@ -17,6 +17,7 @@ setup.py
 ./commands/g
 ./commands/gc
 ./commands/gcs
+./commands/head
 ./commands/img
 ./commands/in
 ./commands/news
@@ -32,6 +33,7 @@ setup.py
 ./commands/upper
 ./commands/url
 ./commands/version
+./commands/w
 ./commands/wa
 ./commands/wik
 ./plugins/admin.py
