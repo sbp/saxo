@@ -1,5 +1,7 @@
 # saxo
 
+[![Build Status](https://travis-ci.org/sbp/saxo.png?branch=master)](https://travis-ci.org/sbp/saxo)
+
 Quick and flexible [irc bot](https://en.wikipedia.org/wiki/Internet_Relay_Chat_bot), extensible in any language.
 
 ## Quick start
