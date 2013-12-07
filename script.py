@@ -279,12 +279,18 @@ def test(args):
     common.thread(run_server)
     common.thread(run_client)
 
+    error = False
+    completed = False
     client_buffer = []
     while True:
         line = outgoing.get()
 
         if line.startswith("S: "):
             print(line)
+            if line.startswith("S: ERROR"):
+               error = True
+            if line.startswith("S: Tests complete"):
+               completed = True
             if not line.startswith("S: Test"):
                 for c in client_buffer:
                     print(c)
@@ -300,6 +306,11 @@ def test(args):
 
         if line == "Server finished":
             break
+
+    if completed and (not error):
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 def main(argv, v):
     # NOTE: No default for argv, because what script name would we use?
