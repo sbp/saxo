@@ -10,8 +10,8 @@ http://www.reddit.com/
 .gc gombuc
 <[0-9,]+>
 
-.gcs [python irc] "a b c" common xrare
-"a b c" (<[0-9,]+>), common (<[0-9,]+>), [python irc] (<[0-9,]+>), xrare (<[0-9,]+>)
+.gcs [python irc] "old man river" common xrare
+common (<[0-9,]+>), [python irc] (<[0-9,]+>), "old man river" (<[0-9,]+>), xrare (<[0-9,]+>)
 
 .img rongorongo
 http://<.*>
