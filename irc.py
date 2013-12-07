@@ -75,10 +75,7 @@ class ThreadSafeEnvironment(object):
 
         if command == "PRIVMSG":
             self.sender = self.parameters[0]
-            if self.identified is not None:
-               self.text = self.parameters[1][1:]
-            else:
-               self.text = self.parameters[1]
+            self.text = self.parameters[1]
             self.private = self.sender == self.config["nick"]
             if self.private:
                 self.sender = self.nick
@@ -405,16 +402,16 @@ class Saxo(object):
         debug(repr(octets))
         prefix, command, parameters = parse(octets)
         identified = None
+        debug("PARAMS:", parameters)
 
         if command == "PRIVMSG":
             if self.identify_msg is True:
-                identified = parameters[1][0] is "+"
-                privmsg = parameters[1][1:]
-            else:
-                privmsg = parameters[1]
+                identified = parameters[1][0] == "+"
+                parameters[1] = parameters[1][1:]
 
             pfx = self.opt["client"]["prefix"]
             length = len(pfx)
+            privmsg = parameters[1]
 
             if privmsg.startswith(pfx):
                 privmsg = privmsg[length:]
@@ -512,7 +509,7 @@ class Saxo(object):
             env["SAXO_SENDER"] = sender
             if identified == True:
                 env["SAXO_IDENTIFIED"] = "1"
-            if identified == False:
+            elif identified == False:
                 env["SAXO_IDENTIFIED"] = "0"
             if sender in self.links:
                 env["SAXO_URL"] = self.links[sender]
