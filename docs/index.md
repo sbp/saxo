@@ -1,7 +1,7 @@
-## Documentation
+## Saxo Documentation
 
-* [Getting started](docs/getting-started.md)
-* [Saxo config](docs/config.md)
-* [List of saxo commands](docs/commands.md)
-* [Write saxo commands](docs/write-commands.md)
-* [Changes](docs/changes.md)
+* [Getting started](getting-started)
+* [Saxo config](config)
+* [List of saxo commands](commands)
+* [Write saxo commands](write-commands)
+* [Changes](changes)
