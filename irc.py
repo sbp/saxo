@@ -407,7 +407,7 @@ class Saxo(object):
         identified = None
 
         if command == "PRIVMSG":
-            if self.identify_msg is not None:
+            if self.identify_msg is True:
                 identified = parameters[1][0] is "+"
                 privmsg = parameters[1][1:]
             else:
@@ -437,7 +437,6 @@ class Saxo(object):
                     debug("Cancelled the disco timer")
                 except:
                     ...
-
 
         args = (self, prefix, command, parameters, identified)
         irc = ThreadSafeEnvironment(*args)
