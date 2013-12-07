@@ -3,4 +3,7 @@ python:
   - "3.3"
 script: python saxo test
 notifications:
-  irc: "chat.freenode.net#swhack"
+  irc:
+    channels:
+      "chat.freenode.net#swhack"
+    on_success: change
