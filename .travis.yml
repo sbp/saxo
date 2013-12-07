@@ -7,3 +7,4 @@ notifications:
     channels:
       "chat.freenode.net#swhack"
     on_success: change
+    skip_join: true
