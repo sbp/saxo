@@ -402,7 +402,6 @@ class Saxo(object):
         debug(repr(octets))
         prefix, command, parameters = parse(octets)
         identified = None
-        debug("PARAMS:", parameters)
 
         if command == "PRIVMSG":
             if self.identify_msg is True:
