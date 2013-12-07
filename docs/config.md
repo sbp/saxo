@@ -67,9 +67,33 @@ Example: `saxobot`
 
 **owner**
 
-Full IRC address of the owner of the bot. This enables the user with that address to use admin functions.
+IRC address of the owner of the bot. This enables the user with that address to use admin functions.
+
+Example: `nick`
+
+If you only specify `nick`, that user must be authenticated with network services.
+
+This feature is not available on all IRC networks.
 
 Example: `nick!~user@subdomain.example.org`
+
+This specifies a full network hostmask as the owner.
+
+Note that if you are using a hostmask, the user does not have to be registered with network services.
+
+You can use a wildcard character in any part of the hostmask:
+
+ * `*!~user@subdomain.example.org`
+
+ * `nick!~*@subdomain.example.org`
+
+ * `nick!~*@*.example.org`
+
+ * `nick!*@*`
+
+This last hostmask anyone with `nick` to be the owner without being identified with network services.
+
+This is generally inadvisable.
 
 **prefix**
 
