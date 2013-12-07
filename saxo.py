@@ -79,7 +79,20 @@ def client(command, *args, base=None):
     client.send(command + b" " + base64.b64encode(pickled) + b"\n")
     client.close()
 
-def command(name):
+def command(name, owner=False):
+    def is_owner(irc):
+        config_owner = irc.config["owner"]
+        test_identity = False
+        if not "!" in config_owner:
+            test_identity = True
+            config_owner = config_owner + "!*@*"
+
+        mask = lambda g: "^" + re.escape(g).replace("\\*", ".*") + "$"
+        matches = re.match(mask(config_owner), irc.prefix) is not None
+        if test_identity:
+           return matches and irc.identified
+        return matches
+
     def decorate(function):
         @event("PRIVMSG")
         def inner(irc):
@@ -95,7 +108,8 @@ def command(name):
 
                 if cmd == name:
                     irc.arg = arg
-                    function(irc)
+                    if (not owner) or is_owner(irc):
+                        function(irc)
         return inner
     return decorate
 

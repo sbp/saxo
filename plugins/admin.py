@@ -3,56 +3,39 @@
 
 import saxo
 
-def owner(irc):
-    if "owner" in irc.config:
-        if irc.prefix == irc.config["owner"]:
-            return True
-        if irc.identified:
-            owner_nick = irc.config["owner"].split("!", 1)[0]
-            if irc.nick == owner_nick:
-                return True
-    return False
-
-@saxo.command("join")
+@saxo.command("join", owner=True)
 def join(irc):
-    if owner(irc):
-        if irc.arg.startswith("#"):
-            irc.client("join", irc.arg)
-            irc.say("Joining %s" % irc.arg)
+    if irc.arg.startswith("#"):
+        irc.client("join", irc.arg)
+        irc.say("Joining %s" % irc.arg)
 
-@saxo.command("leave")
+@saxo.command("leave", owner=True)
 def leave(irc):
-    if owner(irc):
-        if irc.arg.startswith("#"):
-            irc.send("PART", irc.arg)
-            irc.say("Leaving %s" % irc.arg)
+    if irc.arg.startswith("#"):
+        irc.send("PART", irc.arg)
+        irc.say("Leaving %s" % irc.arg)
 
-@saxo.command("part")
+@saxo.command("part", owner=True)
 def part(irc):
-    if owner(irc):
-        if irc.arg.startswith("#"):
-            irc.client("part", irc.arg)
-            irc.say("Parting %s" % irc.arg)
+    if irc.arg.startswith("#"):
+        irc.client("part", irc.arg)
+        irc.say("Parting %s" % irc.arg)
 
-@saxo.command("prefix")
+@saxo.command("prefix", owner=True)
 def prefix(irc):
-    if owner(irc):
-        irc.client("prefix", irc.arg)
-        irc.say("Setting prefix to %r" % irc.arg)
+    irc.client("prefix", irc.arg)
+    irc.say("Setting prefix to %r" % irc.arg)
 
-@saxo.command("quit")
+@saxo.command("quit", owner=True)
 def quit(irc):
-    if owner(irc):
-        irc.client("quit")
+    irc.client("quit")
 
-@saxo.command("reload")
+@saxo.command("reload", owner=True)
 def reload(irc):
-    if owner(irc):
-        irc.client("reload", irc.sender)
+    irc.client("reload", irc.sender)
 
-@saxo.command("visit")
+@saxo.command("visit", owner=True)
 def visit(irc):
-    if owner(irc):
-        if irc.arg.startswith("#"):
-            irc.send("JOIN", irc.arg)
-            irc.say("Visiting %s" % irc.arg)
+    if irc.arg.startswith("#"):
+        irc.send("JOIN", irc.arg)
+        irc.say("Visiting %s" % irc.arg)
