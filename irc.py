@@ -75,7 +75,7 @@ class ThreadSafeEnvironment(object):
 
         if command == "PRIVMSG":
             self.sender = self.parameters[0]
-            if self.identified:
+            if self.identified is not None:
                self.text = self.parameters[1][1:]
             else:
                self.text = self.parameters[1]
@@ -407,7 +407,7 @@ class Saxo(object):
         identified = None
 
         if command == "PRIVMSG":
-            if self.identify_msg:
+            if self.identify_msg is not None:
                 identified = parameters[1][0] is "+"
                 privmsg = parameters[1][1:]
             else:
