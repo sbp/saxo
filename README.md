@@ -1,6 +1,6 @@
 # saxo
 
-[![Build Status](https://travis-ci.org/sbp/saxo.png?branch=master)](https://travis-ci.org/sbp/saxo)
+[![Build Status](https://travis-ci.org/sbp/saxo.png?branch=master)](https://travis-ci.org/sbp/saxo) [![PyPI version](https://badge.fury.io/py/saxo.png)](http://badge.fury.io/py/saxo)
 
 Quick and flexible [irc bot](https://en.wikipedia.org/wiki/Internet_Relay_Chat_bot), extensible in any language.
 
