@@ -95,6 +95,20 @@ This last hostmask anyone with `nick` to be the owner without being identified w
 
 This is generally inadvisable.
 
+**private**
+
+How messages from the user directly to the bot, outside of any channel, should be handled.
+
+Example: `only`
+
+The bot will only respond to private messages.
+
+Example: `deny`
+
+The bot will never respond to private messages.
+
+Any other value instructs the bot to respond to any sort of message.
+
 **prefix**
 
 The prefix to use for commands. Using `.` for example would allow commands such as `.version`.
