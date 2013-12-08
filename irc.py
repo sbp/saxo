@@ -400,10 +400,21 @@ class Saxo(object):
 
     def instruction_remote(self, octets):
         debug(repr(octets))
+        nick = self.opt["client"]["nick"]
         prefix, command, parameters = parse(octets)
         identified = None
 
         if command == "PRIVMSG":
+            private = self.opt["client"].get("private")
+            sender = parameters[0]
+
+            if sender == nick:
+                if private == "deny":
+                    return
+                sender = prefix[0]
+            elif private == "only":
+                return
+
             if self.identify_msg is True:
                 identified = parameters[1][0] == "+"
                 parameters[1] = parameters[1][1:]
@@ -418,10 +429,6 @@ class Saxo(object):
                     cmd, arg = privmsg.split(" ", 1)
                 else:
                     cmd, arg = privmsg, ""
-
-                sender = parameters[0]
-                if sender == self.opt["client"]["nick"]:
-                    sender = prefix[0]
 
                 self.command(prefix, sender, identified, cmd, arg)
 
