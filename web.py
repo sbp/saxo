@@ -121,13 +121,23 @@ def request(url, query=None, data=None, method="GET",
         response["url"] = res.url
         response["status"] = res.status # int
         response["info"] = res.info()
-        response["headers"] = {a.lower(): b for (a, b) in response["info"].items()}
+        response["headers"] = {
+            a.lower(): b for (a, b) in response["info"].items()
+        }
 
         if method == "GET":
             if limit is None:
                 response["octets"] = res.read()
             else:
                 response["octets"] = res.read(limit)
+
+    if "Content-Encoding" in response["info"]:
+        if response["info"]["Content-Encoding"] == "gzip":
+            from gzip import GzipFile
+            from io import BytesIO
+            sio = BytesIO(response["octets"])
+            gz = GzipFile(fileobj=sio)
+            response["octets"] = gz.read()
 
     mime, encoding = content_type(response["info"])
     if mime:

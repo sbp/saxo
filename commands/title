@@ -9,6 +9,7 @@ import saxo
 
 regex_link = re.compile(r"^(http[s]?://[^<> \"\x01]+)[,.]?$")
 regex_title = re.compile(r"(?ims)<title>(.*?)</title>")
+regex_script = re.compile(r"(?ims)<script(.*?)</script>")
 regex_tag = re.compile(r"<[^>]+>")
 
 def longest(input, sep):
@@ -21,7 +22,6 @@ def longest(input, sep):
     return result
 
 blacklist = (
-    "github.com",
     "swhack.com",
     "translate.google.com",
     "tumbolia.appspot.com",
@@ -45,7 +45,8 @@ def title(url):
             return
 
     page = saxo.request(url, limit=262144, follow=True)
-    search = regex_title.search(page["text"])
+    text = regex_script.sub("", page["text"])
+    search = regex_title.search(text)
     if search:
         title = search.group(1)
         title = regex_tag.sub("", title)
