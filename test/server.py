@@ -208,9 +208,6 @@ class Test(socketserver.StreamRequestHandler):
         who = self.recv()
         self.equal(who["command"], "WHO", "Expected WHO")
 
-        cap = self.recv()
-        self.equal(cap["command"], "CAP", "Expected CAP")
-
     def recv(self):
         while True:
             try: octets = self.rfile.readline()

@@ -58,7 +58,7 @@ def parse(octets):
     return match_prefix.groups(), params[0], params[1:]
 
 class ThreadSafeEnvironment(object):
-    def __init__(self, saxo, prefix, command, parameters, identified):
+    def __init__(self, saxo, prefix, command, parameters):
         self.base = saxo.base[:]
         self.config = saxo.config_cache.copy()
 
@@ -71,7 +71,6 @@ class ThreadSafeEnvironment(object):
 
         self.command = command
         self.parameters = parameters
-        self.identified = identified
 
         if command == "PRIVMSG":
             self.sender = self.parameters[0]
@@ -152,7 +151,6 @@ class Saxo(object):
         self.receiving = False
         self.sending = False
         self.user_reconnection = False
-        self.identify_msg = False
         self.links = {}
 
         self.environment_cache = os.environ.copy()
@@ -278,7 +276,7 @@ class Saxo(object):
 
     def instruction_connected(self):
         if ":connected" in self.events:
-            irc = ThreadSafeEnvironment(self, ("", "", ""), "", [], None)
+            irc = ThreadSafeEnvironment(self, ("", "", ""), "", [])
             for function in self.events[":connected"]:
                 function(irc)
 
@@ -301,9 +299,6 @@ class Saxo(object):
             else:
                 # TODO: Close the socket?
                 ...
-
-    def instruction_identify_msg(self, ack):
-        self.identify_msg = ack
 
     def instruction_join(self, channel):
         # NOTE: .visit can still be followed by .join
@@ -402,7 +397,6 @@ class Saxo(object):
         debug(repr(octets))
         nick = self.opt["client"]["nick"]
         prefix, command, parameters = parse(octets)
-        identified = None
 
         if command == "PRIVMSG":
             private = self.opt["client"].get("private")
@@ -415,10 +409,6 @@ class Saxo(object):
             elif private == "only":
                 return
 
-            if self.identify_msg is True:
-                identified = parameters[1][0] == "+"
-                parameters[1] = parameters[1][1:]
-
             pfx = self.opt["client"]["prefix"]
             length = len(pfx)
             privmsg = parameters[1]
@@ -430,7 +420,7 @@ class Saxo(object):
                 else:
                     cmd, arg = privmsg, ""
 
-                self.command(prefix, sender, identified, cmd, arg)
+                self.command(prefix, sender, cmd, arg)
 
         elif command == "PONG":
             if self.discotimer is not None:
@@ -441,7 +431,7 @@ class Saxo(object):
                 except:
                     ...
 
-        args = (self, prefix, command, parameters, identified)
+        args = (self, prefix, command, parameters)
         irc = ThreadSafeEnvironment(*args)
         def safe(function, irc):
             try: function(irc)
@@ -473,7 +463,7 @@ class Saxo(object):
     def instruction_sending(self):
         self.sending = True
 
-    def command(self, prefix, sender, identified, cmd, arg):
+    def command(self, prefix, sender, cmd, arg):
         if ("\x00" in cmd) or (os.sep in cmd) or ("." in cmd):
             return
 
@@ -513,10 +503,6 @@ class Saxo(object):
             env = self.environment_cache.copy()
             env["SAXO_NICK"] = prefix[0]
             env["SAXO_SENDER"] = sender
-            if identified == True:
-                env["SAXO_IDENTIFIED"] = "1"
-            elif identified == False:
-                env["SAXO_IDENTIFIED"] = "0"
             if sender in self.links:
                 env["SAXO_URL"] = self.links[sender]
             common.thread(process, env, path, arg)

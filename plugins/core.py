@@ -15,7 +15,6 @@ def first(irc):
     for channel in irc.config["channels"].split(" "):
         irc.send("JOIN", channel)
     irc.send("WHO", irc.config["nick"])
-    irc.send("CAP REQ", "identify-msg")
 
 @saxo.event("352")
 def who(irc):
@@ -28,12 +27,3 @@ def who(irc):
 @saxo.event("PING")
 def ping(irc):
     irc.send("PONG", irc.config["nick"])
-
-@saxo.event("CAP")
-def cap(irc):
-    if irc.parameters[0] != irc.config["nick"]:
-        return
-    if irc.parameters[1] != "ACK":
-        return
-    if "identify-msg" in irc.parameters[2].split():
-        irc.client("identify_msg", True)
