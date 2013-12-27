@@ -38,6 +38,7 @@ class Table(object):
         schema = ", ".join(a + " " + types.get(b, b) for (a, b) in schema)
         query = "CREATE TABLE IF NOT EXISTS %s (%s)" % (self.name, schema)
         cursor.execute(query)
+        cursor.close()
 
     def insert(self, row, *rows, commit=True):
         cursor = self.connection.cursor()
@@ -51,6 +52,7 @@ class Table(object):
 
         if commit:
             self.connection.commit()
+        cursor.close()
 
     def rows(self, order=None):
         cursor = self.connection.cursor()
@@ -66,6 +68,7 @@ class Table(object):
             if result is None:
                 break
             yield result
+        cursor.close()
 
     def schema(self):
         cursor = self.connection.cursor()
@@ -76,6 +79,7 @@ class Table(object):
             if result is None:
                 break
             yield result
+        cursor.close()
 
 class Database(object):
     def __init__(self, path):
@@ -94,12 +98,15 @@ class Database(object):
             query = "DROP TABLE %s" % key
             cursor = self.connection.cursor()
             cursor.execute(query)
+            cursor.close()
 
     def __contains__(self, key):
         cursor = self.connection.cursor()
         query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
         cursor.execute(query, (key,))
-        return cursor.fetchone() is not None
+        result = cursor.fetchone() is not None
+        cursor.close()
+        return result
 
     def __getitem__(self, key):
         return Table(self.connection, key)
@@ -136,6 +143,7 @@ class Database(object):
                 continue
             yield result
             previous = result
+        cursor.close()
 
 def test():
     import os
