@@ -178,7 +178,7 @@ def request(url, query=None, data=None, method="GET",
 
     if mime and ("text" in response):
         if ("/html" in mime) or ("/xhtml" in mime):
-                # TODO: Raw HTML option
+                response["html"] = response["text"]
                 response["text"] = decode_entities(response["text"])
                 response["decoded-entities"] = True
 

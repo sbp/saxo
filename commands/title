@@ -3,6 +3,7 @@
 # Copyright 2013, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
+import html.entities
 import os
 import re
 import saxo
@@ -11,6 +12,7 @@ regex_link = re.compile(r"^(http[s]?://[^<> \"\x01]+)[,.]?$")
 regex_title = re.compile(r"(?ims)<title>(.*?)</title>")
 regex_script = re.compile(r"(?ims)<script(.*?)</script>")
 regex_tag = re.compile(r"<[^>]+>")
+regex_entity = re.compile(r"&([^;\s]+);")
 
 def longest(input, sep):
     longest = 0
@@ -30,6 +32,20 @@ blacklist = (
     "wikipedia.org"
 )
 
+def decode_entities(hypertext):
+    def entity(match):
+        name = match.group(1).lower()
+
+        if name.startswith("#x"):
+            return chr(int(name[2:], 16))
+        elif name.startswith("#"):
+            return chr(int(name[1:]))
+        elif name in html.entities.name2codepoint:
+            return chr(html.entities.name2codepoint[name])
+        return "[" + name + "]"
+
+    return regex_entity.sub(entity, hypertext)
+
 @saxo.pipe
 def title(url):
     if not url:
@@ -45,11 +61,12 @@ def title(url):
             return
 
     page = saxo.request(url, limit=262144, follow=True)
-    text = regex_script.sub("", page["text"])
+    text = regex_script.sub("", page["html"])
     search = regex_title.search(text)
     if search:
         title = search.group(1)
         title = regex_tag.sub("", title)
+        title = decode_entities(title)
         title = title.replace("\r", "")
         title = title.replace("\n", "")
 
