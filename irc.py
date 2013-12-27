@@ -19,10 +19,12 @@ import time
 if "." in __name__:
     from . import common
     from . import scheduler
+    from . import sqlite
     from .saxo import path as saxo_path
 else:
     import common
     import scheduler
+    import sqlite
     from saxo import path as saxo_path
 
 lock = threading.Lock()
@@ -299,6 +301,20 @@ class Saxo(object):
             else:
                 # TODO: Close the socket?
                 ...
+
+    def instruction_instances(self):
+        our_pid = os.getpid()
+        database_filename = os.path.join(self.base, "database.sqlite3")
+        with sqlite.Database(database_filename) as db:
+            pids = [row[0] for row in db["saxo_instances"]]
+        if len(pids) == 1:
+            if pids[0] == our_pid:
+                return
+
+        debug("Found another saxo instance! %s" % pids)
+        self.send("QUIT", "Another saxo instance was detected")
+        self.disconnect()
+        os._exit(0)
 
     def instruction_join(self, channel):
         # NOTE: .visit can still be followed by .join
