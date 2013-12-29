@@ -354,6 +354,13 @@ class Saxo(object):
         self.send("PART", channel)
 
     def instruction_ping(self):
+        # Don't ping if not connected, or connected less than a minute ago
+        if not self.receiving:
+            return
+        now = time.time()
+        if self.receiving > (now - 60):
+            return
+
         self.send("PING", self.opt["client"]["nick"])
 
         def reconnect():
@@ -376,7 +383,7 @@ class Saxo(object):
         os._exit(0)
 
     def instruction_receiving(self):
-        self.receiving = True
+        self.receiving = time.time()
         # TODO: Check that we really are connected
         # TODO: Unit test for :connected event
         incoming.put(("connected",))
