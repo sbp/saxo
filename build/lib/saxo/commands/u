@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import re
+import saxo
+
+def search_by_char(db, char):
+    codepoint = ord(char)
+    query = "SELECT * FROM saxo_unicode WHERE codepoint = ?"
+    for row in db.query(query, codepoint):
+        return "U+%s %s (%s)" % (row[0], row[2], row[7])
+
+def search_by_name(db, search):
+    regex_metachar = re.compile("[%s]" % re.escape(r"$()*+.?[\]^{|}"))
+    if regex_metachar.search(search):
+        pattern = search
+    else:
+        pattern = ".*".join(r"\b" + word for word in search.split(" "))
+    pattern = "(?i)" + pattern
+
+    results = []
+    query = "SELECT * FROM saxo_unicode WHERE name REGEXP ?"
+    for row in db.query(query, pattern):
+        codepoint = row[1]
+        name = row[2]
+
+        length = len(name) / 60
+        length = length if (length <= .5) else .5
+
+        position = codepoint / 0xFFFF
+        position = position if (position <= 1) else 1
+
+        weight = length + position
+        # DerivedAge might make a good weight
+
+        results.append((weight, row))
+
+    if not results:
+        return "No characters found"
+
+    for weight, row in sorted(results):
+        # hexcode, name, display
+        return "U+%s %s (%s)" % (row[0], row[2], row[7])
+
+@saxo.pipe
+def u(arg):
+    if not arg:
+        return "Search for Unicode characters"
+
+    with saxo.database() as db:
+        if not "saxo_unicode" in db:
+            return "Get an admin to run .update-unicode-data first"
+
+        # TODO: Search by hexcode, search by character
+        if len(arg) == 1:
+            if ord(arg) > 0x80:
+                return search_by_char(db, arg)
+        return search_by_name(db, arg)

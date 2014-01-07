@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import os
+import queue
+import re
+import saxo
+import subprocess
+import threading
+
+pattern = r'\+?"[^"\\]*(?:\\.[^"\\]*)*"|\[[^]\\]*(?:\\.[^]\\]*)*\]|\S+'
+regex_search_term = re.compile(pattern)
+
+def thread(target, *args):
+    t = threading.Thread(target=target, args=tuple(args), daemon=True)
+    t.start()
+    return t
+
+def terms(text):
+    terms = []
+    while text:
+        text = text.strip()
+        match = regex_search_term.match(text)
+        if not match:
+            raise ValueError("No search term found, here: %r" % text)
+
+        term = match.group(0)
+        terms.append(term)
+        text = text[len(term):]
+    return terms
+
+@saxo.pipe
+def gcs(arg):
+    if not arg:
+        return "Count results for multiple phrases on Google"
+
+    phrases = terms(arg)
+    results = queue.Queue()
+    commands = saxo.env("commands")
+    if not commands:
+        return "Can't find the gc command"
+
+    for phrase in phrases:
+        path = os.path.join(commands, "gc")
+        octets = phrase.encode("utf-8")
+        def gc(path, phrase, octets):
+            proc = subprocess.Popen([path, octets],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
+            try: outs, errs = proc.communicate(octets + b"\n", timeout=3)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                outs = "[timeout]"
+                size = None
+            else:
+                outs = outs.decode("utf-8", "replace")
+                outs = outs.rstrip("\r\n")
+                size = int(outs.replace(",", ""))
+
+            if not outs:
+                outs = "[no response]"
+                size = None
+
+            # TODO: Probably not thread-safe
+            results.put((size, phrase, outs))
+        thread(gc, path, phrase, octets)
+
+    expect = len(phrases)
+    res = []
+    while True:
+        try: item = results.get(timeout=3)
+        except queue.Empty:
+            break
+        res.append(item)
+        if len(res) >= expect:
+            break
+
+    # TODO: Sort by results
+    res = sorted(res, reverse=True)
+    return ", ".join("%s (%s)" % (a, b) for (_, a, b) in res)

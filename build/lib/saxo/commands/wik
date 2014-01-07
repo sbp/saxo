@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import json
+import re
+import saxo
+
+upper = tuple("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+lower = tuple("abcdefghijklmnopqrstuvwxyz")
+abbreviations = upper + lower + ("etc", "ca", "cf", "Co", "Ltd", "Inc",
+    "Mt", "Mr", "Mrs", "Dr", "Ms", "Rev", "Fr", "St", "Sgt", "pron",
+    "approx", "lit", "syn", "transl", "sess", "fl", "Op", "Dec", "Brig",
+    "Gen", "Bros")
+abbreviations_pattern = r"(?<!\b%s)" % r")(?<!\b".join(abbreviations)
+regex_sentence= re.compile(
+    r"^(.{5,}?%s(?:\.(?=[\[ ][A-Z0-9]|\Z)|\Z|\n))" % abbreviations_pattern)
+
+regex_block = re.compile(r"(?ims)<p[^>]*>.*?</p>|<li(?!n)[^>]*>.*?</li>")
+regex_tr = re.compile(r"(?ims)<tr.*?</(tr|table)>")
+regex_footnote = re.compile(r"[|]*\[[0-9]+\][|]*")
+regex_tag = re.compile(r"<[^>]+>")
+
+# TODO: Copied from ./g
+def g(arg):
+    page = saxo.request("http://ajax.googleapis.com/ajax/services/search/web",
+        query={"v": "1.0", "safe": "off", "q": arg})
+    data = json.loads(page["text"])
+
+    if "responseData" in data:
+        if "results" in data["responseData"]:
+            if data["responseData"]["results"]:
+                if "unescapedUrl" in data["responseData"]["results"][0]:
+                    return data['responseData']['results'][0]['unescapedUrl']
+
+def article_search(term, language):
+    site = "%s.wikipedia.org" % language
+    phrase = "site:%s %s" % (site, term.replace("_", " "))
+    url = g(phrase)
+    if not url:
+        return
+    if "?" in url:
+        url = url.split("?", 1)[0]
+    return url[len("http://%s/wiki/" % site):].replace("_", " ")
+
+@saxo.pipe
+def wik(arg):
+    term = arg
+    # TODO: Allow :fr style flags
+    language = "en"
+    debug = []
+
+    def underscored(term):
+        return term.replace(" ", "_")
+
+    def spaced(term):
+        return term.replace("_", " ")
+
+    def search(term):
+        debug.append("Searched %s for %r" % (language, spaced(term)))
+        return article_search(spaced(term), language)
+
+    def skip_html_block(block):
+        skip = ("technical limitations", "window.showTocToggle",
+            "Deletion_policy", "Template:AfD_footer",    'disambiguation)"',
+            "(images and media)", "This article contains a",
+            'id="coordinates"', 'class="thumb'    ,
+            "using the Article Wizard if you wish", "or add a request for it",
+            "in existing articles")
+
+        if not block:
+            return True
+        if block.startswith("<p><i>") and block.endswith("</i></p>"):
+            return True
+        for text in skip:
+            if text in block:
+                return True
+
+        return False
+
+    def skip_text_block(block):
+        if len(block) < 32:
+            return True
+        if not block:
+            return True
+        return False
+
+    def scrape(block):
+        block = block.replace("<sup>", "|")
+        block = block.replace("</sup>", "|")
+        block = regex_tag.sub("", block)
+        return regex_footnote.sub("", block)
+
+    for attempt in range(2):
+        # See if the article actually exists first, with following on
+        page = saxo.request(
+            "https://%s.wikipedia.org/wiki/%s" %
+                (language, underscored(term)),
+            follow=True)
+
+        # @@ it's an int here? huh
+        if page["status"] != 200:
+            debug.append("%s gave %s" % (page["url"], page["status"]))
+            term = search(term)
+            if not term:
+                return "Google had no results"
+            continue
+
+        # Don't think they have those old 200 Redirects now
+        text = regex_tr.sub("", page["text"])
+        blocks = regex_block.findall(text)
+        if not blocks:
+            debug.append("%s had no blocks" % page["url"])
+            term = search(term)
+            continue
+
+        # Filter out stuff we don't want
+        blocks = (block for block in blocks if not skip_html_block(block))
+        blocks = (scrape(block) for block in blocks)
+        blocks = (block for block in blocks if not skip_text_block(block))
+
+        block = next(blocks)
+        try: block += " " + next(blocks) + " " + next(blocks)
+        except StopIteration:
+            ...
+
+        sentence_match = regex_sentence.match(block)
+        if not sentence_match:
+            debug.append("%s had no sentences" % page["url"])
+            term = search(term)
+            continue
+
+        sentence = sentence_match.group(1)
+        if 'href="/wiki/Category:Disambiguation_pages"' in page["text"]:
+            sentence = "[Disambiguation] " + sentence
+
+        if len(sentence) < 128:
+            block = block[len(sentence):].lstrip()
+            sentence_match2 = regex_sentence.match(block)
+            if sentence_match2:
+                sentence += " " + sentence_match2.group(1)
+
+        maxlength = 275
+        if len(sentence) > maxlength:
+            words = sentence[:maxlength][:-6].split(" ")
+            sentence = " ".join(words[:-1]) + " [...]"
+        sentence = sentence.replace('"', "'")
+        if sentence.endswith(":"):
+            sentence = sentence[:-1] + "..."
+
+        # url = page["url"]
+        # term = spaced(term)
+        sentence = sentence.replace("\r", "")
+        sentence = sentence.replace("\n", "")
+        return '"' + sentence + '" - ' + page["url"]
+
+    return "Article not found: " + " | ".join(debug)

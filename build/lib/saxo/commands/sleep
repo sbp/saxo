@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+
+# Copyright 2013, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import sys
+import time
+
+def sleep(text):
+    duration = int(text)
+    before = time.time()
+    time.sleep(duration)
+
+    return "Slept for %s seconds" % (time.time() - before)
+
+if __name__ == "__main__":
+    print(sleep(sys.argv[1]))

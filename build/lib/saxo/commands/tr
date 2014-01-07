@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import json
+import saxo
+
+def optflag(arg):
+    flag = None
+    if arg.startswith(":"):
+        if " " in arg:
+            flag, arg = arg.split(" ", 1)
+        else:
+            flag, arg = arg, ""
+        flag = flag[1:]
+    return flag, arg
+
+def translate(text, source="auto", target=None):
+    ua = "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11"
+    if target is None:
+        target = "en"
+
+    page = saxo.request(
+        "http://translate.google.com/translate_a/t",
+        headers={"User-Agent": ua},
+        query = {
+            "client": "t",
+            "hl": "en",
+            "sl": source,
+            "tl": target,
+            "multires": "1",
+            "otf": "1",
+            "ssel": "0",
+            "tsel": "0",
+            "uptl": "en",
+            "sc": "1",
+            "text": text
+        })
+
+    text = page["text"]
+    while ",," in text:
+        text = text.replace(",,", ",null,")
+    js = json.loads(text)
+
+    if len(js) > 2:
+        source = js[2]
+    else:
+        source  = "?"
+    translation = "".join(part[0] for part in js[0])
+    return translation.replace(" ,", ","), source, target
+
+@saxo.pipe
+def tr(arg):
+    if not arg:
+        return "Translate text from one language to another"
+
+    source, arg = optflag(arg)
+    target, text = optflag(arg)
+
+    translation, source, target = translate(text, source, target)
+
+    t = translation[:-1] if translation.endswith(".") else translation
+    msg = "%s (%s » %s). translate.google.com"
+    return msg % (translation, source, target)

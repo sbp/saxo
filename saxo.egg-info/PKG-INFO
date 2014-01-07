@@ -1,0 +1,13 @@
+Metadata-Version: 1.1
+Name: saxo
+Version: 0.2.005
+Summary: Quick and flexible irc bot, extensible in any language
+Home-page: http://inamidst.com/saxo/
+Author: Sean B. Palmer
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: Documented in `@sbp/saxo/README.md <https://github.com/sbp/saxo/blob/master/README.md>`_
+Platform: Linux and OS X
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python :: 3

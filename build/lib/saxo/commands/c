@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import re
+import saxo
+
+pattern = r'(?ims)<(?:h2 class="r"|div id="aoba")[^>]*>(.*?)</(?:h2|div)>'
+regex_answer = re.compile(pattern)
+
+@saxo.pipe
+def c(arg):
+    substitutions = {
+        "ϕ": "phi",
+        "π": "pi",
+        "tau": "(pi*2)",
+        "τ": "(pi*2)"
+    }
+
+    expression = arg
+    for a, b in substitutions.items():
+        expression = expression.replace(a, b)
+
+    def correct(right):
+        substitutions = {
+            "<sup>": "^(",
+            "</sup>": ")",
+            "\xA0": "," # nbsp
+        }
+        for a, b in substitutions.items():
+            right = right.replace(a, b)
+        return right
+
+    page = saxo.request(
+        "https://www.google.com/search",
+        query={"q": expression})
+
+    text = page["text"]
+    for answer in regex_answer.findall(page["text"]):
+        return correct(answer)
+    return "No answers found"

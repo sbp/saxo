@@ -1,0 +1,19 @@
+#!/bin/bash
+
+SAXO=$(pwd)
+
+rm -rf /tmp/saxo-pip-installation
+mkdir /tmp/saxo-pip-installation
+cd /tmp/saxo-pip-installation
+
+curl -O https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.10.1.tar.gz
+tar -zxvf virtualenv-1.10.1.tar.gz
+python3 virtualenv-1.10.1/virtualenv.py saxo-pip
+
+saxo-pip/bin/pip install $SAXO
+saxo-pip/bin/saxo test
+echo
+
+echo  "cd /tmp/saxo-pip-installation"
+echo "/tmp/saxo-pip-installation/saxo-pip/bin/saxo -f start"
+echo "rm -rf /tmp/saxo-pip-installation"

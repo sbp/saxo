@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+# Copyright 2013, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import re
+import saxo
+import time
+
+pattern = r"[A-Za-z\x5B-\x60\x7B-\x7D][A-Za-z0-9\x5B-\x60\x7B-\x7D-]{,17}"
+regex_nickname = re.compile("^" + pattern + "$")
+
+@saxo.pipe
+def to(arg):
+    if not arg:
+        return "Send a message to somebody"
+
+    if " " not in arg:
+        return "Syntax: .to recipient <your message here>"
+
+    nick = saxo.env("nick")
+    if nick is None:
+        return "Sorry, I don't know your nickname"
+
+    recipient, message = arg.split(" ", 1)
+    if recipient == nick:
+        return "You can tell yourself that"
+    if recipient == saxo.env("bot"):
+        return "Thanks, noted"
+
+    if not regex_nickname.match(recipient):
+        return "Sorry, %r is not a valid nickname" % recipient
+
+    channel = saxo.env("sender")
+    if channel is None:
+        return "Sorry, I don't know what channel you're on"
+
+    with saxo.database() as db:
+        now = int(time.time())
+        db["saxo_to"].insert((nick, recipient, now, channel, message))
+        return "Okay, I'll pass that message along to %s" % recipient

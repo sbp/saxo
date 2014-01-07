@@ -1,0 +1,13 @@
+#!python
+
+# Copyright 2013, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import sys
+
+def main():
+    import saxo
+    saxo.script(sys.argv)
+
+if __name__ == "__main__":
+    main()

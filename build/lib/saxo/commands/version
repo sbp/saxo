@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+
+import os
+import saxo
+
+@saxo.pipe
+def version(arg):
+    reply = "saxo " + saxo.version
+    master = os.path.join(saxo.path, ".git", "refs", "heads", "master")
+    if os.path.isfile(master):
+        with open(master, "r", encoding="ascii") as f:
+            reply += " (%s)" % f.read()[:10]
+    return reply

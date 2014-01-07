@@ -1,0 +1,22 @@
+.in 9s ê!
+: Will remind at <.*>
+WAIT 6
+: ê!
+
+.to
+Send a message to somebody
+
+.to $(BOT) something
+Thanks, noted
+
+.to $(USER) something
+You can tell yourself that
+
+.u control
+U+0001 <.>control<.> (␁)
+
+.u small circum
+U+00E2 LATIN SMALL LETTER A WITH CIRCUMFLEX (â)
+
+.upper abc
+ABC

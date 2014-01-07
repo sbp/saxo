@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+
+# Copyright 2013, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import re
+import saxo
+import sys
+import time
+
+clock_dict_scales = {
+    365.25 * 24 * 3600: ("years", "year", "yrs", "y"),
+    29.53059 * 24 * 3600: ("months", "month", "mo"),
+    7 * 24 * 3600: ("weeks", "week", "wks", "wk", "w"),
+    24 * 3600: ("days", "day", "d"),
+    3600: ("hours", "hour", "hrs", "hr", "h"),
+    60: ("minutes", "minute", "mins", "min", "m"),
+    1: ("seconds", "second", "secs", "sec", "s")
+}
+
+clock_dict_scaling = {}
+for period, names in clock_dict_scales.items():
+    for name in names:
+        clock_dict_scaling[name] = period
+
+clock_regex_period = re.compile(r"(?i)([0-9]+(?:\.[0-9]+)?) *([a-z]+)")
+
+def period_seconds(match):
+    number, unit = match.groups()
+    number = float(number)
+    unit = unit.lower()
+
+    if not unit in clock_dict_scaling:
+        raise ValueError("Invalid period unit: %s" % unit)
+
+    scale = clock_dict_scaling[unit]
+    seconds = number * scale
+
+    return number, unit, scale, seconds
+
+def periods_seconds(text):
+    seconds = 0
+    periods = 0
+    durations = []
+    remainder = text
+
+    while True:
+        remainder = remainder.lstrip()
+        match = clock_regex_period.match(remainder)
+        if not match:
+            break
+
+        period = match.group(0)
+        try:  _, _, _, p_seconds = period_seconds(match)
+        except ValueError as err:
+            break
+
+        seconds += p_seconds
+        periods += 1
+        durations.append(p_seconds)
+        remainder = remainder[len(period):]
+
+    return int(seconds), remainder
+
+def parse_periods(text):
+    basetime = int(time.time())
+    seconds, message = periods_seconds(text)
+    return seconds, basetime + seconds, message
+
+@saxo.pipe
+def main(arg):
+    if not arg:
+        return "Schedule a reminder"
+
+    seconds, unixtime, message = parse_periods(arg)
+    if not seconds:
+        return "Couldn't understand your duration. Use units?"
+
+    nick = saxo.env("nick")
+    sender = saxo.env("sender")
+    if message:
+        message = nick + ": " + message
+    else:
+        message = nick + "!"
+
+    args = (unixtime, "msg", (sender, message))
+    saxo.client("schedule", *args)
+
+    return "%s: Will remind at %s" % (nick, time.ctime(unixtime))

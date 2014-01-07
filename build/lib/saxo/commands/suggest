@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import saxo
+
+@saxo.pipe
+def suggest(arg):
+    page = saxo.request("http://websitedev.de/temp-bin/suggest.pl",
+        query={"q": arg})
+    return page["text"]

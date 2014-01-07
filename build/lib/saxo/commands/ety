@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import re
+import saxo
+
+pattern_sentence = \
+    r"^(.*?(?<!%s)(?:\.(?= [A-Z0-9]|\Z)|\Z))" % ")(?<!".join((
+    "cf", "lit", "etc", "Ger", "Du", "Skt", "Rus", "Eng", "Amer.Eng", "Sp",
+    "Fr", "N", "E", "S", "W", "L", "Gen", "J.C", "dial", "Gk", "19c",
+    "18c", "17c", "16c", "St", "Capt", "obs", "Jan", "Feb", "Mar", "Apr",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "c", "tr", "e", "g"))
+regex_sentence = re.compile(pattern_sentence)
+regex_definition = re.compile("(?ims)<dd[^>]*>.*?</dd>")
+regex_tag = re.compile(r"<[^>]+>")
+
+def etymology(term, limit=None):
+    page = saxo.request(
+        "http://etymonline.com/index.php",
+        query={"term": term},
+        headers={"Referer": "http://www.etymonline.com/"})
+
+    if not "text" in page:
+        raise Exception("No response from %s" % page["url"])
+
+    definitions = regex_definition.findall(page["text"])
+    if not definitions:
+        raise Exception("No definitions found in %s" % page["url"])
+
+    definition = regex_tag.sub("", definitions[0])
+    definition = definition.replace("\r", "")
+    definition = definition.replace("\n", " ")
+    limit = limit - len(page["url"]) - 3
+    definition = definition[:limit] + "..."
+    definition = definition.replace('"', "'")
+    return definition, page["url"]
+
+@saxo.pipe
+def ety(arg):
+    if not arg:
+        return "Display the etymology of a term from Etymonline"
+
+    try: sentence, url = etymology(arg, 360)
+    except Exception as err:
+        link = "http://etymonline.com/search.php?term=" + arg
+        return "Nothing found. Try " + link + (" (%s)" % err)
+
+    if sentence:
+        return "\"%s\" - %s" % (sentence, url)
+    return "?"

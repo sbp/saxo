@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import urllib.parse
+import saxo
+
+@saxo.pipe
+def py(arg):
+    # If you don't encode the arg, you can get this error:
+    # UnicodeEncodeError: 'utf-8' codec [...]: surrogates not allowed
+    arg = arg.encode("utf-8", "replace")
+    quoted = urllib.parse.quote(arg)
+
+    page = saxo.request("http://tumbolia.appspot.com/py/" + quoted)
+    return page["text"]
