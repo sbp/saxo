@@ -240,6 +240,7 @@ class Saxo(object):
            raise SaxoConnectionError(str(err))
 
         self.first = True
+        # TODO: Reset other state? e.g. self.address
 
         receiving = (socket_receive, self.sock)
         self.receiving_thread = common.thread(*receiving)
@@ -267,13 +268,15 @@ class Saxo(object):
         # NOTE: *Do not* close the sending thread gracefully
         # The socket shutdown code below will be invoked before the queue
         # item reaches the socket thread. That means the *next* thread will
-        # pick it up, beacuse it'll quit with a pipe error anyway
+        # pick it up, because it'll quit with a pipe error anyway
 
         # Close the socket forcefully
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
+        self.cancel_discotimer()
 
         # This will force a pipe error in the send thread
+        # But only if the socket is still open
         outgoing.put(b"NOOP\r\n")
 
         # Now, the following are true:
@@ -283,10 +286,19 @@ class Saxo(object):
         # They'll then take the appropriate actions
 
     def socket_threads_active(self):
-        sending = self.sending_thread.is_alive()
         receiving = self.receiving_thread.is_alive()
-        debug("SEND, RECV:", sending, receiving)
-        return sending or receiving
+        sending = self.sending_thread.is_alive()
+        debug("RECV, SEND:", receiving, sending)
+        return receiving or sending
+
+    def cancel_discotimer(self):
+        if self.discotimer is not None:
+            try:
+                self.discotimer.cancel()
+                self.discotimer = None
+                debug("Cancelled the disco timer")
+            except:
+                ...
 
     def handle(self):
         while True:
@@ -395,7 +407,8 @@ class Saxo(object):
 
     def instruction_ping(self):
         # Don't ping if not connected, or connected less than a minute ago
-        if not self.receiving:
+        if (not self.receiving) or (not self.sending):
+            # TODO: Check the socket threads too?
             return
         now = time.time()
         if self.receiving > (now - 60):
@@ -405,6 +418,8 @@ class Saxo(object):
 
         def reconnect():
             incoming.put(("reconnect",))
+
+        # Make sure the timer is shorter than the pingloop!
         self.discotimer = threading.Timer(30, reconnect)
         self.discotimer.start()
 
@@ -429,6 +444,10 @@ class Saxo(object):
         incoming.put(("connected",))
 
     def instruction_reconnect(self, wait=3):
+        if self.reconnecting:
+            debug("Warning: Attempted a nested reconnection")
+            return
+
         debug("<reconnecting>")
         debug("<core>")
         self.reconnecting = True
@@ -499,13 +518,7 @@ class Saxo(object):
                 self.command(prefix, sender, cmd, arg)
 
         elif command == "PONG":
-            if self.discotimer is not None:
-                try:
-                    self.discotimer.cancel()
-                    self.discotimer = None
-                    debug("Cancelled the disco timer")
-                except:
-                    ...
+            self.cancel_discotimer()
 
         args = (self, prefix, command, parameters)
         irc = ThreadSafeEnvironment(*args)
