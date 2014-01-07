@@ -81,6 +81,7 @@ def client(command, *args, base=None):
 
 def command(name, owner=False):
     def is_owner(irc):
+        import re
         config_owner = irc.config["owner"]
         test_identity = False
         if not "!" in config_owner:

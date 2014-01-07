@@ -96,6 +96,11 @@ def help(args, v):
     version(args, v)
     print(HELP.rstrip())
 
+def base_option(args):
+    if args.directory is None:
+        return os.path.expanduser("~/.saxo")
+    return args.directory
+
 # Actions
 
 @action
@@ -113,10 +118,7 @@ def create(args):
 
 @action
 def shell(args):
-    if args.directory is None:
-        base = os.path.expanduser("~/.saxo")
-    else:
-        base = args.directory
+    base = base_option(args)
 
     # Save PEP 3122!
     if "." in __name__:
@@ -142,12 +144,91 @@ def shell(args):
     return 0
 
 @action
-def start(args):
-    if args.directory is None:
-        base = os.path.expanduser("~/.saxo")
-    else:
-        base = args.directory
+def console(args):
+    # TODO: Reduce code duplication
+    base = base_option(args)
 
+    # Save PEP 3122!
+    if "." in __name__:
+        from . import saxo
+    else:
+        import saxo
+
+    path = os.environ.get("PATH", "")
+    commands = os.path.join(base, "commands")
+
+    os.environ["PATH"] = commands + os.pathsep + path
+    os.environ["PYTHONPATH"] = saxo.path
+    os.environ["SAXO_SHELL"] = "1"
+    os.environ["SAXO_BASE"] = base
+    os.environ["SAXO_BOT"] = "saxo"
+    os.environ["SAXO_COMMANDS"] = commands
+    os.environ["SAXO_NICK"] = os.environ["USER"]
+    os.environ["SAXO_SENDER"] = os.environ["USER"]
+
+    def do(cmd, arg):
+        import subprocess
+        cmd = os.path.join(os.environ["SAXO_COMMANDS"], cmd)
+        try: octets = subprocess.check_output([cmd, arg])
+        except Exception as err:
+            return "Error: %s" % err
+        return octets.decode("utf-8")
+
+    while True:
+        sys.stdout.write("> ")
+        sys.stdout.flush()
+        try: i = sys.stdin.readline()
+        except: break
+
+        i = i.rstrip("\r\n")
+        if " " in i:
+            cmd, arg = i.split(" ", 1)
+        else:
+            cmd, arg = i, ""
+
+        if cmd.startswith("."):
+            saxo.client(cmd[1:], *eval("(%s)" % arg))
+
+        elif cmd.startswith("!"):
+            print(do(cmd[1:], arg).rstrip("\r\n"))
+
+        elif cmd == "saxo.path":
+            print(saxo.path)
+
+        elif cmd == "saxo.base":
+            print(base)
+
+        elif not cmd:
+            break
+
+        else:
+            print("Unknown command:", repr(cmd))
+
+@action
+def log(args):
+    base = base_option(args)
+    print(os.path.join(base, "log"))
+
+@action
+def start(args):
+    base = base_option(args)
+
+    # Quit any previously connected instances
+    if "." in __name__:
+        from .saxo import client
+    else:
+        from saxo import client
+
+    try: client("quit", base=base)
+    except FileNotFoundError as err:
+        ...
+    except ConnectionRefusedError as err:
+        ...
+    else:
+        print("Warning: Client may already have been running!")
+        sys.stdout.flush()
+
+    pidfile = os.path.join(base, "pid")
     if not args.foreground:
         # Save PEP 3122!
         if "." in __name__:
@@ -155,15 +236,28 @@ def start(args):
         else:
             import daemon
 
-        if args.output is None:
-            output = open(os.devnull, "w")
-        elif args.output in {"-", "/dev/stdout"}:
-            output = sys.stdout
+        if args.log:
+            log = os.path.join(base, "log")
+            if os.path.exists(log):
+                import shutil
+                modified = time.gmtime(os.path.getmtime("saxo"))
+                log2 = time.strftime("log-%Y%m%d-%H%M%S.txt", modified)
+                shutil.move(log, os.path.join(base, log2))
+            output = open(log, "w")
         else:
-            output = open(args.output, "w")
+            output = open(os.devnull, "w")
 
-        pidfile = os.path.join(base, "pid")
         daemon.start(pidfile, output)
+    else:
+        # This is duplicated variatim from daemon.py
+        import atexit
+        with open(pidfile, "w") as f:
+            f.write(str(os.getpid()) + "\n")
+
+        def delete_pidfile():
+            if os.path.isfile(pidfile):
+                os.remove(pidfile)
+        atexit.register(delete_pidfile)
 
     # Save PEP 3122!
     if "." in __name__:
@@ -171,15 +265,39 @@ def start(args):
     else:
         import irc
 
+    print("calling irc.start")
     irc.start(base)
     return 0
 
 @action
-def stop(args):
-    if args.directory is None:
-        base = os.path.expanduser("~/.saxo")
+def status(args):
+    base = base_option(args)
+
+    # Quit any previously connected instances
+    if "." in __name__:
+        from .saxo import client
     else:
-        base = args.directory
+        from saxo import client
+
+    try: client("noop", base=base)
+    except FileNotFoundError as err:
+        print("not running")
+    except ConnectionRefusedError as err:
+        print("not running")
+    else:
+        print("running")
+
+@action
+def stop(args):
+    base = base_option(args)
+
+    if "." in __name__:
+        from .saxo import client
+    else:
+        from saxo import client
+
+    try: client("quit", base=base)
+    except: ...
 
     pidfile = os.path.join(base, "pid")
     if not os.path.exists(pidfile):
@@ -263,13 +381,14 @@ def test(args):
             line = line.rstrip("\n")
             outgoing.put("C: " + line)
 
-        manifest01 = {"commands", "config", "database.sqlite3", "plugins"}
+        manifest01 = {"commands", "config", "database.sqlite3",
+            "pid", "plugins"}
         manifest02 = manifest01 | {"client.sock"}
 
         if set(os.listdir(saxo_test)) == manifest01:
             shutil.rmtree(saxo_test)
         elif set(os.listdir(saxo_test)) == manifest02:
-            outgoing.put("Warning: client.sock was not removed")
+            outgoing.put("Warning: client.sock had not been removed")
             shutil.rmtree(saxo_test)
         else:
             outgoing.put("Refusing to delete the saxo test directory")
@@ -307,7 +426,10 @@ def test(args):
         if line == "Server finished":
             break
 
-    print("TMP:", tmp)
+    if not os.listdir(tmp):
+        os.rmdir(tmp)
+    else:
+        print("Warning: Did not remove:", tmp)
 
     if completed and (not error):
         sys.exit(0)
@@ -316,9 +438,8 @@ def test(args):
 
 def main(argv, v):
     # NOTE: No default for argv, because what script name would we use?
-
-    parser = argparse.ArgumentParser(description="Control saxo irc bot instances",
-        add_help=False)
+    description = "Control saxo irc bot instances"
+    parser = argparse.ArgumentParser(description=description, add_help=False)
 
     parser.add_argument("-f", "--foreground", action="store_true",
         help="run in the foreground instead of as a daemon")
@@ -327,7 +448,10 @@ def main(argv, v):
         help="show a short help message")
 
     parser.add_argument("-o", "--output", metavar="filename",
-        help="redirect daemon stdout and stderr to this filename")
+        help="deprecated command: use -l / --log with no arg instead")
+
+    parser.add_argument("-l", "--log", action="store_true",
+        help="log to the standard log file")
 
     parser.add_argument("-v", "--version", action="store_true",
         help="show the current saxo version")
@@ -339,6 +463,11 @@ def main(argv, v):
         help="the path to the saxo configuration directory")
 
     args = parser.parse_args(argv[1:])
+
+    if args.output:
+        print("Sorry, -o / --output has been removed!")
+        print("Use -l / --log instead, with no arguments")
+        sys.exit(2)
 
     if args.help:
         help(args, v)
