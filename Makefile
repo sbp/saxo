@@ -4,6 +4,7 @@ SHELL = /bin/sh
 publish:
 	python3 setup.py sdist --formats=bztar upload
 	python3 setup.py bdist_wheel upload
+	rm -rf build/
 	rm -rf dist/
 	git add -A
 	git commit -m "Published `egrep -m1 '^version' saxo.py | cut -b12-18`"
