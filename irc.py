@@ -325,6 +325,27 @@ class Saxo(object):
     def instruction_address(self, address):
         self.address = address
 
+    def instruction_connect(self):
+        # NOTE: The instruction mechanism is synchronous
+        # This means we can't use self.receiving etc. to check connectivity
+        # We rely on self.disconnect() to have done the right thing
+        # The following is a check to make sure that it has
+        if self.socket_threads_active():
+           time.sleep(2)
+           if self.socket_threads_active():
+               # TODO: If the threads are still active, they should be killed
+               # Unfortunately, threads in python can't be killed
+               debug("ERROR! Unable to stop the socket threads")
+               os._exit(1)
+
+        try: self.connect()
+        except SaxoConnectionError as err:
+            # This might not work, because we don't allow nested reconnects
+            def connect():
+                incoming.put(("connect",))
+            t = threading.Timer(5, connect)
+            t.start()
+
     def instruction_connected(self):
         if ":connected" in self.events:
             irc = ThreadSafeEnvironment(self, ("", "", ""), "", [])
@@ -338,8 +359,8 @@ class Saxo(object):
         self.receiving = False
 
         if not self.reconnecting:
-            if not self.sending:
-                incoming.put(("reconnect",))
+            # if not self.sending:
+            incoming.put(("reconnect",))
         elif not self.sending:
             self.reconnecting = False
             debug("</reconnecting>")
@@ -407,11 +428,14 @@ class Saxo(object):
 
     def instruction_ping(self):
         # Don't ping if not connected, or connected less than a minute ago
-        if (not self.receiving) or (not self.sending):
-            # TODO: Check the socket threads too?
-            return
+        # if (not self.receiving) or (not self.sending):
+        #     # TODO: Check the socket threads too?
+        #     debug("Won't start discotimer, because we're not connected")
+        #     return
+
         now = time.time()
         if self.receiving > (now - 60):
+            debug("Won't start discotimer, because we recently reconnected")
             return
 
         self.send("PING", self.opt["client"]["nick"])
@@ -461,22 +485,7 @@ class Saxo(object):
         if not flood:
             time.sleep(wait)
 
-        # NOTE: The instruction mechanism is synchronous
-        # This means we can't use self.receiving etc. to check connectivity
-        # We rely on self.disconnect() to have done the right thing
-        # The following is a check to make sure that it has
-        if self.socket_threads_active():
-           time.sleep(2)
-           if self.socket_threads_active():
-               # TODO: If the threads are still active, they should be killed
-               # Unfortunately, threads in python can't be killed
-               debug("ERROR! Unable to stop the socket threads")
-               os._exit(1)
-
-        try: self.connect()
-        except SaxoConnectionError as err:
-            incoming.put(("reconnect", 5))
-
+        incoming.put(("connect",))
         # self.reconnecting is set to False in the disco_* instructions
         debug("</core>")
 
