@@ -5,7 +5,12 @@
 
 import os.path
 import sys
-import distutils.core
+
+try: from setuptools import setup
+except ImportError as err:
+    if "bdist_wheel" in sys.argv:
+        raise err
+    from distutils.core import setup
 
 try: import sqlite3
 except ImportError:
@@ -48,7 +53,7 @@ def update_version():
 if __name__ == "__main__":
     README = "https://github.com/sbp/saxo/blob/master/README.md"
 
-    distutils.core.setup(
+    setup(
         name="saxo",
         version=update_version(),
         author="Sean B. Palmer",

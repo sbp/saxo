@@ -307,6 +307,8 @@ def test(args):
         if line == "Server finished":
             break
 
+    print("TMP:", tmp)
+
     if completed and (not error):
         sys.exit(0)
     else:
