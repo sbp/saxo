@@ -1,0 +1,44 @@
+.c e ** (i * 2/3pi)
+e^((i * 2) / (3 * pi)) = 0.977568548 + 0.210617505 i
+
+.ety frog
+"<.{32,}>" - http://etymonline.com/index.php?term=frog
+
+.g reddit
+http://www.reddit.com/
+
+.gc gombuc
+<[0-9,]+>
+
+.gcs [python irc] "old man river" common xrare
+common (<[0-9,]+>), [python irc] (<[0-9,]+>), "old man river" (<[0-9,]+>), xrare (<[0-9,]+>)
+
+.img rongorongo
+http://<.*>
+
+.news UN special envoy
+http://<.*>
+
+.npl
+<[0-9 :.-]{26}> UTC
+
+.py len("mâché!")
+8
+
+.suggest up Pompeii
+Perhaps up Pompeii: <.{16,}>
+
+.title http://inamidst.com/
+Website of Sean B. Palmer
+
+.tr :fr mon chat
+my cat (fr » en). translate.google.com
+
+.tw 241314011524788225
+Juhu, mache nächste Woche also was mit maxi :3 (@Einhornkotze2)
+
+.tw https://twitter.com/Einhornkotze2/status/241314011524788225
+Juhu, mache nächste Woche also was mit maxi :3 (@Einhornkotze2)
+
+.wik Rime of the Ancient Mariner
+"The Rime of the Ancient Mariner <.*> Coleridge<.*>" - https://en.wikipedia.org/wiki/Rime_of_the_Ancient_Mariner
