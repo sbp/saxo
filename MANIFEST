@@ -45,7 +45,9 @@ setup.py
 ./plugins/to.py
 ./plugins/unicode.py
 ./test/client
+./test/commands
 ./test/config
+./test/net-commands.txt
 ./test/pip-installation
 ./test/script.out
 ./test/script.sh
