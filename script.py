@@ -214,7 +214,7 @@ def test(args):
     saxo_script = sys.modules["__main__"].__file__
     saxo_test_server = os.path.join(saxo.path, "test", "server.py")
 
-    tmp = tempfile.gettempdir()
+    tmp = tempfile.mkdtemp()
     outgoing = queue.Queue()
 
     if not sys.executable:
