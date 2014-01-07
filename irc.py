@@ -127,8 +127,9 @@ def socket_send(sock, flood=False):
             incoming.put(("sending",))
             while True:
                 octets = outgoing.get()
-                if octets == None:
-                    break
+                if octets is None:
+                    debug("Sending Thread: Requested quit")
+                    return True
 
                 debug("->", repr(octets.decode("utf-8", "replace")))
                 s.write(octets)
@@ -136,11 +137,13 @@ def socket_send(sock, flood=False):
                 if not flood:
                     # TODO: Allow two or three burst lines
                     time.sleep(1)
+        debug("Sending Thread: No more data")
+        return False
 
     try: sending(sock, flood)
     except Exception as err:
         # Usually BrokenPipeError
-        ...
+        debug("Sending Thread: Error:", err)
     incoming.put(("disco_sending",))
 
 class SaxoConnectionError(Exception):
@@ -155,7 +158,9 @@ class Saxo(object):
         self.discotimer = None
         self.receiving = False
         self.sending = False
-        self.user_reconnection = False
+        self.receiving_thread = None
+        self.sending_thread = None
+        self.reconnecting = False
         self.links = {}
 
         self.environment_cache = os.environ.copy()
@@ -235,8 +240,12 @@ class Saxo(object):
            raise SaxoConnectionError(str(err))
 
         self.first = True
-        common.thread(socket_receive, self.sock)
-        common.thread(socket_send, self.sock, "flood" in self.opt["client"])
+
+        receiving = (socket_receive, self.sock)
+        self.receiving_thread = common.thread(*receiving)
+
+        sending = (socket_send, self.sock, "flood" in self.opt["client"])
+        self.sending_thread = common.thread(*sending)
 
     def connect_sock(self):
         host = self.opt["server"]["host"]
@@ -255,9 +264,29 @@ class Saxo(object):
         self.sock.connect((host, port))
 
     def disconnect(self):
-        outgoing.put(None) # Closes the send thread
+        # NOTE: *Do not* close the sending thread gracefully
+        # The socket shutdown code below will be invoked before the queue
+        # item reaches the socket thread. That means the *next* thread will
+        # pick it up, beacuse it'll quit with a pipe error anyway
+
+        # Close the socket forcefully
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
+
+        # This will force a pipe error in the send thread
+        outgoing.put(b"NOOP\r\n")
+
+        # Now, the following are true:
+        # * self.receiving is True
+        # * self.sending is True
+        # But, they're about to put disco_* methods into the queue
+        # They'll then take the appropriate actions
+
+    def socket_threads_active(self):
+        sending = self.sending_thread.is_alive()
+        receiving = self.receiving_thread.is_alive()
+        debug("SEND, RECV:", sending, receiving)
+        return sending or receiving
 
     def handle(self):
         while True:
@@ -295,20 +324,23 @@ class Saxo(object):
 
     def instruction_disco_receiving(self):
         self.receiving = False
-        if not self.user_reconnection:
-            if self.sending:
-                outgoing.put(None)
-            else:
-                incoming.put(("reconnect", False))
+
+        if not self.reconnecting:
+            if not self.sending:
+                incoming.put(("reconnect",))
+        elif not self.sending:
+            self.reconnecting = False
+            debug("</reconnecting>")
 
     def instruction_disco_sending(self):
         self.sending = False
-        if not self.user_reconnection:
+
+        if not self.reconnecting:
             if not self.receiving:
-                incoming.put(("reconnect", False))
-            else:
-                # TODO: Close the socket?
-                ...
+                incoming.put(("reconnect",))
+        elif not self.receiving:
+            self.reconnecting = False
+            debug("</reconnecting>")
 
     def instruction_instances(self):
         our_pid = os.getpid()
@@ -396,28 +428,38 @@ class Saxo(object):
         # TODO: Unit test for :connected event
         incoming.put(("connected",))
 
-    def instruction_reconnect(self, close=True, wait=3):
-        if close:
-            self.user_reconnection = True
-            # Never call this from a thread, otherwise this can give an OSError
+    def instruction_reconnect(self, wait=3):
+        debug("<reconnecting>")
+        debug("<core>")
+        self.reconnecting = True
+
+        if self.receiving or self.sending:
+            # NOTE: This is synchronous!
+            # So we don't actually know if the threads exited!
             self.disconnect()
 
         flood = "flood" in self.opt["client"]
         if not flood:
             time.sleep(wait)
-        for attempt in range(7):
-            if not flood:
-                if self.receiving or self.sending:
-                    time.sleep(1)
-                # TODO: If the threads are still active, they should be killed
-                # Unfortunately, threads in python can't be killed
 
-        if close:
-            self.user_reconnection = False
+        # NOTE: The instruction mechanism is synchronous
+        # This means we can't use self.receiving etc. to check connectivity
+        # We rely on self.disconnect() to have done the right thing
+        # The following is a check to make sure that it has
+        if self.socket_threads_active():
+           time.sleep(2)
+           if self.socket_threads_active():
+               # TODO: If the threads are still active, they should be killed
+               # Unfortunately, threads in python can't be killed
+               debug("ERROR! Unable to stop the socket threads")
+               os._exit(1)
 
         try: self.connect()
         except SaxoConnectionError as err:
-            incoming.put(("reconnect", close, 20))
+            incoming.put(("reconnect", 5))
+
+        # self.reconnecting is set to False in the disco_* instructions
+        debug("</core>")
 
     def instruction_reload(self, destination=None):
         before = time.time()
