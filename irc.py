@@ -143,6 +143,9 @@ def socket_send(sock, flood=False):
         ...
     incoming.put(("disco_sending",))
 
+class SaxoConnectionError(Exception):
+    ...
+
 class Saxo(object):
     def __init__(self, base, opt):
         self.base = base
@@ -227,6 +230,15 @@ class Saxo(object):
         sys.path[:1] = []
 
     def connect(self):
+        try: self.connect_sock()
+        except Exception as err:
+           raise SaxoConnectionError(str(err))
+
+        self.first = True
+        common.thread(socket_receive, self.sock)
+        common.thread(socket_send, self.sock, "flood" in self.opt["client"])
+
+    def connect_sock(self):
         host = self.opt["server"]["host"]
         port = int(self.opt["server"]["port"])
 
@@ -241,10 +253,6 @@ class Saxo(object):
 
         debug("Connecting to %s:%s" % (host, port))
         self.sock.connect((host, port))
-        self.first = True
-
-        common.thread(socket_receive, self.sock)
-        common.thread(socket_send, self.sock, "flood" in self.opt["client"])
 
     def disconnect(self):
         outgoing.put(None) # Closes the send thread
@@ -388,7 +396,7 @@ class Saxo(object):
         # TODO: Unit test for :connected event
         incoming.put(("connected",))
 
-    def instruction_reconnect(self, close=True):
+    def instruction_reconnect(self, close=True, wait=3):
         if close:
             self.user_reconnection = True
             # Never call this from a thread, otherwise this can give an OSError
@@ -396,7 +404,7 @@ class Saxo(object):
 
         flood = "flood" in self.opt["client"]
         if not flood:
-            time.sleep(3)
+            time.sleep(wait)
         for attempt in range(7):
             if not flood:
                 if self.receiving or self.sending:
@@ -406,7 +414,10 @@ class Saxo(object):
 
         if close:
             self.user_reconnection = False
-        self.connect()
+
+        try: self.connect()
+        except SaxoConnectionError as err:
+            incoming.put(("reconnect", close, 20))
 
     def instruction_reload(self, destination=None):
         before = time.time()
