@@ -1,4 +1,4 @@
-# Copyright 2013, Sean B. Palmer
+# Copyright 2013-4, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
 import html.entities

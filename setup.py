@@ -1,49 +1,49 @@
-# Copyright 2013, Sean B. Palmer
+# Copyright 2013-4, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
 # python3 setup.py sdist --formats=bztar
+# python3 setup.py bdist_wheel
 
 import os.path
 import sys
 
+def error(*messages):
+    for message in messages:
+        print(message, file=sys.stderr)
+    sys.exit(1)
+
 try: from setuptools import setup
 except ImportError as err:
     if "bdist_wheel" in sys.argv:
-        raise err
+        error("Option bdist_wheel requires setuptools, which can't be found")
     from distutils.core import setup
 
 try: import sqlite3
 except ImportError:
-    print("Error: sqlite3 is not installed", file=sys.stderr)
-    print("Please build Python against the sqlite libraries", file=sys.stderr)
-    sys.exit(1)
+    error("Error: sqlite3 is not installed",
+          "Please build Python against the sqlite libraries")
 else:
     if not sqlite3.threadsafety:
-        print("Error: Your sqlite3 is not thread-safe", file=sys.stderr)
-        sys.exit(1)
+        error("Error: Your sqlite3 is not thread-safe")
 
 if sys.version_info < (3, 3):
-    print("Error: Requires Python 3.3 or later", file=sys.stderr)
-    sys.exit(1)
+    error("Error: Requires Python 3.3 or later")
 
 def update_version():
-    if os.path.isfile("saxo.py"):
-        offset = 81
-        with open("saxo.py", "r+", encoding="utf-8") as f:
-            f.seek(offset)
-            version = f.read(7)
+    if os.path.isfile("version"):
+        with open("version", "r", encoding="ascii") as f:
+            version = f.read().rstrip("\r\n")
 
-            if os.path.isdir(".git") and ("sdist" in sys.argv):
-                patch = int(version[-3:]) + 1
-                if patch > 999:
-                   raise ValueError("Update major/minor version")
-                version = version[:-3] + "%03i" % patch
+        if os.path.isdir(".git") and ("sdist" in sys.argv):
+            from datetime import datetime
+            year = datetime.utcnow().year
+            serial = int(version.rsplit(".", 1).pop())
+            version = "%s.%s" % (year, serial + 1)
 
-                f.seek(offset)
+            with open("version", "w", encoding="ascii") as f:
                 f.write(version)
     else:
-        print("Unable to find saxo.py script: refusing to install")
-        sys.exit(1)
+        error("Error: No saxo version file found")
 
     return version
 

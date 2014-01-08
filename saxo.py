@@ -1,9 +1,5 @@
-# Copyright 2013, Sean B. Palmer
+# Copyright 2013-4, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
-
-version = "0.2.006"
-# WARNING: If updating anything before this message,
-# change the offset in setup.py
 
 # TODO list:
 # - Think about folding common.py into saxo.py
@@ -22,17 +18,15 @@ version = "0.2.006"
 # - Document the database tables
 # - Delete and select methods for sqlite.Table
 
+import os
+
 path = None
 
 if "__file__" in vars():
     if __file__:
-        import os.path
-
         path = os.path.abspath(__file__)
         path = os.path.realpath(path)
         path = os.path.dirname(path)
-
-        del os
 
 if "__path__" in vars():
     if __path__:
@@ -43,6 +37,20 @@ if "__path__" in vars():
                 raise Exception("Can't create saxo.path")
 
         del directory
+
+if path is None:
+   raise Exception("Can't create saxo.path")
+
+with open(os.path.join(path, "version")) as f:
+    version = f.read().rstrip("\r\n")
+
+from collections import namedtuple
+
+version_info = namedtuple(
+    "Version", ["year", "serial"]
+)(*(int(n) for n in version.split(".")))
+
+del namedtuple
 
 # Decorators:
 #
@@ -63,7 +71,6 @@ if "__path__" in vars():
 
 def client(command, *args, base=None):
     import base64
-    import os
     import pickle
     import socket
 
@@ -124,8 +131,6 @@ def command(name, owner=False):
 # saxo_unicode
 
 def database(name=None):
-    import os
-
     # Save PEP 3122!
     if "." in __name__:
         from .sqlite import Database
@@ -146,7 +151,6 @@ def database(name=None):
 # saxo.env("url")
 
 def env(name, alternative=None):
-    import os
     return os.environ.get("SAXO_%s" % name.upper(), alternative)
 
 # TODO: priority?
@@ -166,7 +170,6 @@ def pipe(function):
 
     # TODO: Would like to run this in caller __name__ == "__main__"
     # __name__ here is "saxo"
-    import os
     import sys
 
     # Save PEP 3122!
@@ -235,3 +238,5 @@ def script(argv):
         from script import main
 
     main(argv, version)
+
+del os
