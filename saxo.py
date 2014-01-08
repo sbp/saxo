@@ -51,6 +51,7 @@ version_info = namedtuple(
 )(*(int(n) for n in version.split(".")))
 
 del namedtuple
+del os
 
 # Decorators:
 #
@@ -71,6 +72,7 @@ del namedtuple
 
 def client(command, *args, base=None):
     import base64
+    import os
     import pickle
     import socket
 
@@ -131,6 +133,8 @@ def command(name, owner=False):
 # saxo_unicode
 
 def database(name=None):
+    import os
+
     # Save PEP 3122!
     if "." in __name__:
         from .sqlite import Database
@@ -151,6 +155,7 @@ def database(name=None):
 # saxo.env("url")
 
 def env(name, alternative=None):
+    import os
     return os.environ.get("SAXO_%s" % name.upper(), alternative)
 
 # TODO: priority?
@@ -170,6 +175,7 @@ def pipe(function):
 
     # TODO: Would like to run this in caller __name__ == "__main__"
     # __name__ here is "saxo"
+    import os
     import sys
 
     # Save PEP 3122!
@@ -193,7 +199,6 @@ def pipe(function):
 
     try: result = function(arg)
     except Exception as err:
-        import os.path
         import traceback
 
         python = err.__class__.__name__ + ": " + str(err)
@@ -238,5 +243,3 @@ def script(argv):
         from script import main
 
     main(argv, version)
-
-del os
