@@ -9,7 +9,7 @@ import re
 import saxo
 
 regex_link = re.compile(r"^(http[s]?://[^<> \"\x01]+)[,.]?$")
-regex_title = re.compile(r"(?ims)<title>(.*?)</title>")
+regex_title = re.compile(r"(?ims)<title[^>]*>(.*?)</title>")
 regex_script = re.compile(r"(?ims)<script(.*?)</script>")
 regex_tag = re.compile(r"<[^>]+>")
 regex_entity = re.compile(r"&([^;\s]+);")

@@ -47,7 +47,7 @@ if "__path__" in vars():
 # Decorators:
 #
 # saxo.command(name)
-# saxo.event(command="*", synchronous=False)
+# saxo.event(command="*")
 # saxo.pipe(function)
 # saxo.setup(function)
 #
@@ -82,7 +82,7 @@ def client(command, *args, base=None):
 def command(name, owner=False):
     def is_owner(irc):
         import re
-        config_owner = irc.config["owner"]
+        config_owner = irc.config.get("owner", "")
         test_identity = False
         if not "!" in config_owner:
             test_identity = True
@@ -150,10 +150,9 @@ def env(name, alternative=None):
     return os.environ.get("SAXO_%s" % name.upper(), alternative)
 
 # TODO: priority?
-def event(command="*", synchronous=False):
+def event(command="*"):
     def decorate(function):
         function.saxo_event = command
-        function.saxo_synchronous = synchronous
         return function
     return decorate
 

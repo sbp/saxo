@@ -6,6 +6,7 @@ publish:
 	python3 setup.py bdist_wheel upload
 	rm -rf build/
 	rm -rf dist/
+	rm -rf saxo.egg-info/
 	git add -A
 	git commit -m "Published `egrep -m1 '^version' saxo.py | cut -b12-18`"
 	git tag `egrep -m1 '^version' saxo.py | cut -b12-18`

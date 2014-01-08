@@ -59,8 +59,10 @@ def parse(octets):
     params = regex_parameter.findall(text[match_prefix.end():])
     return match_prefix.groups(), params[0], params[1:]
 
-class ThreadSafeEnvironment(object):
-    def __init__(self, saxo, prefix, command, parameters):
+class Message(object):
+    def __init__(self, saxo, octets):
+        prefix, command, parameters = parse(octets)
+
         self.base = saxo.base[:]
         self.config = saxo.config_cache.copy()
 
@@ -73,16 +75,7 @@ class ThreadSafeEnvironment(object):
 
         self.command = command
         self.parameters = parameters
-
-        if command == "PRIVMSG":
-            self.sender = self.parameters[0]
-            self.text = self.parameters[1]
-            self.private = self.sender == self.config["nick"]
-            if self.private:
-                self.sender = self.nick
-            if saxo.address:
-                # TODO: Why was this 498 for duxlot?
-                self.limit = 493 - len(self.sender + saxo.address)
+        self.blocked = False
 
         def send(*args):
             saxo.send(*args)
@@ -92,15 +85,44 @@ class ThreadSafeEnvironment(object):
             saxo.send("PRIVMSG", *args)
         self.msg = msg
 
-        if hasattr(self, "sender"):
+        if self.command == "PRIVMSG":
+            self.sender = self.parameters[0]
+            self.text = self.parameters[1]
+            self.private = self.sender == self.config["nick"]
+
+            if self.private:
+                self.sender = self.nick
+
+            if saxo.address:
+                # TODO: Why was this 498 for duxlot?
+                self.limit = 493 - len(self.sender + saxo.address)
+
             def say(text):
                 saxo.send("PRIVMSG", self.sender, text)
             self.say = say
 
-        if hasattr(self, "nick") and hasattr(self, "sender"):
             def reply(text):
                 saxo.send("PRIVMSG", self.sender, self.nick + ": " + text)
             self.reply = reply
+
+            private = self.config.get("private")
+            if self.private:
+                if private == "deny":
+                    self.blocked = True
+            elif private == "only":
+                self.blocked = True
+
+            self.cmd = None
+
+            cmdpfx = self.config["prefix"]
+            if self.text.startswith(cmdpfx):
+                text = self.text[len(cmdpfx):]
+                if " " in text:
+                    cmd, arg = text.split(" ", 1)
+                else:
+                    cmd, arg = text, ""
+                self.cmd = cmd
+                self.arg = arg
 
     def client(self, *args):
         incoming.put(args)
@@ -173,10 +195,12 @@ class Saxo(object):
 
         self.config_cache = {}
         client_options = {
-            "channels", # Channels to join on startup
+            "channels", # Channels to join on startup
             "nick", # Nickname of the bot, variable
             "owner", # Full address of the owner
-            "prefix" # Command prefix
+            "prefix", # Command prefix
+            "flood", # Whether or not to flood
+            "private" # Whether to respond in private
         }
 
         for option in opt["client"]:
@@ -347,9 +371,9 @@ class Saxo(object):
 
     def instruction_connected(self):
         if ":connected" in self.events:
-            irc = ThreadSafeEnvironment(self, ("", "", ""), "", [])
+            msg = Message(self, b"NOOP")
             for function in self.events[":connected"]:
-                function(irc)
+                function(msg)
 
     def instruction_command(self, prefix, sender, cmd, arg):
         self.command(prefix, sender, cmd, arg)
@@ -479,56 +503,31 @@ class Saxo(object):
 
     def instruction_remote(self, octets):
         debug(repr(octets))
-        nick = self.opt["client"]["nick"]
-        prefix, command, parameters = parse(octets)
+        msg = Message(self, octets)
 
-        if command == "PRIVMSG":
-            private = self.opt["client"].get("private")
-            sender = parameters[0]
-
-            if sender == nick:
-                if private == "deny":
-                    return
-                sender = prefix[0]
-            elif private == "only":
+        if msg.command == "PRIVMSG":
+            if msg.blocked:
                 return
 
-            pfx = self.opt["client"]["prefix"]
-            length = len(pfx)
-            privmsg = parameters[1]
+            if msg.cmd is not None:
+                self.command(msg)
 
-            if privmsg.startswith(pfx):
-                privmsg = privmsg[length:]
-                if " " in privmsg:
-                    cmd, arg = privmsg.split(" ", 1)
-                else:
-                    cmd, arg = privmsg, ""
-
-                self.command(prefix, sender, cmd, arg)
-
-        elif command == "PONG":
+        elif msg.command == "PONG":
             self.cancel_discotimer()
 
-        args = (self, prefix, command, parameters)
-        irc = ThreadSafeEnvironment(*args)
-        def safe(function, irc):
-            try: function(irc)
-            except Exception as err:
-                debug("Thread error:", function.__name__, err)
-
-        def run(name, safe, irc):
+        def run(name, msg):
             if name in self.events:
                 for function in self.events[name]:
-                    if not function.saxo_synchronous:
-                        common.thread(safe, function, irc)
-                    else:
-                        safe(function, irc)
+                    try: function(msg)
+                    except Exception as err:
+                        debug("Error:", function.__name__ + ":", err)
 
         if self.first is True:
-            run(":1st", safe, irc)
+            run(":1st", msg)
             self.first = False
-        run(command, safe, irc)
-        run("*", safe, irc)
+
+        run(msg.command, msg)
+        run("*", msg)
 
     def instruction_schedule(self, unixtime, command, args):
         command = command.encode("ascii")
@@ -541,7 +540,9 @@ class Saxo(object):
     def instruction_sending(self):
         self.sending = True
 
-    def command(self, prefix, sender, cmd, arg):
+    def command(self, msg):
+        cmd, arg = msg.cmd, msg.arg
+
         if ("\x00" in cmd) or (os.sep in cmd) or ("." in cmd):
             return
 
@@ -575,14 +576,14 @@ class Saxo(object):
                     outs = "Sorry, %s responded with an error" % cmd
 
             if outs:
-                self.send("PRIVMSG", sender, outs)
+                self.send("PRIVMSG", msg.sender, outs)
 
         if os.path.isfile(path):
             env = self.environment_cache.copy()
-            env["SAXO_NICK"] = prefix[0]
-            env["SAXO_SENDER"] = sender
-            if sender in self.links:
-                env["SAXO_URL"] = self.links[sender]
+            env["SAXO_NICK"] = msg.nick
+            env["SAXO_SENDER"] = msg.sender
+            if msg.sender in self.links:
+                env["SAXO_URL"] = self.links[msg.sender]
             common.thread(process, env, path, arg)
 
     def update_config(self, section, option, value):
