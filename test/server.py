@@ -1,4 +1,4 @@
-# Copyright 2012-3, Sean B. Palmer
+# Copyright 2012-4, Sean B. Palmer
 # Source: http://inamidst.com/saxo/
 
 import codecs
