@@ -85,7 +85,7 @@ $ : Testing start, 01
 $ rm -rf /tmp/sax
 
 $ saxo start
-Running saxo as PID 41836
+Running saxo as PID 41782
 This PID is also saved in /tmp/sax/.saxo/pid
 
 $ saxo stop
@@ -102,7 +102,7 @@ $ touch /tmp/sax/.saxo/config
 $ chmod 000 /tmp/sax/.saxo/config
 
 $ saxo start
-Running saxo as PID 41844
+Running saxo as PID 41790
 This PID is also saved in /tmp/sax/.saxo/pid
 
 $ saxo stop
@@ -176,13 +176,13 @@ Modify this file with your own settings, and then run:
     ./saxo start /tmp/sax/.saxo
 
 $ saxo -f start
+calling irc.start
 Connecting to irc.freenode.net:6667
 handle: message ('started scheduler',)
 IPC message: started scheduler
 handle: receiving ()
 handle: sending ()
-handle: connected ()
-Exception BrokenPipeError: BrokenPipeError(32, 'Broken pipe') in <encodings.utf_8.StreamWriter object at 0x106263450> ignored
+Exception BrokenPipeError: BrokenPipeError(32, 'Broken pipe') in <encodings.utf_8.StreamWriter object at 0x10b25f450> ignored
 
 $ : Cleanup
 

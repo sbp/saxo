@@ -224,6 +224,11 @@ def start(args):
         ...
     except ConnectionRefusedError as err:
         ...
+    except PermissionError as err:
+        print("Error: Unable to connect to internal socket", file=sys.stderr)
+        print("Check permissions on the config dir", file=sys.stderr)
+        sys.stderr.flush()
+        sys.exit()
     else:
         print("Warning: Client may already have been running!")
         sys.stdout.flush()
@@ -265,7 +270,6 @@ def start(args):
     else:
         import irc
 
-    print("calling irc.start")
     irc.start(base)
     return 0
 
