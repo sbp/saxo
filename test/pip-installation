@@ -6,11 +6,11 @@ rm -rf /tmp/saxo-pip-installation
 mkdir /tmp/saxo-pip-installation
 cd /tmp/saxo-pip-installation
 
-curl -O https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.11.tar.gz
-tar -zxvf virtualenv-1.11.tar.gz
-python3 virtualenv-1.11/virtualenv.py saxo-pip
+wget -O 1.11.X.tar.gz https://codeload.github.com/pypa/virtualenv/tar.gz/96632965391d5d0912728a9ed8d1b4b028113363
+tar -zxvf 1.11.X.tar.gz
+python3 virtualenv-96632965391d5d0912728a9ed8d1b4b028113363/virtualenv.py saxo-pip
 
-saxo-pip/bin/python3.3 -m pip install $SAXO
+saxo-pip/bin/pip3.3 install $SAXO
 saxo-pip/bin/saxo test
 echo
 

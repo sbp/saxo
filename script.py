@@ -320,6 +320,7 @@ def test(args):
 
     import queue
     import shutil
+    import socket
     import subprocess
     import tempfile
 
@@ -370,7 +371,12 @@ def test(args):
 
         test_config = os.path.join(saxo.path, "test", "config")
         saxo_test_config = os.path.join(saxo_test, "config")
-        shutil.copy2(test_config, saxo_test_config)
+        with open(test_config) as f:
+            with open(saxo_test_config, "w") as w:
+                for line in f:
+                    line = line.replace("localhost", socket.gethostname())
+                    w.write(line)
+        # shutil.copy2(test_config, saxo_test_config)
 
         client = subprocess.Popen([sys.executable, "-u",
                 saxo_script, "-f", "start", saxo_test],

@@ -63,7 +63,7 @@ if __name__ == "__main__":
         packages=["saxo"],
         package_dir={"saxo": "."},
         package_data={"saxo": [
-            "README.md", "commands/*", "plugins/*", "test/*"
+            "README.md", "commands/*", "plugins/*", "test/*", "version"
         ]},
         scripts=["saxo"],
         platforms="Linux and OS X",

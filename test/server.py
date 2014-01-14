@@ -271,7 +271,7 @@ class Server(socketserver.TCPServer):
         os._exit(1)
 
 def main():
-    server = Server(("", 61070), Test)
+    server = Server((socket.gethostname(), 61070), Test)
     server.serve_forever()
 
 if __name__ == "__main__":
