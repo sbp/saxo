@@ -36,9 +36,9 @@ def update_version():
 
         if os.path.isdir(".git") and ("sdist" in sys.argv):
             from datetime import datetime
-            year = datetime.utcnow().year
+            year = datetime.utcnow().year - 2000
             serial = int(version.rsplit(".", 1).pop())
-            version = "%s.%s" % (year, serial + 1)
+            version = "0.%s.%s" % (year, serial + 1)
 
             with open("version", "w", encoding="ascii") as f:
                 f.write(version)

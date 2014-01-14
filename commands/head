@@ -13,10 +13,14 @@ def head(arg):
     page = saxo.request(arg)
     values = [str(page["status"])]
 
-    if ("mime" in page) and ("encoding-source" in page):
-        values.append(page["mime"] + " (" + page["encoding-source"] + ")")
-    elif "content-type" in page["headers"]:
-        values.append(page["headers"]["content-type"])
+    if "mime" in page:
+        values.append(page["mime"])
+
+    if "encoding" in page:
+        if "encoding-source" in page:
+            values.append(page["encoding"] + " (%s)" % page["encoding-source"])
+        else:
+            values.append(page["encoding"])
 
     if "last-modified" in page["headers"]:
         values.append("modified " + page["headers"]["last-modified"])

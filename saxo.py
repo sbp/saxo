@@ -47,7 +47,7 @@ with open(os.path.join(path, "version")) as f:
 from collections import namedtuple
 
 version_info = namedtuple(
-    "Version", ["year", "serial"]
+    "Version", ["major", "year", "serial"]
 )(*(int(n) for n in version.split(".")))
 
 del namedtuple
