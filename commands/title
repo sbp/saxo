@@ -60,6 +60,9 @@ def title(url):
         if blacklisted in url:
             return
 
+    if "nytimes.com" in url:
+        return url.rsplit(".html", 1)[0].rsplit("/").pop()
+
     page = saxo.request(url, limit=262144, follow=True)
     text = regex_script.sub("", page["html"])
     search = regex_title.search(text)

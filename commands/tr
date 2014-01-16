@@ -41,7 +41,12 @@ def translate(text, source="auto", target=None):
     text = page["text"]
     while ",," in text:
         text = text.replace(",,", ",null,")
-    js = json.loads(text)
+
+    try: js = json.loads(text)
+    except ValueError:
+        text = text.replace(",,", ",")
+        text = text.replace("[,", "[")
+        js = json.loads(text)
 
     if len(js) > 2:
         source = js[2]

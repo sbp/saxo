@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+
+import re
+import saxo
+
+item = re.compile("<td>([^<\n]+)|span class=([^ >]+)")
+
+@saxo.pipe
+def ssl(arg):
+    arg = arg.split("//", 1).pop()
+    arg = arg.split("/", 1)[0]
+    page = saxo.request("http://dpk.io/ssl/" + arg)
+    items = enumerate((a or b) for (a, b) in item.findall(page["text"]))
+    items = (item + ("," if (i % 2) else ":") for (i, item) in items)
+    return " ".join(items).rstrip(",")
