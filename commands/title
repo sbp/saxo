@@ -27,7 +27,6 @@ blacklist = (
     "swhack.com",
     "translate.google.com",
     "tumbolia.appspot.com",
-    "twitter.com",
     "wikia.com",
     "wikipedia.org"
 )
@@ -52,6 +51,9 @@ def title(url):
         url = os.environ.get("SAXO_URL")
     if not url:
         return "Sorry, no link found to title"
+
+    if not url.startswith("http"):
+        url = "http://" + url
 
     if "#" in url:
         url = url.split("#", 1)[0]

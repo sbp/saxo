@@ -41,7 +41,7 @@ def start(base, client):
 
         # TODO: Or "check_connection" instead of "ping"
         db["saxo_periodic"].insert((180, b"ping", b""))
-        db["saxo_periodic"].insert((20, b"instances", b""))
+        db["saxo_periodic"].insert((25, b"instances", b""))
 
         if not "saxo_schedule" in db:
             db["saxo_schedule"].create(

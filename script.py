@@ -56,7 +56,7 @@ USAGE = """
 Usage:
     saxo -v
     saxo create [ directory ]
-    saxo [ -f ] [ -o filename ] start [ directory ]
+    saxo [ -f ] [ --log ] start [ directory ]
     saxo stop [ directory ]
     saxo active [ directory ]
 
@@ -82,8 +82,8 @@ Usage:
             -f / --foreground
                 Don't run the bot as a daemon
 
-            -o / --output filename
-                Redirect stdout and stderr to filename
+            -l / --log
+                Save output to a log file in saxo base
 
     saxo stop [ directory ]
         Stops a bot
@@ -458,7 +458,7 @@ def main(argv, v):
         help="show a short help message")
 
     parser.add_argument("-o", "--output", metavar="filename",
-        help="deprecated command: use -l / --log with no arg instead")
+        help="removed command: use -l / --log with no arg instead")
 
     parser.add_argument("-l", "--log", action="store_true",
         help="log to the standard log file")

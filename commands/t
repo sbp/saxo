@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ARG=${1:-$SAXO_URL}
+COMMANDS=$SAXO_BASE/commands
+
+case $ARG in
+   [0-9]*) $COMMANDS/tw $ARG;;
+   *//twitter.com/*) $COMMANDS/tw $ARG;;
+   */*) $COMMANDS/title $ARG;;
+   *) $COMMANDS/tw $ARG;;
+esac

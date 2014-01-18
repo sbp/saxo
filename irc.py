@@ -356,18 +356,23 @@ class Saxo(object):
         # We rely on self.disconnect() to have done the right thing
         # The following is a check to make sure that it has
         if self.socket_threads_active():
-           time.sleep(2)
-           if self.socket_threads_active():
-               # TODO: If the threads are still active, they should be killed
-               # Unfortunately, threads in python can't be killed
-               debug("ERROR! Unable to stop the socket threads")
-               os._exit(1)
+            # Wait up to six seconds for the threads to quit
+            for attempt in range(12):
+                time.sleep(0.5)
+                if not self.socket_threads_active():
+                    break
+            else:
+                # TODO: If the threads are still active, they should be killed
+                # Unfortunately, threads in python can't be killed
+                debug("ERROR! Unable to stop the socket threads")
+                os._exit(1)
 
         if "flood" not in self.opt["client"]:
             time.sleep(3)
 
         try: self.connect()
         except SaxoConnectionError as err:
+            # Retry, with 1sec more delay, up to a maximum of 30sec delay
             def connect():
                 incoming.put(("connect", min(30, delay + 1)))
             t = threading.Timer(delay, connect)
@@ -471,11 +476,10 @@ class Saxo(object):
     def instruction_prefix(self, pfx):
         self.update_config("client", "prefix", pfx)
 
-    def instruction_propagate(self, kind="both"):
-        ...
-
     def instruction_quit(self):
         # Never call this from a thread, otherwise this can give an OSError
+        # TODO: Get the sender to pick this up and disconnect from there?
+        # Could be a problem if the sender has broken
         self.send("QUIT")
         self.disconnect()
         # sys.exit()
@@ -488,11 +492,13 @@ class Saxo(object):
         # TODO: Unit test for :connected event
         incoming.put(("connected",))
 
-    def instruction_reconnect(self, wait=3):
+    def instruction_reconnect(self):
         # disco_* will automatically reconnect
         if self.receiving or self.receiving_thread.is_alive():
+            # Close the socket, which forces the receiving thread to quit
             self.disconnect()
         elif self.sending or self.sending_thread.is_alive():
+            # Signal the sending thread to quit
             outgoing.put(None)
         else:
             debug("Reconnect requested during reconnect")

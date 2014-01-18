@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-3, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import time
+import saxo
+
+@saxo.pipe
+def t(arg):
+    return time.ctime()
