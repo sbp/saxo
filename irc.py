@@ -312,9 +312,13 @@ class Saxo(object):
     def cancel_discotimer(self):
         if self.discotimer is not None:
             try:
+                was_finished = self.discotimer.finished.is_set()
+                # Note: .cancel() still works on an expired timer!
+                # It just calls .finished.set()
                 self.discotimer.cancel()
+                if not was_finished:
+                    debug("Cancelled probably unfinished disco timer")
                 self.discotimer = None
-                debug("Cancelled the disco timer")
             except:
                 ...
 
