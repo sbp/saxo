@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+
+# Copyright 2012-4, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
+import re
+import saxo
+
+@saxo.pipe
+def leo(arg):
+    page = saxo.request("http://dict.leo.org/ende", query={"search": arg})
+    regex_whitespace = re.compile(r"[ \t\r\n\xA0]+")
+    regex_td = re.compile(r'(?ims)<td class="text" lang="..">(.*?)</td>')
+
+    def normalise(text):
+        text = re.sub(r"<[^>]+>", "", text)
+        text = text.replace("(Brit.)", "")
+        text = text.replace("adj.", "a.")
+        text = text.replace("[", "(")
+        text = text.replace("]", ")")
+        return regex_whitespace.sub(" ", text.strip())
+
+    definitions = [normalise(td) for td in regex_td.findall(page["text"])]
+    pairs = [(a, b) for a, b in zip(definitions[::2], definitions[1::2])
+             if not '(Amer.)' in a and not '(Amer.)' in b]
+
+    order = []
+    translations = {}
+
+    for a, b in pairs:
+        if arg in b:
+            a, b = b, a
+
+        try: translations[a].append(b)
+        except KeyError:
+            order.append(a)
+            translations[a] = [b]
+
+    result = []
+    for entry in order[:5]:
+        result.append(entry + " = " + ", ".join(translations[entry][:5]))
+        result[-1] = result[-1].replace(" | ", ", ").strip(" ,|")
+
+    return " / ".join(result)[:128] + " - " + page["url"]

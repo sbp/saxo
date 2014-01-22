@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright 2012-4, Sean B. Palmer
+# Source: http://inamidst.com/saxo/
+
 ARG=${1:-$SAXO_URL}
 COMMANDS=$SAXO_BASE/commands
 

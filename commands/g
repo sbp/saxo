@@ -9,9 +9,9 @@ import urllib.parse
 
 import saxo
 
-r_url = re.compile(r'(?ims)/url[?]q=([^&]+)')
-parens = "(Macintosh; Intel Mac OS X 10.9; rv:26.0)"
-user_agent = "Mozilla/5.0 %s Gecko/20100101 Firefox/26.0" % parens
+r_url = re.compile(r'(?ims)class="r".*?<a href="(.*?)"')
+user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:26.0) " + \
+    "Gecko/20100101 Firefox/26.0"
 
 @saxo.pipe
 def g(arg):
@@ -20,8 +20,7 @@ def g(arg):
 
     page = saxo.request("https://www.google.com/search",
         query={"q": arg},
-        headers={"Referer": "https://www.google.com/",
-                 "User-Agent": user_agent})
+        headers={"User-Agent": user_agent})
 
     for url in r_url.findall(page["text"]):
         if url.startswith("/"):
