@@ -3,11 +3,20 @@
 import os
 import saxo
 
+def read(name):
+    with open(name, "r", encoding="ascii") as f:
+        text = f.read()
+    return text
+
 @saxo.pipe
 def version(arg):
     reply = "saxo " + saxo.version
     master = os.path.join(saxo.path, ".git", "refs", "heads", "master")
     if os.path.isfile(master):
-        with open(master, "r", encoding="ascii") as f:
-            reply += " (%s)" % f.read()[:10]
+        master_commit = read(master)
+        tag = os.path.join(saxo.path, ".git", "refs", "tags", saxo.version)
+        if os.path.isfile(tag):
+            if read(tag) != master_commit:
+                reply += "bis"
+        reply += " (%s)" % master_commit[:10]
     return reply

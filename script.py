@@ -312,7 +312,10 @@ def stop(args):
         pid = int(text.rstrip("\n"))
 
     # TODO: Make this less crude
-    os.kill(pid, signal.SIGTERM)
+    # This can give a ProcessLookupError: [Errno 3] No such process
+    try: os.kill(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        ...
     # os.kill(pid, signal.SIGKILL)
 
     return 0
