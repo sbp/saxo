@@ -32,4 +32,4 @@ Try the [docs](docs) directory:
 
 ## License
 
-To be decided. Will be a [FLOSS](https://en.wikipedia.org/wiki/Free_and_open-source_software#FLOSS) license.
+[Apache License](https://en.wikipedia.org/wiki/Apache_License) 2.0.
