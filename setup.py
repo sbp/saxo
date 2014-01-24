@@ -26,6 +26,7 @@ else:
     if not sqlite3.threadsafety:
         error("Error: Your sqlite3 is not thread-safe")
 
+# Do wheels invoke setup.py?
 if sys.version_info < (3, 3):
     error("Error: Requires Python 3.3 or later")
 
@@ -35,10 +36,8 @@ def update_version():
             version = f.read().rstrip("\r\n")
 
         if os.path.isdir(".git") and ("sdist" in sys.argv):
-            from datetime import datetime
-            year = datetime.utcnow().year - 2000
-            serial = int(version.rsplit(".", 1).pop())
-            version = "0.%s.%s" % (year, serial + 1)
+            major, minor, serial = [int(n) for n in version.split(".")]
+            version = "%s.%s.%s" % (major, minor, serial + 1)
 
             with open("version", "w", encoding="ascii") as f:
                 f.write(version)

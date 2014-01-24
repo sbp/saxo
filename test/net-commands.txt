@@ -14,10 +14,10 @@ http://www.reddit.com/
 common (<[0-9,]+>), [python irc] (<[0-9,]+>), "old man river" (<[0-9,]+>), xrare (<[0-9,]+>)
 
 .img rongorongo
-http://<.*>
+http<s?>://<.*>
 
 .news UN special envoy
-http://<.*>
+http<s?>://<.*>
 
 .npl
 <[0-9 :.-]{26}> UTC
