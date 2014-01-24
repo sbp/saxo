@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Copyright 2012-4, Sean B. Palmer
-# Source: http://inamidst.com/saxo/
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
 
 USER=sax
 

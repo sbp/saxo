@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
 SAXO=$(pwd)
 
 rm -rf /tmp/saxo-pip-installation

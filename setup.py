@@ -1,5 +1,5 @@
-# Copyright 2013-4, Sean B. Palmer
-# Source: http://inamidst.com/saxo/
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
 
 # python3 setup.py sdist --formats=bztar
 # python3 setup.py bdist_wheel
@@ -62,7 +62,8 @@ if __name__ == "__main__":
         packages=["saxo"],
         package_dir={"saxo": "."},
         package_data={"saxo": [
-            "README.md", "commands/*", "plugins/*", "test/*", "version"
+            "README.md", "NOTICE", "version",
+            "commands/*", "plugins/*", "test/*"
         ]},
         scripts=["saxo"],
         platforms="Linux and OS X",

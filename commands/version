@@ -1,22 +1,27 @@
 #!/usr/bin/env python3
 
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
 import os
 import saxo
 
-def read(name):
-    with open(name, "r", encoding="ascii") as f:
-        text = f.read()
-    return text
+def content(*segments):
+    try:
+        with open(os.path.join(*segments), "r", encoding="ascii") as f:
+            text = f.read()
+        return text
+    except:
+        return None
 
 @saxo.pipe
 def version(arg):
     reply = "saxo " + saxo.version
-    master = os.path.join(saxo.path, ".git", "refs", "heads", "master")
-    if os.path.isfile(master):
-        master_commit = read(master)
-        tag = os.path.join(saxo.path, ".git", "refs", "tags", saxo.version)
-        if os.path.isfile(tag):
-            if read(tag) != master_commit:
-                reply += "bis"
-        reply += " (%s)" % master_commit[:10]
+    master = content(saxo.path, ".git", "refs", "heads", "master")
+    if master is not None:
+        tag = content(saxo.path, ".git", "refs", "tags", saxo.version)
+        if tag is not None:
+            if tag != master:
+                reply += "-bis"
+        reply += " (%s)" % master[:10]
     return reply

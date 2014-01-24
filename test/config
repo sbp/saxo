@@ -1,5 +1,8 @@
 # See TODO for more options
 
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
 [server]
     host = localhost
     port = 61070

@@ -1,5 +1,5 @@
-# Copyright 2013-4, Sean B. Palmer
-# Source: http://inamidst.com/saxo/
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
 
 # You know your code is good when you don't have a generic module
 
