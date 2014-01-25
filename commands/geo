@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import os
+import saxo
+
+url = "http://websitedev.de/temp-bin/geo.php"
+
+@saxo.pipe
+def geo(arg):
+    nick = os.environ.get("SAXO_NICK", "result")
+    page = saxo.request(url, query={"nick": nick, "arg": arg})
+    return page["text"]

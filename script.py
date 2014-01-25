@@ -157,6 +157,9 @@ def console(args):
     path = os.environ.get("PATH", "")
     commands = os.path.join(base, "commands")
 
+    # TODO: Reload symlinks
+    # e.g. the pip-installation test changes them
+
     os.environ["PATH"] = commands + os.pathsep + path
     os.environ["PYTHONPATH"] = saxo.path
     os.environ["SAXO_SHELL"] = "1"

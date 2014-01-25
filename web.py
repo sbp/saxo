@@ -137,7 +137,10 @@ def request(url, query=None, data=None, method="GET",
             from io import BytesIO
             sio = BytesIO(response["octets"])
             gz = GzipFile(fileobj=sio)
-            response["octets"] = gz.read()
+            try: response["octets"] = gz.read()
+            except OSError:
+                # e.g. not gzip encoded, despite the site saying it is
+                ...
 
     mime, encoding = content_type(response["info"])
     if mime:

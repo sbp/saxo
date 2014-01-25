@@ -59,6 +59,7 @@ if __name__ == "__main__":
         url="http://inamidst.com/saxo/",
         description="Quick and flexible irc bot, extensible in any language",
         long_description="Documented in `@sbp/saxo/README.md <%s>`_" % README,
+        license="Apache License 2.0",
         packages=["saxo"],
         package_dir={"saxo": "."},
         package_data={"saxo": [
