@@ -11,5 +11,5 @@ url = "http://websitedev.de/temp-bin/geo.php"
 @saxo.pipe
 def geo(arg):
     nick = os.environ.get("SAXO_NICK", "result")
-    page = saxo.request(url, query={"nick": nick, "arg": arg})
+    page = saxo.request(url, query={"nick": nick, "q": arg})
     return page["text"]
