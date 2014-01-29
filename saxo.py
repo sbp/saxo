@@ -169,6 +169,7 @@ def pipe(function):
     # This gives you:
     # * concise code
     # * clean exiting
+    # * SAXO_COMMANDS check and possible setup
     # * input surrogate decoding
     # * output encoding
     # * a custom error wrapper
@@ -185,6 +186,9 @@ def pipe(function):
         import common
 
     common.exit_cleanly()
+
+    if not os.environ.get("SAXO_COMMANDS"):
+        os.environ["SAXO_COMMANDS"] = os.path.dirname(sys.argv[0])
 
     if len(sys.argv) > 1:
         arg = sys.argv[1]

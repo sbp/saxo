@@ -3,7 +3,13 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
+import os.path
+import sys
 import urllib.parse
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
 import saxo
 
 @saxo.pipe
@@ -14,4 +20,4 @@ def py(arg):
     quoted = urllib.parse.quote(arg)
 
     page = saxo.request("http://tumbolia.appspot.com/py/" + quoted)
-    return page["text"]
+    return page["text"].rstrip("\r\n")

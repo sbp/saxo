@@ -1,14 +1,33 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
-# Copyright 2012-4, Sean B. Palmer
-# Source: http://inamidst.com/saxo/
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
 
-ARG=${1:-$SAXO_URL}
-COMMANDS=$SAXO_BASE/commands
+import os.path
+import sys
+import subprocess
 
-case $ARG in
-   [0-9]*) $COMMANDS/tw $ARG;;
-   *//twitter.com/*) $COMMANDS/tw $ARG;;
-   */*) $COMMANDS/title $ARG;;
-   *) $COMMANDS/tw $ARG;;
-esac
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
+import saxo
+
+def shell(*args):
+    return str(subprocess.check_output(list(args)), "utf-8").rstrip("\r\n")
+
+@saxo.pipe
+def t(arg):
+    if not arg:
+        return "Give me a link, a twitter ID, or a twitter name"
+
+    title = os.path.join(commands, "title")
+    tw = os.path.join(commands, "tw")
+
+    if arg[0] in "0123456789":
+        return shell(tw, arg)
+    elif "//twitter.com/" in arg:
+        return shell(tw, arg)
+    elif "/" in arg:
+        return shell(title, arg)
+    else:
+        return shell(tw, arg)

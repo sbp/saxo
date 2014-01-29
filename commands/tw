@@ -3,9 +3,15 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
+import os.path
 import re
-import saxo
+import sys
 import time
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
+import saxo
 
 regex_twitter_username = re.compile(r"^[a-zA-Z0-9_]{1,15}$")
 regex_twitter_link = re.compile(r"^https?://twitter.com/\S+$")

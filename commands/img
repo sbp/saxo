@@ -4,6 +4,12 @@
 # Created by Sean B. Palmer
 
 import json
+import os.path
+import sys
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
 import saxo
 
 @saxo.pipe

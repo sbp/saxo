@@ -6,6 +6,11 @@
 import html.entities
 import os
 import re
+import sys
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
 import saxo
 
 regex_link = re.compile(r"^(http[s]?://[^<> \"\x01]+)[,.]?$")
@@ -18,6 +23,7 @@ def longest(input, sep):
     longest = 0
     result = ""
     for part in input.split(sep):
+        part = part.strip()
         if len(part) > longest:
            longest = len(part)
            result = part

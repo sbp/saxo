@@ -3,7 +3,13 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
+import os
 import re
+import sys
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
 import saxo
 
 def search_by_char(db, char):
@@ -48,6 +54,9 @@ def search_by_name(db, search):
 def u(arg):
     if not arg:
         return "Search for Unicode characters"
+
+    if not os.environ.get("SAXO_BASE"):
+        return "Sorry, can't find the Unicode database"
 
     with saxo.database() as db:
         if not "saxo_unicode" in db:

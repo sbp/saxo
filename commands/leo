@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 
-# Copyright 2012-4, Sean B. Palmer
-# Source: http://inamidst.com/saxo/
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
 
+import os.path
 import re
+import sys
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
 import saxo
 
 @saxo.pipe

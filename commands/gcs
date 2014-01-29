@@ -6,9 +6,14 @@
 import os
 import queue
 import re
-import saxo
 import subprocess
+import sys
 import threading
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
+import saxo
 
 pattern = r'\+?"[^"\\]*(?:\\.[^"\\]*)*"|\[[^]\\]*(?:\\.[^]\\]*)*\]|\S+'
 regex_search_term = re.compile(pattern)

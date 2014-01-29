@@ -3,10 +3,15 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
+import os.path
 import re
-import saxo
 import sys
 import time
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
+import saxo
 
 clock_dict_scales = {
     365.25 * 24 * 3600: ("years", "year", "yrs", "y"),
@@ -78,6 +83,10 @@ def main(arg):
 
     nick = saxo.env("nick")
     sender = saxo.env("sender")
+
+    if not (nick or sender):
+        return "Sorry, couldn't set a reminder!"
+
     if message:
         message = nick + ": " + message
     else:

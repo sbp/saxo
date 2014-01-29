@@ -87,6 +87,8 @@ def populate(saxo_path, base):
         if not (os.path.exists(dest) or os.path.islink(dest)):
             symlink(os.path.join(saxo_plugins, name), dest)
 
+    symlink(saxo_path, os.path.join(commands, ".saxo-path"))
+
     for name in os.listdir(saxo_commands):
         dest = os.path.join(commands, name)
         if not (os.path.exists(dest) or os.path.islink(dest)):
