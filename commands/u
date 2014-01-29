@@ -56,7 +56,11 @@ def u(arg):
         return "Search for Unicode characters"
 
     if not os.environ.get("SAXO_BASE"):
-        return "Sorry, can't find the Unicode database"
+        base = os.path.expanduser("~/.saxo")
+        if os.path.isdir(base):
+            os.environ["SAXO_BASE"] = base
+        else:
+            return "Sorry, can't find the Unicode database"
 
     with saxo.database() as db:
         if not "saxo_unicode" in db:

@@ -191,13 +191,14 @@ def pipe(function):
         os.environ["SAXO_COMMANDS"] = os.path.dirname(sys.argv[0])
 
     if len(sys.argv) > 1:
-        arg = sys.argv[1]
+        arg = " ".join(sys.argv[1:])
         # We have to do this because python converts arguments to surrogates
         # http://stackoverflow.com/a/7077803
         arg = os.fsencode(arg).decode("utf-8")
     elif not sys.stdin.isatty():
         arg = sys.stdin.buffer.readline()
         arg = arg.rstrip(b"\r\n")
+        arg = arg.decode("utf-8")
     else:
         arg = ""
 
