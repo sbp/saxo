@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import json
+import random
+
+import os, site
+site.addsitedir(os.path.dirname(__file__))
+import saxo
+
+@saxo.pipe
+def reddit_random_test(arg):
+    if arg:
+        return "Expected no argument"
+
+    page = saxo.request("http://api.reddit.com/r/funny+gifs/top.json")
+    data = json.loads(page["text"])
+    posts = data["data"]["children"]
+    images = []
+    for post in posts:
+        if "imgur.com" in post["data"]["domain"]:
+            url = post["data"]["url"]
+            if "//imgur.com" in url:
+                url = url.replace("//imgur", "//i.imgur") + ".jpg"
+            images.append(url)
+    return random.choice(images)

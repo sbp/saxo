@@ -3,14 +3,11 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import os.path
 import re
-import sys
 import time
 
-commands = os.path.dirname(__file__)
-sys.path.append(os.path.join(commands, ".saxo-path"))
-
+import os, site
+site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 pattern = r"[A-Za-z\x5B-\x60\x7B-\x7D][A-Za-z0-9\x5B-\x60\x7B-\x7D-]{,17}"

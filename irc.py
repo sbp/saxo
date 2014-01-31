@@ -20,11 +20,13 @@ if "." in __name__:
     from . import common
     from . import scheduler
     from . import sqlite
+    from .saxo import authorised as saxo_authorised
     from .saxo import path as saxo_path
 else:
     import common
     import scheduler
     import sqlite
+    from saxo import authorised as saxo_authorised
     from saxo import path as saxo_path
 
 lock = threading.Lock()
@@ -590,13 +592,19 @@ class Saxo(object):
             if outs:
                 self.send("PRIVMSG", msg.sender, outs)
 
-        if os.path.isfile(path):
-            env = self.environment_cache.copy()
-            env["SAXO_NICK"] = msg.nick
-            env["SAXO_SENDER"] = msg.sender
-            if msg.sender in self.links:
-                env["SAXO_URL"] = self.links[msg.sender]
-            common.thread(process, env, path, arg)
+        if not os.path.isfile(path):
+            return
+        if not os.path.getsize(path):
+            return
+
+        env = self.environment_cache.copy()
+        env["SAXO_NICK"] = msg.nick
+        env["SAXO_SENDER"] = msg.sender
+        if msg.sender in self.links:
+            env["SAXO_URL"] = self.links[msg.sender]
+        if saxo_authorised(msg):
+            env["SAXO_AUTHORISED"] = "1"
+        common.thread(process, env, path, arg)
 
     def update_config(self, section, option, value):
         self.opt[section][option] = value
@@ -674,8 +682,6 @@ def start(base):
     opt.read(config)
     # TODO: Defaulting?
     # TODO: Warn if the config file is widely readable?
-
-    common.populate(saxo_path, base)
 
     sockname =  os.path.join(base, "client.sock")
     serve(sockname, incoming)

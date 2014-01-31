@@ -8,6 +8,7 @@ def exclamation(irc):
     if irc.text == irc.config["nick"] + "!":
         irc.say(irc.nick + "!")
 
+# TODO: Move this into prefix.py?
 @saxo.event("PRIVMSG")
 def prefix(irc):
     if irc.text == irc.config["nick"] + ": prefix?":

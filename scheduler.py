@@ -17,38 +17,47 @@ else:
 
 incoming = queue.Queue()
 
+def setup(db):
+    # 1. INSTANCES
+    if not "saxo_instances" in db:
+        db["saxo_instances"].create(
+            ("pid", int))
+
+    # Remove any values from previous instances
+    for row in db["saxo_instances"]:
+        del db["saxo_instances"][row]
+    # Add our value
+    db["saxo_instances"].insert((os.getpid(),))
+
+    # 2. PERIODIC
+    if not "saxo_periodic" in db:
+        db["saxo_periodic"].create(
+            ("period", int),
+            ("command", bytes),
+            ("args", bytes))
+    else:
+        for row in db["saxo_periodic"]:
+            del db["saxo_periodic"][row]
+
+    # TODO: Or "check_connection" instead of "ping"
+    db["saxo_periodic"].insert((180, b"ping", b""))
+    db["saxo_periodic"].insert((25, b"instances", b""))
+    # saxo.check_connection
+    # saxo.check_unique
+    # TODO: Use closest primes to 180 and 25
+    # TODO: Empty commands
+
+    # 3. SCHEDULE
+    if not "saxo_schedule" in db:
+        db["saxo_schedule"].create(
+            ("unixtime", int),
+            ("command", bytes),
+            ("args", bytes))
+
 def start(base, client):
     database_filename = os.path.join(base, "database.sqlite3")
     with sqlite.Database(database_filename) as db:
-        if not "saxo_instances" in db:
-            db["saxo_instances"].create(
-                ("pid", int))
-
-        # Remove any values from previous instances
-        for row in db["saxo_instances"]:
-            del db["saxo_instances"][row]
-        # Add our value
-        db["saxo_instances"].insert((os.getpid(),))
-
-        if not "saxo_periodic" in db:
-            db["saxo_periodic"].create(
-                ("period", int),
-                ("command", bytes),
-                ("args", bytes))
-        else:
-            for row in db["saxo_periodic"]:
-                del db["saxo_periodic"][row]
-
-        # TODO: Or "check_connection" instead of "ping"
-        db["saxo_periodic"].insert((180, b"ping", b""))
-        db["saxo_periodic"].insert((25, b"instances", b""))
-
-        if not "saxo_schedule" in db:
-            db["saxo_schedule"].create(
-                ("unixtime", int),
-                ("command", bytes),
-                ("args", bytes))
-
+        setup(db)
         client.put(("message", "started scheduler"))
 
         periodic = {}
@@ -58,6 +67,7 @@ def start(base, client):
 
         duration = 1/2
 
+        # TODO: Make a monotonic version of time.time()
         def tick():
             start = time.time()
 

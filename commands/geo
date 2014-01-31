@@ -4,17 +4,14 @@
 # Created by Sean B. Palmer
 
 import os
-import sys
 
-commands = os.path.dirname(__file__)
-sys.path.append(os.path.join(commands, ".saxo-path"))
-
+import site
+site.addsitedir(os.path.dirname(__file__))
 import saxo
-
-url = "http://websitedev.de/temp-bin/geo.php"
 
 @saxo.pipe
 def geo(arg):
     nick = os.environ.get("SAXO_NICK", "result")
-    page = saxo.request(url, query={"nick": nick, "q": arg})
+    page = saxo.request("http://websitedev.de/temp-bin/geo.php",
+                        query={"nick": nick, "q": arg})
     return page["text"]

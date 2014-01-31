@@ -3,13 +3,10 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import sys
+import os, site
+site.addsitedir(os.path.dirname(__file__))
+import saxo
 
-def upper(text):
-    return text.upper()
-
-if __name__ == "__main__":
-    for line in sys.stdin:
-        line = line[:-1]
-        print(upper(line))
-        # break
+@saxo.pipe
+def upper(arg):
+    return arg.upper()

@@ -62,6 +62,7 @@ del os
 #
 # Other:
 #
+# saxo.authorised(irc)
 # saxo.client(command, *args, base=None)
 # saxo.database(name=None)
 # saxo.env(name)
@@ -69,6 +70,21 @@ del os
 # saxo.script(argv)
 
 # TODO: environment modification?
+
+def authorised(irc):
+    import re
+
+    config_owner = irc.config.get("owner", "")
+    test_identity = False
+    if not "!" in config_owner:
+        test_identity = True
+        config_owner = config_owner + "!*@*"
+
+    mask = lambda g: "^" + re.escape(g).replace("\\*", ".*") + "$"
+    matches = re.match(mask(config_owner), irc.prefix) is not None
+    if test_identity:
+        return matches and irc.identified
+    return matches
 
 def client(command, *args, base=None):
     import base64
@@ -89,20 +105,6 @@ def client(command, *args, base=None):
     client.close()
 
 def command(name, owner=False):
-    def is_owner(irc):
-        import re
-        config_owner = irc.config.get("owner", "")
-        test_identity = False
-        if not "!" in config_owner:
-            test_identity = True
-            config_owner = config_owner + "!*@*"
-
-        mask = lambda g: "^" + re.escape(g).replace("\\*", ".*") + "$"
-        matches = re.match(mask(config_owner), irc.prefix) is not None
-        if test_identity:
-           return matches and irc.identified
-        return matches
-
     def decorate(function):
         @event("PRIVMSG")
         def inner(irc):
@@ -118,7 +120,7 @@ def command(name, owner=False):
 
                 if cmd == name:
                     irc.arg = arg
-                    if (not owner) or is_owner(irc):
+                    if (not owner) or authorised(irc):
                         function(irc)
         return inner
     return decorate

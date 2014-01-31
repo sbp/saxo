@@ -6,14 +6,11 @@
 import datetime
 import decimal
 import math as maths
-import os.path
 import socket
 import struct
-import sys
 
-commands = os.path.dirname(__file__)
-sys.path.append(os.path.join(commands, ".saxo-path"))
-
+import os, site
+site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 @saxo.pipe

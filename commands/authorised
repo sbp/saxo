@@ -3,16 +3,12 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import time
-
 import os, site
 site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 @saxo.pipe
-def sleep(arg):
-    duration = int(arg)
-    before = time.time()
-    time.sleep(duration)
-
-    return "Slept for %s seconds" % (time.time() - before)
+def authorised(arg):
+    if saxo.env("authorised"):
+        return "You are an authorised user"
+    return "You are not an authorised user"

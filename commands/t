@@ -3,13 +3,11 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import os.path
-import sys
+import os
 import subprocess
 
-commands = os.path.dirname(__file__)
-sys.path.append(os.path.join(commands, ".saxo-path"))
-
+import site
+site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 def shell(*args):
@@ -17,10 +15,11 @@ def shell(*args):
 
 @saxo.pipe
 def t(arg):
-    arg = arg if arg else os.environ.get("SAXO_URL")
+    arg = arg if arg else saxo.env("url")
     if not arg:
         return "Give me a link, a twitter ID, or a twitter name"
 
+    commands = os.path.dirname(__file__)
     title = os.path.join(commands, "title")
     tw = os.path.join(commands, "tw")
 

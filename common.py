@@ -67,6 +67,7 @@ def exit_cleanly():
     signal.signal(signal.SIGTERM, quit)
 
 def populate(saxo_path, base):
+    # TODO: This is being called twice
     plugins = os.path.join(base, "plugins")
     saxo_plugins = os.path.join(saxo_path, "plugins")
     if not os.path.isdir(plugins):
@@ -87,7 +88,12 @@ def populate(saxo_path, base):
         if not (os.path.exists(dest) or os.path.islink(dest)):
             symlink(os.path.join(saxo_plugins, name), dest)
 
-    symlink(saxo_path, os.path.join(commands, ".saxo-path"))
+    with open(os.path.join(commands, "saxo.pth"), "w") as f:
+        f.write(saxo_path + "\n")
+
+    old_path_file = os.path.join(commands, ".saxo-path")
+    if os.path.islink(old_path_file):
+        os.remove(old_path_file)
 
     for name in os.listdir(saxo_commands):
         dest = os.path.join(commands, name)

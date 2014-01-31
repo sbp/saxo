@@ -4,13 +4,10 @@
 # Created by Sean B. Palmer
 
 import html.entities
-import os
 import re
-import sys
 
-commands = os.path.dirname(__file__)
-sys.path.append(os.path.join(commands, ".saxo-path"))
-
+import os, site
+site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 regex_link = re.compile(r"^(http[s]?://[^<> \"\x01]+)[,.]?$")
@@ -54,7 +51,7 @@ def decode_entities(hypertext):
 @saxo.pipe
 def title(url):
     if not url:
-        url = os.environ.get("SAXO_URL")
+        url = saxo.env("url")
     if not url:
         return "Sorry, no link found to title"
 
