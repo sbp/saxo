@@ -20,14 +20,14 @@ if "." in __name__:
     from . import common
     from . import scheduler
     from . import sqlite
-    from .saxo import authorised as saxo_authorised
     from .saxo import path as saxo_path
+    from .saxo import version as saxo_version
 else:
     import common
     import scheduler
     import sqlite
-    from saxo import authorised as saxo_authorised
     from saxo import path as saxo_path
+    from saxo import version as saxo_version
 
 lock = threading.Lock()
 
@@ -38,6 +38,14 @@ def debug(*args, **kargs):
             sys.stdout.flush()
         except BrokenPipeError:
             sys.exit()
+
+def exit(code):
+    # TODO: Sometimes sys.exit doesn't work, not sure why
+    # TODO: Sock removal code
+    try: sys.exit(code)
+    finally:
+        debug("Warning: os._exit(%s) used" % code)
+        os._exit(code)
 
 # List of threads:
 # client.receive
@@ -126,6 +134,21 @@ class Message(object):
                 self.cmd = cmd
                 self.arg = arg
 
+    def authorised(self):
+        import re
+
+        config_owner = self.config.get("owner", "")
+        test_identity = False
+        if not "!" in config_owner:
+            test_identity = True
+            config_owner = config_owner + "!*@*"
+
+        mask = lambda g: "^" + re.escape(g).replace("\\*", ".*") + "$"
+        matches = re.match(mask(config_owner), self.prefix) is not None
+        if test_identity:
+            return matches and self.identified
+        return matches
+
     def client(self, *args):
         incoming.put(args)
 
@@ -196,6 +219,7 @@ class Saxo(object):
         self.environment_cache["SAXO_BASE"] = base
         self.environment_cache["SAXO_COMMANDS"] = \
             os.path.join(base, "commands")
+        self.environment_cache["SAXO_VERSION"] = saxo_version
 
         self.config_cache = {}
         client_options = {
@@ -369,7 +393,7 @@ class Saxo(object):
                 # TODO: If the threads are still active, they should be killed
                 # Unfortunately, threads in python can't be killed
                 debug("ERROR! Unable to stop the socket threads")
-                os._exit(1)
+                exit(1)
 
         if "flood" not in self.opt["client"]:
             time.sleep(3)
@@ -417,7 +441,7 @@ class Saxo(object):
         debug("Found another saxo instance! %s" % pids)
         self.send("QUIT", "Another saxo instance was detected")
         self.disconnect()
-        os._exit(0)
+        exit(0)
 
     def instruction_join(self, channel):
         # NOTE: .visit can still be followed by .join
@@ -486,9 +510,7 @@ class Saxo(object):
         # Could be a problem if the sender has broken
         self.send("QUIT")
         self.disconnect()
-        # sys.exit()
-        # TODO: Sometimes sys.exit doesn't work, not sure why
-        os._exit(0)
+        exit(0)
 
     def instruction_receiving(self):
         self.receiving = time.time()
@@ -602,7 +624,7 @@ class Saxo(object):
         env["SAXO_SENDER"] = msg.sender
         if msg.sender in self.links:
             env["SAXO_URL"] = self.links[msg.sender]
-        if saxo_authorised(msg):
+        if msg.authorised():
             env["SAXO_AUTHORISED"] = "1"
         common.thread(process, env, path, arg)
 

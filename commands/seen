@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import os
+import time
+
+import site
+site.addsitedir(os.path.dirname(__file__))
+import saxo
+
+@saxo._command()
+def seen(arg):
+    if not arg:
+        return "Give information about when a user was around"
+
+    path = os.path.join(saxo.env("base"), "database.sqlite3")
+    with saxo.database(path) as db:
+        if "saxo_seen" in db:
+            query = "SELECT * FROM saxo_seen WHERE nick = ?"
+            for (nick, unixtime, channel) in db.query(query, arg):
+                private = False
+                query = "SELECT * FROM saxo_private WHERE channel = ?"
+                for row in db.query(query, channel):
+                    if row[0] == channel:
+                        private = True
+                        break
+                if not private:
+                    formatted = time.ctime(unixtime)
+                    return "%s was on %s at %s" % (nick, channel, formatted)
+                return "Sorry, there is no available data"
+        else:
+            return "Sorry, there is no saxo_seen database table"
+    return "Sorry, no available data"

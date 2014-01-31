@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import os, site
+site.addsitedir(os.path.dirname(__file__))
+import saxo
+
+@saxo._command(authorised=True, private=True)
+def reload(arg):
+    saxo.client("reload", saxo.env("sender"))

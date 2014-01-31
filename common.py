@@ -20,7 +20,7 @@ import threading
 # thread: client, script
 
 def console():
-    # TODO: This should probably be moved to saxo.py
+    # TODO: This can probably be removed
     client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     client_sock = os.path.expanduser("~/.saxo/client.sock")
     client.connect(client_sock)
@@ -61,6 +61,7 @@ def error(short, long=None, err=None, code=1):
 
 def exit_cleanly():
     def quit(signum, frame):
+        print("Exiting cleanly (SIG %s)" % signum)
         sys.exit()
 
     signal.signal(signal.SIGINT, quit)

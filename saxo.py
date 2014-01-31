@@ -44,6 +44,13 @@ if path is None:
 with open(os.path.join(path, "version")) as f:
     version = f.read().rstrip("\r\n")
 
+if (os.environ.get("SAXO_VERSION") or version) != version:
+    import sys
+    message = "Error: Version mismatch: Saxo %s attempted to import Saxo %s"
+    msg = message % (version, os.environ.get("SAXO_VERSION"))
+    print(msg)
+    raise ImportError(msg)
+
 from collections import namedtuple
 
 version_info = namedtuple(
@@ -55,6 +62,7 @@ del os
 
 # Decorators:
 #
+# saxo._command(*, authorised=False, private=False)
 # saxo.command(name)
 # saxo.event(command="*")
 # saxo.pipe(function)
@@ -62,7 +70,6 @@ del os
 #
 # Other:
 #
-# saxo.authorised(irc)
 # saxo.client(command, *args, base=None)
 # saxo.database(name=None)
 # saxo.env(name)
@@ -71,20 +78,15 @@ del os
 
 # TODO: environment modification?
 
-def authorised(irc):
-    import re
-
-    config_owner = irc.config.get("owner", "")
-    test_identity = False
-    if not "!" in config_owner:
-        test_identity = True
-        config_owner = config_owner + "!*@*"
-
-    mask = lambda g: "^" + re.escape(g).replace("\\*", ".*") + "$"
-    matches = re.match(mask(config_owner), irc.prefix) is not None
-    if test_identity:
-        return matches and irc.identified
-    return matches
+def _command(*, authorised=False, private=False):
+    # TODO: arity, etc.
+    def decorator(function):
+        if authorised and (not env("authorised")):
+            return
+        if private and env("sender").startswith("#"):
+            return
+        pipe(function)
+    return decorator
 
 def client(command, *args, base=None):
     import base64
@@ -105,6 +107,9 @@ def client(command, *args, base=None):
     client.close()
 
 def command(name, owner=False):
+    print("Warning: This command is deprecated")
+    print("saxo.command may be removed and replaced")
+
     def decorate(function):
         @event("PRIVMSG")
         def inner(irc):
@@ -120,7 +125,7 @@ def command(name, owner=False):
 
                 if cmd == name:
                     irc.arg = arg
-                    if (not owner) or authorised(irc):
+                    if (not owner) or irc.authorised():
                         function(irc)
         return inner
     return decorate
