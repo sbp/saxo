@@ -7,7 +7,7 @@ import os, site
 site.addsitedir(os.path.dirname(__file__))
 import saxo
 
-@saxo._command(authorised=True, private=True)
+@saxo.command(authorised=True, private=True)
 def prefix(arg):
     if arg:
         saxo.client("prefix", arg)

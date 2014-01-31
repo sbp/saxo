@@ -13,7 +13,7 @@ import saxo
 def delete_table(db):
     del db["saxo_unicode"]
 
-@saxo._command(authorised=True, private=True)
+@saxo.command(authorised=True, private=True)
 def remove_unicode_data(irc):
     path = os.path.join(saxo.env("base"), "database.sqlite3")
     with saxo.database(path) as db:

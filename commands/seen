@@ -10,7 +10,7 @@ import site
 site.addsitedir(os.path.dirname(__file__))
 import saxo
 
-@saxo._command()
+@saxo.command()
 def seen(arg):
     if not arg:
         return "Give information about when a user was around"

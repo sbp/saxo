@@ -9,7 +9,7 @@ import site
 site.addsitedir(os.path.dirname(__file__))
 import saxo
 
-@saxo._command(authorised=True, private=True)
+@saxo.command(authorised=True, private=True)
 def public_channel(arg):
     path = os.path.join(saxo.env("base"), "database.sqlite3")
     with saxo.database(path) as db:

@@ -9,7 +9,7 @@ import site
 site.addsitedir(os.path.dirname(__file__))
 import saxo
 
-@saxo._command(authorised=True, private=True)
+@saxo.command(authorised=True, private=True)
 def off(arg):
     if not arg:
         return "Turn a command off"

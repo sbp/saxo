@@ -25,7 +25,7 @@ def shebang(path):
         return first.split(" ", 1).pop()
     return False
 
-@saxo._command(authorised=True, private=True)
+@saxo.command(authorised=True, private=True)
 def which(arg):
     if not arg:
         return "Show information about a command"
@@ -60,4 +60,8 @@ def which(arg):
                 result.append(" is a non-empty, non-script regular file")
         result.append(" with permissions ")
         result.append(oct(os.stat(command)[stat.ST_MODE])[2:])
+    elif os.path.exists(command):
+        result.append(" is neither a symlink nor a file")
+    else:
+        result.append(" does not exist")
     return "".join(result)

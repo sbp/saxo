@@ -7,7 +7,7 @@ import os, site
 site.addsitedir(os.path.dirname(__file__))
 import saxo
 
-@saxo._command(authorised=True, private=True)
+@saxo.command(authorised=True, private=True)
 def part(arg):
     if arg.startswith("#"):
         saxo.client("part", arg)

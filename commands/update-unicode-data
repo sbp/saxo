@@ -70,7 +70,7 @@ def say(msg):
     sender = saxo.env("sender")
     saxo.client("send", "PRIVMSG", sender, msg)
 
-@saxo._command(authorised=True, private=True)
+@saxo.command(authorised=True, private=True)
 def update_unicode_data(irc):
     path = os.path.join(saxo.env("base"), "database.sqlite3")
     with saxo.database(path) as db:

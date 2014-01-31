@@ -62,8 +62,7 @@ del os
 
 # Decorators:
 #
-# saxo._command(*, authorised=False, private=False)
-# saxo.command(name)
+# saxo.command(*args, *, authorised=False, owner=False, private=False)
 # saxo.event(command="*")
 # saxo.pipe(function)
 # saxo.setup(function)
@@ -77,16 +76,6 @@ del os
 # saxo.script(argv)
 
 # TODO: environment modification?
-
-def _command(*, authorised=False, private=False):
-    # TODO: arity, etc.
-    def decorator(function):
-        if authorised and (not env("authorised")):
-            return
-        if private and env("sender").startswith("#"):
-            return
-        pipe(function)
-    return decorator
 
 def client(command, *args, base=None):
     import base64
@@ -106,29 +95,48 @@ def client(command, *args, base=None):
     client.send(command + b" " + base64.b64encode(pickled) + b"\n")
     client.close()
 
-def command(name, owner=False):
-    print("Warning: This command is deprecated")
-    print("saxo.command may be removed and replaced")
+def command(*args, authorised=False, owner=False, private=False):
+    # TODO: arity, etc.
+    def plugin_command(name, owner=False):
+        print("Warning: Use of saxo.command is deprecated!")
+    
+        def decorate(function):
+            @event("PRIVMSG")
+            def inner(irc):
+                prefix = irc.config["prefix"]
+                if irc.text.startswith(prefix):
+                    length = len(prefix)
+                    text = irc.text[length:]
+    
+                    if " " in text:
+                        cmd, arg = text.split(" ", 1)
+                    else:
+                        cmd, arg = text, ""
+    
+                    if cmd == name:
+                        irc.arg = arg
+                        if (not owner) or irc.authorised():
+                            function(irc)
+            return inner
+        return decorate
 
-    def decorate(function):
-        @event("PRIVMSG")
-        def inner(irc):
-            prefix = irc.config["prefix"]
-            if irc.text.startswith(prefix):
-                length = len(prefix)
-                text = irc.text[length:]
+    if args:
+        if len(args) == 1:
+            return plugin_command(args[0], owner=owner)
+        elif (len(args) == 2) and (owner is False):
+            return plugin_command(args[0], owner=args[1])
+        else:
+            raise ValueError("Incorrect use of saxo.command")
+    elif owner is not False:
+        raise ValueError("No such keyword argument: owner")
 
-                if " " in text:
-                    cmd, arg = text.split(" ", 1)
-                else:
-                    cmd, arg = text, ""
-
-                if cmd == name:
-                    irc.arg = arg
-                    if (not owner) or irc.authorised():
-                        function(irc)
-        return inner
-    return decorate
+    def decorator(function):
+        if authorised and (not env("authorised")):
+            return
+        if private and env("sender").startswith("#"):
+            return
+        pipe(function)
+    return decorator
 
 # saxo_event
 # saxo_periodic
