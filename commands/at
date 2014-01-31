@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import calendar
+import datetime
+import os.path
+import re
+import sys
+import time
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
+import saxo
+
+r_arg = re.compile("(\d{2}):(\d{2})(?::(\d{2}))?(Z|[+-]\d{1,2})(?: (.*))?")
+
+@saxo.pipe
+def main(arg):
+    if not arg:
+        return "Set a reminder at a certain time. Must match " + r_arg.pattern
+
+    match = r_arg.match(arg)
+    if not match:
+        return "Sorry, input must match " + r_arg.pattern
+
+    hour = int(match.group(1))
+    minute = int(match.group(2))
+    second = int(match.group(3) or 0)
+
+    tz = match.group(4)
+    tz = 0 if (tz == "Z") else int(tz)
+    if (tz > 12) or (tz < -12):
+        return "Sorry, timezone must be between -12 and +12 inclusive"
+
+    message = match.group(5)
+    utcnow = datetime.datetime.utcnow()
+    # print("utcnow", utcnow)
+    delta = datetime.timedelta(minutes=tz * 60)
+    now = utcnow + delta
+    # print("now", now)
+    base = datetime.datetime(
+        year=now.year,
+        month=now.month,
+        day=now.day,
+        hour=hour,
+        minute=minute,
+        second=second)
+    # print("base", base)
+    base = base - delta
+    # print("base - delta", base)
+    if base < utcnow:
+        base += datetime.timedelta(minutes=24 * 60)
+    unixtime = calendar.timegm(base.utctimetuple())
+
+    nick = saxo.env("nick")
+    sender = saxo.env("sender")
+
+    if not (nick or sender):
+        return "Sorry, couldn't set a reminder!"
+
+    if message:
+        message = nick + ": " + message
+    else:
+        message = nick + "!"
+
+    args = (unixtime, "msg", (sender, message))
+    saxo.client("schedule", *args)
+
+    return "%s: Will remind at %s" % (nick, time.ctime(unixtime))
