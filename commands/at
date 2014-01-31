@@ -27,8 +27,14 @@ def main(arg):
         return "Sorry, input must match " + r_arg.pattern
 
     hour = int(match.group(1))
+    if hour > 23:
+        return "Sorry, hour must be between 0 and 23 inclusive"
     minute = int(match.group(2))
+    if minute > 59:
+        return "Sorry, minute must be between 0 and 59 inclusive"
     second = int(match.group(3) or 0)
+    if second > 59:
+        return "Sorry, second must be between 0 and 59 inclusive"
 
     tz = match.group(4)
     tz = 0 if (tz == "Z") else int(tz)

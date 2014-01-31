@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import json
+import os.path
+import sys
+
+commands = os.path.dirname(__file__)
+sys.path.append(os.path.join(commands, ".saxo-path"))
+
+import saxo
+
+@saxo.pipe
+def btc(arg):
+    if arg:
+        return "This command takes no argment"
+    url = "http://data.mtgox.com/api/2/BTCUSD/money/ticker_fast"
+    page = saxo.request(url)
+    data = json.loads(page["text"])
+    return data["data"]["sell"]["value"][:6] + " USD (mtgox)"
