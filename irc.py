@@ -171,6 +171,8 @@ def socket_send(sock, flood=False):
 class SaxoConnectionError(Exception):
     ...
 
+regex_link = re.compile(r"(http[s]?://[^<> \"\x01]+)[,.]?")
+
 class Saxo(object):
     def __init__(self, base, opt):
         self.base = base
@@ -612,6 +614,13 @@ class Saxo(object):
         if len(args) > 1:
             args = args[:-1] + (":" + args[-1],)
         text = re.sub(r"[\r\n]", "", " ".join(args))
+
+        if len(args) == 3:
+            if (args[0] == "PRIVMSG") and args[1].startswith("#"):
+                search = regex_link.search(args[2])
+                if search:
+                    incoming.put(("link", args[1], search.group(1)))
+
         outgoing.put(text.encode("utf-8", "replace")[:510] + b"\r\n")
 
 def serve(sockname, incoming):

@@ -17,6 +17,7 @@ def shell(*args):
 
 @saxo.pipe
 def t(arg):
+    arg = arg if arg else os.environ.get("SAXO_URL")
     if not arg:
         return "Give me a link, a twitter ID, or a twitter name"
 
