@@ -19,6 +19,7 @@ def on(arg):
 
     base = saxo.env("base")
     command = os.path.join(base, "commands", arg)
+    saxo_command = os.path.join(saxo.path, "commands", arg)
 
     if os.path.islink(command):
         return "Error: Command is a symlink"
@@ -26,10 +27,14 @@ def on(arg):
         # This is true for symlinks too
         if not os.path.getsize(command):
             os.remove(command)
-            saxo_command = os.path.join(saxo.path, "commands", arg)
             os.symlink(saxo_command, command)
             return "Symlinked commands/%s to its saxo version" % arg
         else:
             os.chmod(command, 0o644)
             return "Changed permissions of commands/%s to 644" % arg
-    return "Error: Command is not a regular file"
+    elif os.path.exists(command):
+        return "Error: Command is not a regular file"
+    elif os.path.isfile(saxo_command):
+        os.symlink(saxo_command, command)
+        return "Symlinked commands/%s to new saxo version" % arg
+    return "Error: Command does not exist"

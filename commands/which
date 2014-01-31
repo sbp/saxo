@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import os
+import stat
+
+import site
+site.addsitedir(os.path.dirname(__file__))
+import saxo
+
+def pretty(path):
+    home = os.environ.get("HOME", "")
+    home = home.rstrip("/")
+    if path.startswith(home):
+        return "~" + path[len(home):]
+    return path
+
+def shebang(path):
+    with open(path) as f:
+        bytes = f.read(1024)
+    first = bytes.split("\n")[0]
+    if first.startswith("#!"):
+        return first.split(" ", 1).pop()
+    return False
+
+@saxo._command(authorised=True, private=True)
+def which(arg):
+    if not arg:
+        return "Show information about a command"
+
+    base = saxo.env("base")
+    command = os.path.join(base, "commands", arg)
+    result = []
+    result.append(pretty(command))
+    if os.path.islink(command):
+        result.append(" is a symlink that points to ")
+        dest = os.readlink(command)
+        result.append(pretty(dest))
+        result.append(" which is a ")
+        if os.path.isfile(dest):
+            script = shebang(dest)
+            if script:
+                result.append("%s script" % script)
+            else:
+                result.append("non-script regular file")
+            result.append(" with permissions ")
+            result.append(oct(os.stat(dest)[stat.ST_MODE])[2:])
+        else:
+            result.append("non-regular file")
+    elif os.path.isfile(command):
+        if not os.path.getsize(command):
+            result.append(" is an empty regular file")
+        else:
+            script = shebang(command)
+            if script:
+                result.append(" is a %s script" % script)
+            else:
+                result.append(" is a non-empty, non-script regular file")
+        result.append(" with permissions ")
+        result.append(oct(os.stat(command)[stat.ST_MODE])[2:])
+    return "".join(result)
