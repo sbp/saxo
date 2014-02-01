@@ -21,30 +21,12 @@ class Scheduler(object):
     def __init__(self, client):
         self.client = client
         self.duration = 0.5
+        self.connections = 0
         self.connected = False
         self.running = False
 
     def message(self, msg):
         self.client.put(("message", "Scheduler: %s" % msg))
-
-    def setup(self):
-        # 1. INSTANCES
-        if not "saxo_instances" in self.db:
-            self.db["saxo_instances"].create(
-                ("pid", int))
-
-        # Remove any values from previous instances
-        for row in self.db["saxo_instances"]:
-            del self.db["saxo_instances"][row]
-        # Add our value
-        self.db["saxo_instances"].insert((os.getpid(),))
-
-        # 3. SCHEDULE
-        if not "saxo_schedule" in self.db:
-            self.db["saxo_schedule"].create(
-                ("unixtime", int),
-                ("command", bytes),
-                ("args", bytes))
 
     # TODO: Make a monotonic version of time.time()
     def tick(self):
@@ -57,7 +39,8 @@ class Scheduler(object):
                 break
             else:
                 if a == "connected":
-                    self.message("connected")
+                    self.connections += 1
+                    self.message("connected (%s)" % self.connections)
                     self.connected = True
                 elif a == "disconnected":
                     self.message("disconnected, and stopped")
@@ -65,8 +48,7 @@ class Scheduler(object):
                     self.running = False
                 elif a == "start":
                     if self.connected:
-                        self.message("started")
-                        self.setup()
+                        self.message("started at tick %s" % start)
                         self.running = True
                 elif a == "stop":
                     self.message("stopped")

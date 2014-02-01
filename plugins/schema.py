@@ -4,6 +4,12 @@
 import saxo
 
 @saxo.setup
+def instances(irc):
+    if not "saxo_instances" in irc.db:
+        irc.db["saxo_instances"].create(
+            ("pid", int))
+
+@saxo.setup
 def periodic(irc):
     sqlite3_schema = [(0, 'name', 'TEXT', 0, None, 1),
                       (1, 'period', 'INTEGER', 0, None, 0),
@@ -22,3 +28,11 @@ def periodic(irc):
                                        ("recent", int),
                                        ("command", bytes),
                                        ("args", bytes))
+
+@saxo.setup
+def schedule(irc):
+    if not "saxo_schedule" in irc.db:
+        irc.db["saxo_schedule"].create(
+            ("unixtime", int),
+            ("command", bytes),
+            ("args", bytes))

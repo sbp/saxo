@@ -2,6 +2,7 @@
 # Created by Sean B. Palmer
 
 import atexit
+import collections
 import configparser
 import imp
 import importlib
@@ -165,9 +166,26 @@ def socket_receive(sock):
         ...
     incoming.put(("disco_receiving",))
 
+def flood_protection(recent):
+    recent.append(time.monotonic())
+    if len(recent) > 3:
+        recent.popleft()
+        if (recent[2] - recent[0]) < 2:
+            # debug("sleeping 1")
+            time.sleep(1)
+        elif (recent[2] - recent[1]) < 1:
+            # debug("sleeping 0.5")
+            time.sleep(0.5)
+        # else:
+        #     debug("sleeping 0")
+    else:
+        # debug("sleeping 0.25")
+        time.sleep(0.25)
+
 # threaded
 def socket_send(sock, flood=False):
     def sending(sock, flood=False):
+        recent = collections.deque()
         with sock.makefile("wb") as s:
             incoming.put(("sending",))
             while True:
@@ -179,9 +197,10 @@ def socket_send(sock, flood=False):
                 debug("->", repr(octets.decode("utf-8", "replace")))
                 s.write(octets)
                 s.flush()
+
                 if not flood:
-                    # TODO: Allow two or three burst lines
-                    time.sleep(1)
+                    flood_protection(recent)
+        # TODO: Surely this is never reached?
         debug("Sending Thread: No more data")
         return False
 
@@ -571,7 +590,7 @@ class Saxo(object):
         scheduler.incoming.put(("connected", ()))
         def start_scheduler():
             scheduler.incoming.put(("start", ()))
-        start = threading.Timer(20, start_scheduler)
+        start = threading.Timer(3, start_scheduler)
         start.start()
 
         # TODO: Check that we really are connected
