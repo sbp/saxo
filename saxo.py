@@ -99,7 +99,7 @@ def command(*args, authorised=False, owner=False, private=False):
     # TODO: arity, etc.
     def plugin_command(name, owner=False):
         print("Warning: Use of saxo.command is deprecated!")
-    
+
         def decorate(function):
             @event("PRIVMSG")
             def inner(irc):
@@ -107,12 +107,12 @@ def command(*args, authorised=False, owner=False, private=False):
                 if irc.text.startswith(prefix):
                     length = len(prefix)
                     text = irc.text[length:]
-    
+
                     if " " in text:
                         cmd, arg = text.split(" ", 1)
                     else:
                         cmd, arg = text, ""
-    
+
                     if cmd == name:
                         irc.arg = arg
                         if (not owner) or irc.authorised():
@@ -253,6 +253,8 @@ def request(*args, **kargs):
 
 def setup(function):
     function.saxo_setup = True
+    if not hasattr(function, "saxo_deps"):
+        function.saxo_deps = []
     return function
 
 def script(argv):

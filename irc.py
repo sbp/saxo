@@ -40,12 +40,10 @@ def debug(*args, **kargs):
             sys.exit()
 
 def exit(code):
-    # TODO: Sometimes sys.exit doesn't work, not sure why
     # TODO: Sock removal code
     try: sys.exit(code)
-    finally:
-        debug("Warning: os._exit(%s) used" % code)
-        os._exit(code)
+    finally: os._exit(code)
+    # TODO: Sometimes sys.exit doesn't work, not sure why
 
 # List of threads:
 # client.receive
@@ -198,6 +196,42 @@ class SaxoConnectionError(Exception):
 
 regex_link = re.compile(r"(http[s]?://[^<> \"\x01]+)[,.]?")
 
+def command_path(base, cmd):
+    if ("\x00" in cmd) or (os.sep in cmd) or ("." in cmd):
+        return None
+    path = os.path.join(base, "commands", cmd)
+    if (not os.path.isfile(path)) or (not os.path.getsize(path)):
+        return None
+    return path
+
+def process(env, path, arg):
+    octets = arg.encode("utf-8", "replace")
+
+    try: proc = subprocess.Popen([path, octets], env=env,
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    except PermissionError:
+        outs = "The command file does not have executable permissions"
+    except FileNotFoundError:
+        # Might have been removed just after running this thread
+        return
+    else:
+        try: outs, errs = proc.communicate(octets + b"\n", timeout=12)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            # TODO: Use actual prefix
+            outs = "Sorry, %s took too long" % cmd
+        else:
+            outs = outs.decode("utf-8", "replace")
+            if "\n" in outs:
+                outs = outs.splitlines()[0]
+
+        code = proc.returncode or 0
+        # Otherwise: TypeError: unorderable types: NoneType() > int()
+        if (code > 0) and (not outs):
+            # TODO: Use actual prefix
+            outs = "Sorry, %s responded with an error" % cmd
+    return outs
+
 class Saxo(object):
     def __init__(self, base, opt):
         self.base = base
@@ -256,6 +290,7 @@ class Saxo(object):
         plugins = os.path.join(self.base, "plugins")
         sys.path[:0] = [plugins]
 
+        setups = {}
         for name in os.listdir(plugins):
             if ("_" in name) or (not name.endswith(".py")):
                 continue
@@ -280,9 +315,25 @@ class Saxo(object):
                         self.events[obj.saxo_event] = [obj]
 
                 elif hasattr(obj, "saxo_setup"):
-                    obj(self)
+                    obj.saxo_name = module.__name__ + "." + obj.__name__
+                    setups[obj.saxo_name] = obj
 
             # debug("Loaded module:", name)
+
+        debug("%s setup functions" % len(setups))
+
+        graph = {}
+        for setup in setups.values():
+            graph[setup.saxo_name] = setup.saxo_deps
+
+        database_filename = os.path.join(self.base, "database.sqlite3")
+        with sqlite.Database(database_filename) as self.db:
+            for name in common.tsort(graph):
+                debug(name)
+                if name in setups:
+                    setups[name](self)
+                else:
+                    debug("Warning: Missing dependency:", name)
 
         sys.path[:1] = []
 
@@ -417,6 +468,8 @@ class Saxo(object):
 
     def instruction_disco_receiving(self):
         self.receiving = False
+        debug("Sending disconnected event to scheduler")
+        scheduler.incoming.put(("disconnected", ()))
         if self.sending:
             outgoing.put(None)
         else:
@@ -514,6 +567,13 @@ class Saxo(object):
 
     def instruction_receiving(self):
         self.receiving = time.time()
+
+        scheduler.incoming.put(("connected", ()))
+        def start_scheduler():
+            scheduler.incoming.put(("start", ()))
+        start = threading.Timer(20, start_scheduler)
+        start.start()
+
         # TODO: Check that we really are connected
         # TODO: Unit test for :connected event
         incoming.put(("connected",))
@@ -568,7 +628,11 @@ class Saxo(object):
     def instruction_schedule(self, unixtime, command, args):
         command = command.encode("ascii")
         args = common.b64pickle(args)
-        scheduler.incoming.put((unixtime, command, args))
+        # TODO: Why not just add it to the database ourselves?
+        scheduler.incoming.put(("schedule.add", (unixtime, command, args)))
+
+    def instruction_scheduled(self, cmd, arg, sender=None):
+        self.scheduled_command(cmd, arg, sender=sender)
 
     def instruction_send(self, *args):
         self.send(*args)
@@ -578,46 +642,14 @@ class Saxo(object):
 
     def command(self, msg):
         cmd, arg = msg.cmd, msg.arg
-
-        if ("\x00" in cmd) or (os.sep in cmd) or ("." in cmd):
+        path = command_path(self.base, cmd)
+        if path is None:
             return
 
-        path = os.path.join(self.base, "commands", cmd)
-
-        def process(env, path, arg):
-            octets = arg.encode("utf-8", "replace")
-
-            try: proc = subprocess.Popen([path, octets], env=env,
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-            except PermissionError:
-                outs = "The command file does not have executable permissions"
-            except FileNotFoundError:
-                # Might have been removed just after running this thread
-                return
-            else:
-                try: outs, errs = proc.communicate(octets + b"\n", timeout=12)
-                except subprocess.TimeoutExpired:
-                    proc.kill()
-                    # TODO: Use actual prefix
-                    outs = "Sorry, %s took too long" % cmd
-                else:
-                    outs = outs.decode("utf-8", "replace")
-                    if "\n" in outs:
-                        outs = outs.splitlines()[0]
-
-                code = proc.returncode or 0
-                # Otherwise: TypeError: unorderable types: NoneType() > int()
-                if (code > 0) and (not outs):
-                    # TODO: Use actual prefix
-                    outs = "Sorry, %s responded with an error" % cmd
-
+        def command_process(env, path, arg):
+            outs = process(env, path, arg)
             if outs:
                 self.send("PRIVMSG", msg.sender, outs)
-
-        if not os.path.isfile(path):
-            return
-        if not os.path.getsize(path):
-            return
 
         env = self.environment_cache.copy()
         env["SAXO_NICK"] = msg.nick
@@ -626,7 +658,21 @@ class Saxo(object):
             env["SAXO_URL"] = self.links[msg.sender]
         if msg.authorised():
             env["SAXO_AUTHORISED"] = "1"
-        common.thread(process, env, path, arg)
+        common.thread(command_process, env, path, arg)
+
+    def scheduled_command(self, cmd, arg, sender=None):
+        path = command_path(self.base, cmd)
+        if path is None:
+            return
+
+        def command_process(env, path, arg):
+            outs = process(env, path, arg)
+            if outs and (sender is not None):
+                self.send("PRIVMSG", sender, outs)
+
+        env = self.environment_cache.copy()
+        env["SAXO_SCHEDULED"] = "1"
+        common.thread(command_process, env, path, arg)
 
     def update_config(self, section, option, value):
         self.opt[section][option] = value
@@ -715,7 +761,8 @@ def start(base):
             os.remove(sockname)
     atexit.register(remove_sock, sockname)
 
-    common.thread(scheduler.start, base, incoming)
+    sched = scheduler.Scheduler(incoming)
+    common.thread(sched.start, base)
 
     saxo = Saxo(base, opt)
     saxo.run()

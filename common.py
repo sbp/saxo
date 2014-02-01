@@ -4,6 +4,7 @@
 # You know your code is good when you don't have a generic module
 
 import base64
+import collections
 import os
 import pickle
 import signal
@@ -62,7 +63,8 @@ def error(short, long=None, err=None, code=1):
 def exit_cleanly():
     def quit(signum, frame):
         print("Exiting cleanly (SIG %s)" % signum)
-        sys.exit()
+        try: sys.exit()
+        finally: os._exit(0)
 
     signal.signal(signal.SIGINT, quit)
     signal.signal(signal.SIGTERM, quit)
@@ -127,3 +129,41 @@ def thread(target, *args):
     t = threading.Thread(target=target, args=tuple(args), daemon=True)
     t.start()
     return t
+
+def tarjan(graph):
+    # Robert E. Tarjan's 1975 strongly connected nodes algorithm
+    # This is a kind of robust topological sort
+    index = {}
+    lowlinks = {}
+    stack = collections.OrderedDict()
+    result = []
+
+    def search(node):
+        index[node] = len(index)
+        lowlinks[node] = index[node]
+        stack[node] = None
+
+        for succ in graph.get(node, ()):
+            if succ not in index:
+                search(succ)
+                lowlinks[node] = min(lowlinks[succ], lowlinks[node])
+            elif succ in stack:
+                lowlinks[node] = min(lowlinks[node], index[succ])
+
+        if lowlinks[node] == index[node]:
+            connected = []
+            succ = None
+            while succ != node:
+                succ = stack.popitem()[0]
+                connected.append(succ)
+            result.append(connected)
+
+    for node in graph:
+        if not node in index:
+            search(node)
+    return result
+
+def tsort(graph):
+    for connected in tarjan(graph):
+        for node in connected:
+            yield node

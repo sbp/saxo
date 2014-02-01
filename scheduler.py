@@ -17,98 +17,117 @@ else:
 
 incoming = queue.Queue()
 
-def setup(db):
-    # 1. INSTANCES
-    if not "saxo_instances" in db:
-        db["saxo_instances"].create(
-            ("pid", int))
+class Scheduler(object):
+    def __init__(self, client):
+        self.client = client
+        self.duration = 0.5
+        self.connected = False
+        self.running = False
 
-    # Remove any values from previous instances
-    for row in db["saxo_instances"]:
-        del db["saxo_instances"][row]
-    # Add our value
-    db["saxo_instances"].insert((os.getpid(),))
+    def message(self, msg):
+        self.client.put(("message", "Scheduler: %s" % msg))
 
-    # 2. PERIODIC
-    if not "saxo_periodic" in db:
-        db["saxo_periodic"].create(
-            ("period", int),
-            ("command", bytes),
-            ("args", bytes))
-    else:
-        for row in db["saxo_periodic"]:
-            del db["saxo_periodic"][row]
+    def setup(self):
+        # 1. INSTANCES
+        if not "saxo_instances" in self.db:
+            self.db["saxo_instances"].create(
+                ("pid", int))
 
-    # TODO: Or "check_connection" instead of "ping"
-    db["saxo_periodic"].insert((180, b"ping", b""))
-    db["saxo_periodic"].insert((25, b"instances", b""))
-    # saxo.check_connection
-    # saxo.check_unique
-    # TODO: Use closest primes to 180 and 25
-    # TODO: Empty commands
+        # Remove any values from previous instances
+        for row in self.db["saxo_instances"]:
+            del self.db["saxo_instances"][row]
+        # Add our value
+        self.db["saxo_instances"].insert((os.getpid(),))
 
-    # 3. SCHEDULE
-    if not "saxo_schedule" in db:
-        db["saxo_schedule"].create(
-            ("unixtime", int),
-            ("command", bytes),
-            ("args", bytes))
+        # 3. SCHEDULE
+        if not "saxo_schedule" in self.db:
+            self.db["saxo_schedule"].create(
+                ("unixtime", int),
+                ("command", bytes),
+                ("args", bytes))
 
-def start(base, client):
-    database_filename = os.path.join(base, "database.sqlite3")
-    with sqlite.Database(database_filename) as db:
-        setup(db)
-        client.put(("message", "started scheduler"))
-
-        periodic = {}
-        current = time.time()
-        for period, command, args in db["saxo_periodic"]:
-            periodic[(period, command, args)] = current + period
-
-        duration = 1/2
-
-        # TODO: Make a monotonic version of time.time()
-        def tick():
-            start = time.time()
-
-            # Check for new scheduled commands
-            # TODO: New periodic commands
-            while True:
-                try: triple = incoming.get(timeout=1/6 * duration)
-                except queue.Empty:
-                    break
+    # TODO: Make a monotonic version of time.time()
+    def tick(self):
+        start = time.time()
+        # Check for new scheduled commands
+        # TODO: New periodic commands
+        while True:
+            try: a, b = incoming.get(timeout=self.duration / 6)
+            except queue.Empty:
+                break
+            else:
+                if a == "connected":
+                    self.message("connected")
+                    self.connected = True
+                elif a == "disconnected":
+                    self.message("disconnected, and stopped")
+                    self.connected = False
+                    self.running = False
+                elif a == "start":
+                    if self.connected:
+                        self.message("started")
+                        self.setup()
+                        self.running = True
+                elif a == "stop":
+                    self.message("stopped")
+                    self.running = False
+                elif a == "schedule.add":
+                    if "saxo_schedule" in self.db:
+                        self.db["saxo_schedule"].insert(b)
                 else:
-                    db["saxo_schedule"].insert(triple)
-                    elapsed = time.time() - start
-                    if elapsed > (1/3 * duration):
-                        break
+                    self.message("unknown instruction: %s" % a)
 
+                elapsed = time.time() - start
+                if elapsed > (self.duration / 3):
+                    break
+
+        if self.connected and self.running:
             # Periodic commands
-            for (period, command, args), when in periodic.items():
-                if when < start:
-                    # Calling this command causes the following del to fail
+            if "saxo_periodic" in self.db:
+                deletions = []
+                additions = []
+                periodic = self.db["saxo_periodic"].rows(order="recent")
+                for (name, period, recent, command, args) in periodic:
+                    # find next %0 point after start
+                    unixtime = recent - (recent % period) + period
+                    if unixtime > int(start):
+                        continue
                     cmd = command.decode("ascii")
-                    client.put((cmd,) + common.b64unpickle(args))
-                    periodic[(period, command, args)] += period
+                    self.client.put((cmd,) + common.b64unpickle(args))
+                    deletions.append((name, period, recent, command, args))
+                    additions.append((name, period, int(start), command, args))
+
+                for deletion in deletions:
+                    del self.db["saxo_periodic"][deletion]
+                for addition in additions:
+                    self.db["saxo_periodic"].insert(addition)
 
             # Scheduled commands
-            schedule = db["saxo_schedule"].rows(order="unixtime")
-            for (unixtime, command, args) in schedule:
-                if unixtime > start:
-                    break
-                # Calling this command causes the following del to fail
-                cmd = command.decode("ascii")
-                client.put((cmd,) + common.b64unpickle(args))
-                del db["saxo_schedule"][(unixtime, command, args)]
+            if "saxo_schedule" in self.db:
+                deletions[:] = []
+                schedule = self.db["saxo_schedule"].rows(order="unixtime")
+                for (unixtime, command, args) in schedule:
+                    if unixtime > start:
+                        break
+                    cmd = command.decode("ascii")
+                    self.client.put((cmd,) + common.b64unpickle(args))
+                    deletions.append((unixtime, command, args))
 
-            elapsed = time.time() - start
-            if elapsed < duration:
-                time.sleep(duration - elapsed)
+                for deletion in deletions:
+                    del self.db["saxo_schedule"][deletion]
 
-            return True
+        elapsed = time.time() - start
+        if elapsed < self.duration:
+            time.sleep(self.duration - elapsed)
 
-        def tock():
-            ...
+        return True
 
-        while tick():
-            tock()
+    def tock(self):
+        ...
+
+    def start(self, base):
+        database_filename = os.path.join(base, "database.sqlite3")
+        with sqlite.Database(database_filename) as self.db:
+            self.message("initialised, waiting for instructions")
+            while self.tick():
+                self.tock()

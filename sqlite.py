@@ -54,6 +54,21 @@ class Table(object):
             self.connection.commit()
         cursor.close()
 
+    def replace(self, row, *rows, commit=True):
+        # TODO: command="INSERT", then command="INSERT OR REPLACE"
+        cursor = self.connection.cursor()
+        size = len(row)
+        args = ",".join(["?"] * size)
+        query = "INSERT OR REPLACE INTO %s VALUES(%s)" % (self.name, args)
+
+        cursor.execute(query, tuple(row))
+        for extra in rows:
+            cursor.execute(query, tuple(extra))
+
+        if commit:
+            self.connection.commit()
+        cursor.close()
+
     def rows(self, order=None):
         cursor = self.connection.cursor()
         query = "SELECT * FROM %s" % self.name

@@ -3,43 +3,105 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
+import json
 import re
 
 import os, site
 site.addsitedir(os.path.dirname(__file__))
 import saxo
 
-pattern = r'(?ims)<(?:h2 class="r"|div id="aoba")[^>]*>(.*?)</(?:h2|div)>'
-regex_answer = re.compile(pattern)
+tag = re.compile(r"(?ims)<[^>]+>")
+h2 = re.compile(r'(?ims)section id="(pod[^"]+)".*?<h2>(.*?)</h2>')
+pod = re.compile(r'(?ims)popups\.(pod[^ .]+)\..*?"stringified"[^"]+' +
+                 r'"([^"\\]*(?:\\.[^"\\]*)*)"')
+
+def plain(hyper):
+    text = tag.sub("", hyper)
+    return normalise(text)
+
+def normalise(text):
+    text = text.replace("\t", "")
+    text = text.replace("\r", "")
+    text = text.replace("\n", " ")
+    return text.strip()
+
+def pretty(text):
+    text = text.replace("\t", "")
+    text = text.replace("\r", "")
+    text = text.replace("\n", ", ")
+    while "  " in text:
+        text = text.replace("  ", " ")
+    text = text.replace(" | ", ": ")
+    return text.strip()
 
 @saxo.pipe
 def c(arg):
-    substitutions = {
-        "ϕ": "phi",
-        "π": "pi",
-        "tau": "(pi*2)",
-        "τ": "(pi*2)"
-    }
+    if arg.startswith(":long "):
+        arg = arg[6:]
+        limit = 256
+    else:
+        limit = 128
 
-    expression = arg
-    for a, b in substitutions.items():
-        expression = expression.replace(a, b)
-
-    def correct(right):
-        substitutions = {
-            "<sup>": "^(",
-            "</sup>": ")",
-            "\xA0": "," # nbsp
-        }
-        for a, b in substitutions.items():
-            right = right.replace(a, b)
-        return right
-
-    page = saxo.request(
-        "https://www.google.com/search",
-        query={"q": expression})
-
+    page = saxo.request("http://www.wolframalpha.com/input/",
+                        query={"asynchronous": "false", "i": arg})
     text = page["text"]
-    for answer in regex_answer.findall(page["text"]):
-        return correct(answer)
-    return "No answers found"
+
+    labels = {}
+    for (pod_id, label) in h2.findall(text):
+        label = plain(label)
+        labels[pod_id] = label.rstrip(":")
+
+    pods = {}
+    for (pod_id, string) in pod.findall(text):
+        try: string = json.loads('"%s"' % string)
+        except ValueError:
+            string = string.replace("\\", "")
+        label = labels.get(pod_id, "-")
+        string = pretty(string)
+        pods.setdefault(label, []).append(string)
+
+    for (pod_id, strings) in pods.items():
+        pods[pod_id] = ", ".join(strings)
+
+    prefix = ""
+    if limit > 128:
+        if "Input" in pods:
+            prefix = pods["Input"] + " = "
+        elif "Input interpretation" in pods:
+            prefix = pods["Input interpretation"] + " = "
+
+    result = []
+    # Special Case 1: The Weather
+    for pod_id in pods:
+        if pod_id.startswith("Latest recorded weather"):
+            result.append(pods[pod_id])
+
+    # Special Case 2: Unicode Characters
+    if ("Name" in pods) and ("Encodings" in pods):
+        result.append(pods["Name"])
+        result.append(pods["Encodings"])
+
+    # General Cases
+    acceptable = ["Result", "Results", "Exact result",
+                  "Values", "Decimal approximation"]
+    for acceptable in acceptable:
+        if acceptable in pods:
+            result.append(pods[acceptable])
+
+    if not result:
+        # https://stackoverflow.com/questions/16868457
+        for pod_id in sorted(pods, key=lambda p: len(pods[p])):
+            if pod_id not in acceptable:
+                result.append(pods[pod_id])
+
+    i = 0
+    length = 0
+    for i, string in enumerate(result):
+        length += len(string)
+        if length > limit:
+            break
+    result = result[:i or 1]
+    if result:
+        return prefix + "; ".join(result)
+    else:
+        return "Sorry, no results"
