@@ -9,7 +9,7 @@ then echo 'Error: saxo script not found'
 fi
 
 ./saxo create /tmp/saxo-test
-cp test/config /tmp/saxo-test/config
+sed "s/localhost/$(hostname)/g" test/config > /tmp/saxo-test/config
 ./saxo -f start /tmp/saxo-test
 
 rm -rf /tmp/saxo-test

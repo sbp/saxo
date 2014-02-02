@@ -223,7 +223,7 @@ def command_path(base, cmd):
         return None
     return path
 
-def process(env, path, arg):
+def process(env, cmd, path, arg):
     octets = arg.encode("utf-8", "replace")
 
     try: proc = subprocess.Popen([path, octets], env=env,
@@ -555,6 +555,14 @@ class Saxo(object):
         self.update_config("client", "channels", channels)
         self.send("PART", channel)
 
+    def instruction_periodic(self, name, period, cmd, arg, sender=None):
+        database_filename = os.path.join(self.base, "database.sqlite3")
+        with sqlite.Database(database_filename) as db:
+            p = (name, period, int(time.time()), b"scheduled",
+                 common.b64pickle((cmd, arg, sender)))
+            # TODO: This fails silently if there's a type error?
+            db["saxo_periodic"].replace(p)
+
     def instruction_ping(self):
         now = time.time()
 
@@ -665,8 +673,8 @@ class Saxo(object):
         if path is None:
             return
 
-        def command_process(env, path, arg):
-            outs = process(env, path, arg)
+        def command_process(env, cmd, path, arg):
+            outs = process(env, cmd, path, arg)
             if outs:
                 self.send("PRIVMSG", msg.sender, outs)
 
@@ -677,21 +685,21 @@ class Saxo(object):
             env["SAXO_URL"] = self.links[msg.sender]
         if msg.authorised():
             env["SAXO_AUTHORISED"] = "1"
-        common.thread(command_process, env, path, arg)
+        common.thread(command_process, env, cmd, path, arg)
 
     def scheduled_command(self, cmd, arg, sender=None):
         path = command_path(self.base, cmd)
         if path is None:
             return
 
-        def command_process(env, path, arg):
-            outs = process(env, path, arg)
+        def command_process(env, cmd, path, arg):
+            outs = process(env, cmd, path, arg)
             if outs and (sender is not None):
                 self.send("PRIVMSG", sender, outs)
 
         env = self.environment_cache.copy()
         env["SAXO_SCHEDULED"] = "1"
-        common.thread(command_process, env, path, arg)
+        common.thread(command_process, env, cmd, path, arg)
 
     def update_config(self, section, option, value):
         self.opt[section][option] = value

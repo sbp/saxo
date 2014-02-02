@@ -34,6 +34,16 @@ def pretty(text):
     text = text.replace(" | ", ": ")
     return text.strip()
 
+# TODO: Generic code
+def snug(parts, limit):
+    i = 0
+    length = 0
+    for i, text in enumerate(parts):
+        length += len(text)
+        if length > limit:
+            break
+    return parts[:i + 1]
+
 @saxo.pipe
 def c(arg):
     if arg.startswith(":long "):
@@ -94,13 +104,7 @@ def c(arg):
             if pod_id not in acceptable:
                 result.append(pods[pod_id])
 
-    i = 0
-    length = 0
-    for i, string in enumerate(result):
-        length += len(string)
-        if length > limit:
-            break
-    result = result[:i or 1]
+    result = snug(result, limit)
     if result:
         return prefix + "; ".join(result)
     else:

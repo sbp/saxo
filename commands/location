@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import os, site
+site.addsitedir(os.path.dirname(__file__))
+import saxo
+
+@saxo.pipe
+def location(arg):
+    arg = arg if arg else saxo.env("url")
+    if not arg:
+        return "Please supply a URL"
+    page = saxo.request(arg)
+    return page["url"]

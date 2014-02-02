@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import time
+
+import os, site
+site.addsitedir(os.path.dirname(__file__))
+import saxo
+
+# TODO: Generic code
+def snug(parts, limit):
+    i = 0
+    length = 0
+    for i, text in enumerate(parts):
+        length += len(text)
+        if length > limit:
+            break
+    return parts[:i + 1]
+
+@saxo.pipe
+def periodic(arg):
+    if arg:
+        return "?"
+
+    periodics = {}
+    now = int(time.time())
+    with saxo.database() as db:
+        for row in db["saxo_periodic"].rows():
+            name = row[0]
+            period = row[1]
+            remaining = period - (now % period)
+            periodics[name] = remaining
+
+    result = []
+    for name in sorted(periodics, key=lambda n: periodics[n]):
+        result.append("%s (%ss)" % (name, periodics[name]))
+    result = snug(result, 128)
+
+    if result:
+        return "Periodic tasks coming up: " + ", ".join(result)
+    else:
+        return "Sorry, no periodic tasks found"

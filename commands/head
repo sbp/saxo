@@ -9,6 +9,7 @@ import saxo
 
 @saxo.pipe
 def head(arg):
+    arg = arg if arg else saxo.env("url")
     if not arg:
         return "Please supply a URL"
 
