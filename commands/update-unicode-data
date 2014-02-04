@@ -4,9 +4,6 @@
 # Created by Sean B. Palmer
 
 import os
-
-import site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 surrogates = {"D800", "DB7F", "DB80", "DBFF", "DC00", "DFFF"}

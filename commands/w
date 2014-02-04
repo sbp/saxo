@@ -6,8 +6,6 @@
 import re
 import urllib.parse
 
-import os, site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 uri = "http://en.wiktionary.org/w/index.php?title=%s&printable=yes"

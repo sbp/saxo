@@ -4,9 +4,6 @@
 # Created by Sean B. Palmer
 
 import json
-
-import os, site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 def optflag(arg):
@@ -21,12 +18,11 @@ def optflag(arg):
 
 # https://stackoverflow.com/questions/10823877
 def flatten(container):
-    for i in container:
-        if isinstance(i, list) or isinstance(i, tuple):
-            for j in flatten(i):
-                yield j
+    for item in container:
+        if isinstance(item, list):
+            yield from flatten(item)
         else:
-            yield i
+            yield item
 
 def translate(text, source="auto", target=None):
     ua = "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11"

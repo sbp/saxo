@@ -6,8 +6,6 @@
 import html.entities
 import re
 
-import os, site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 regex_link = re.compile(r"^(http[s]?://[^<> \"\x01]+)[,.]?$")

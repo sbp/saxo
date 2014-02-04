@@ -6,8 +6,6 @@
 import os
 import unicodedata
 
-import site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 def delete_table(db):

@@ -6,10 +6,9 @@
 import os
 import subprocess
 
-import site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
+# TODO: Generic shell command
 def shell(*args):
     return str(subprocess.check_output(list(args)), "utf-8").rstrip("\r\n")
 

@@ -6,8 +6,6 @@
 import os
 import subprocess
 
-import site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 def shell(*args):

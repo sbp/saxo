@@ -6,8 +6,6 @@
 import json
 import re
 
-import os, site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 tag = re.compile(r"(?ims)<[^>]+>")

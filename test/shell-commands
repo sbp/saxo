@@ -1,0 +1,64 @@
+#!/bin/bash
+
+eval $(./saxo bash)
+show() {
+    echo "$@"
+    $@
+    echo
+}
+
+show commands/at 15:00Z hello
+show commands/authorised
+show commands/btc
+show commands/c 1 + 1
+show commands/distance London ... Paris
+show commands/ety love
+show commands/g reddit
+show commands/gc git mercurial darcs
+show commands/gcalc 1 + 2
+show commands/gcs '"a b c"' a b c
+show commands/geo London, United Kingdom
+show commands/github-test sbp/saxo
+show commands/head https://github.com/
+show commands/img trust me, I am science
+show commands/in 10s hello
+show commands/join '#channel'
+show commands/leave '#channel'
+show commands/leo 'Möwe'
+show commands/location http://bit.ly/1eo3OVg
+show commands/news Tony Blair
+show commands/npl
+show commands/off off
+show commands/on on
+show commands/part '#channel'
+show commands/periodic
+show commands/prefix @
+show commands/private-channel
+show commands/public-channel
+show commands/py 'repr(u"\u203d".encode("utf-8"))'
+show commands/quit
+show commands/reddit-random-test
+show commands/reload
+show commands/remove-unicode-data
+show commands/seen sbp
+show commands/sleep 1
+show commands/ssl musalbas.com
+show commands/suggest you are an
+show commands/t https://github.com/
+show commands/time
+show commands/title http://inamidst.com/
+show commands/to dpk hello
+show commands/tr 'Möwe'
+show commands/tw 423448345500061696
+show commands/twop @sbp
+show commands/u interrobang
+show commands/update-unicode-data
+show commands/upper abc
+show commands/url
+show commands/version
+show commands/visit '#channel'
+show commands/w love
+show commands/wa 1 + 1
+show commands/which which
+show commands/wik Love
+show commands/wolfram 1 + 1

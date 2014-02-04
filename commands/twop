@@ -4,12 +4,9 @@
 # Created by Sean B. Palmer
 
 from urllib.parse import quote
-
-import os, site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 @saxo.pipe
 def twop(arg):
-    page = saxo.request("http://services.w3.org/xslt?xslfile=http%3A%2F%2Fwww.websitedev.de%2Ftemp%2Fmobile-twitter-toptweet.xslt&xmlfile=http%3A%2F%2Fservices.w3.org%2Ftidy%2Ftidy%3FdocAddr%3Dhttps%253A%252F%252Fmobile.twitter.com%252Fsearch%253Fq%253D{}&content-type=text%2Fplain%3Bcharset%3Dutf-8&submit=transform".format(quote(quote(arg.replace(" ", "+")))))
+    page = saxo.request("http://services.w3.org/xslt", query={"xslfile": "http://www.websitedev.de/temp/mobile-twitter-toptweet.xslt", "xmlfile": "http://services.w3.org/tidy/tidy?docAddr=https%3A%2F%2Fmobile.twitter.com%2Fsearch%3Fq%3D{}".format(quote(arg.replace(" ", "+"))), "content-type": "text/plain;charset=utf-8", "submit": "transform"})
     return page["text"]

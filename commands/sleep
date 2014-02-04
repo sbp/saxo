@@ -4,9 +4,6 @@
 # Created by Sean B. Palmer
 
 import time
-
-import os, site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 @saxo.pipe

@@ -6,8 +6,6 @@
 import os
 import re
 
-import site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 def search_by_char(db, char):

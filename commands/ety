@@ -4,9 +4,6 @@
 # Created by Sean B. Palmer
 
 import re
-
-import os, site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 pattern_sentence = \

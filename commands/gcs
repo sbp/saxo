@@ -9,8 +9,6 @@ import re
 import subprocess
 import threading
 
-import site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 pattern = r'\+?"[^"\\]*(?:\\.[^"\\]*)*"|\[[^]\\]*(?:\\.[^]\\]*)*\]|\S+'

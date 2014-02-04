@@ -3,8 +3,6 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import os, site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 @saxo.pipe

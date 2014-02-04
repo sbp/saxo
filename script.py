@@ -103,6 +103,26 @@ def base_option(args):
 
 # Actions
 
+# eval $(./saxo bash)
+@action
+def bash(arg):
+    # Save PEP 3122!
+    if "." in __name__:
+        from . import saxo
+    else:
+        import saxo
+
+    import pipes
+
+    path = pipes.quote(os.path.join(saxo.path, "commands"))
+    print('export PATH=$PATH:%s' % path)
+
+    pythonpath = pipes.quote(saxo.path)
+    if "PYTHONPATH" in os.environ:
+        print('export PYTHONPATH=$PYTHONPATH:%s' % pythonpath)
+    else:
+        print('export PYTHONPATH=%s' % pythonpath)
+
 @action
 def create(args):
     # Save PEP 3122!

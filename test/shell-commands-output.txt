@@ -1,0 +1,151 @@
+commands/at 15:00Z hello
+Sorry, couldn't set a reminder!
+
+commands/authorised
+You are not an authorised user
+
+commands/btc
+927.85 USD (mtgox)
+
+commands/c 1 + 1
+2
+
+commands/distance London ... Paris
+result: 343.61 km linear distance between London, UK ... Paris, France, see http://google.com/maps?q=to:London+to:Paris
+
+commands/ety love
+"Old English lufu 'love, affection, friendliness,' from Proto-Germanic *lubo (cf. Old High German liubi 'joy,' German Liebe 'love;' Old Norse, Old Frisian, Dutch lof; German Lob 'praise;' Old Saxon liof, Old Frisian liaf, Dutch lief, Old High German liob, German lieb, Gothic liufs 'dear, beloved').  The Germanic wor..." - http://etymonline.com/index.php?term=love
+
+commands/g reddit
+http://www.reddit.com/
+
+commands/gc git mercurial darcs
+937,000
+
+commands/gcalc 1 + 2
+1 + 2 = 3
+
+commands/gcs "a b c" a b c
+a (12,500,000,000), c (5,260,000,000), b (4,220,000,000), "a b c" (186,000,000)
+
+commands/geo London, United Kingdom
+result: London, UK at 51.509,-0.125 to wit http://google.com/maps?q=51.509,-0.125
+
+commands/github-test sbp/saxo
+Quick and flexible irc bot, extensible in any language
+
+commands/head https://github.com/
+200, text/html, utf-8 (Content-Type, HTML), 14475 bytes
+
+commands/img trust me, I am science
+http://denver.mylittlefacewhen.com/media/f/img/mlfw1743-1319430665.jpg
+
+commands/in 10s hello
+Sorry, couldn't set a reminder!
+
+commands/join #channel
+
+commands/leave #channel
+
+commands/leo Möwe
+die Möwe Pl.: die Möwen = gull / die Möwe (Ornithologie) Pl.: die Möwen = sea gull (zool.), sea-gull (zool.), seagull (zool.) - http://dict.leo.org/ende/?search=M%C3%B6we
+
+commands/location http://bit.ly/1eo3OVg
+https://github.com/sbp/saxo
+
+commands/news Tony Blair
+http://www.theguardian.com/media/2014/feb/03/adam-boulton-cameron-spin-doctors-alastair-campbells
+
+commands/npl
+2014-02-04 23:04:36.872180 UTC
+
+commands/off off
+
+commands/on on
+
+commands/part #channel
+
+commands/periodic
+Sorry, this command requires an IRC instance
+
+commands/prefix @
+
+commands/private-channel
+
+commands/public-channel
+
+commands/py repr(u"\u203d".encode("utf-8"))
+'\xe2\x80\xbd'
+
+commands/quit
+
+commands/reddit-random-test
+http://i.imgur.com/Hi6JFTJ.jpg
+
+commands/reload
+
+commands/remove-unicode-data
+
+commands/seen sbp
+Sorry, this command requires an IRC instance
+
+commands/sleep 1
+Slept for 1.0009851455688477 seconds
+
+commands/ssl musalbas.com
+Certificate verified: success, (Perfect) Forward secrecy: success, Cipher: ECDHE-RSA-RC4-SHA, SSL version: TLSv1/SSLv3, Number of bits: 128, Algorithm bits: 128
+
+commands/suggest you are an
+Perhaps you are an: ~idiot, ~idiot virus, ~overcomer, ~awesome god, ~idiot hahaha, ~idiot song, ~ironman, ~acceptable level of threat, ~inspiration, ~amazing person
+
+commands/t https://github.com/
+GitHub · Build software better, together.
+
+commands/time
+Tue Feb  4 23:04:43 2014
+
+commands/title http://inamidst.com/
+Website of Sean B. Palmer
+
+commands/to dpk hello
+Sorry, I don't know your nickname
+
+commands/tr Möwe
+seagull (noun » en). translate.google.com
+
+commands/tw 423448345500061696
+These recent Whits essays—e.g. DRM machines, The executable word, and True source—are a kind of computing manifesto (@sbp)
+
+commands/twop @sbp
+“This chap loves Pinkie Pie. I hope he pulls through. gofundme.com/MichaelMorones…” — Sean B. Palmer, @sbp in tw:430401628009549826
+
+commands/u interrobang
+U+203D INTERROBANG (‽)
+
+commands/update-unicode-data
+
+commands/upper abc
+ABC
+
+commands/url
+Sorry, no URL was found
+
+commands/version
+saxo 0.3.0
+
+commands/visit #channel
+
+commands/w love
+love — noun: 1. (uncountable) Strong affection, 2. An intense feeling of affection and care towards another person — verb: 1. (trans.) To have a strong affection for, 2. (trans.) To need, thrive on
+
+commands/wa 1 + 1
+1+1 = 2
+
+commands/which which
+
+commands/wik Love
+"Love refers to a variety of different feelings, states, and attitudes that ranges from interpersonal affection ('I love my mother') to pleasure ('I loved that meal')." - https://en.wikipedia.org/wiki/Love
+
+commands/wolfram 1 + 1
+1+1 = 2; two; | +: | =: , 1: | 1: | 2; age 6: 3.2 seconds: age 8: 1.8 seconds: age 10: 1.2 seconds: , age 18: 0.83 seconds, (ignoring concentration, repetition, variations in education, etc.)
+

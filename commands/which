@@ -6,8 +6,6 @@
 import os
 import stat
 
-import site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 def pretty(path):

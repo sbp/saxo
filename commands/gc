@@ -6,8 +6,6 @@
 import json
 import re
 
-import os, site
-site.addsitedir(os.path.dirname(__file__))
 import saxo
 
 regex_results = re.compile(r"(?i)([0-9,]+) results?")

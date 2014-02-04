@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import os
+import re
+import subprocess
+import sys
+
+example = """
+.c e ** (i * 2/3pi)
+e^((i * 2) / (3 * pi)) = 0.977568548 + 0.210617505 i
+
+.ety frog
+"<.{32,}>" - http://etymonline.com/index.php?term=frog
+
+.g reddit
+http://www.reddit.com/
+"""
+
+if not os.path.isfile("test/commands"):
+    print("Error: Must be run in the saxo src directory", file=sys.stderr)
+    sys.exit(1)
+
+with open("test/net-commands.txt") as f:
+   text = f.read()
+
+os.environ["PYTHONPATH"] = "."
+os.environ["SAXO_COMMANDS"] = "commands"
+
+tests = text.split("\n\n")
+for test in tests:
+    i, o = test.split("\n", 1)
+    o = o.rstrip("\n")
+    i = i[1:] # strip the "."
+
+    patterns = []
+    for part in re.findall("<[^>]+>|[^<]+", o):
+        if part.startswith("<"):
+            patterns.append(part[1:-1])
+        else:
+            patterns.append(re.escape(part))
+    pattern = "^" + "".join(patterns) + "$"
+
+    if " " in i:
+        command, arg = i.split(" ", 1)
+    else:
+        command, arg = i, ""
+
+    try: octets = subprocess.check_output(["commands/" + command, arg])
+    except subprocess.CalledProcessError:
+        print("ERROR:", i)
+        print("Got non-zero exit status")
+    else:
+        got = octets.decode("utf-8")
+        got = got.split("\n")[0]
+        if re.match(pattern, got):
+            print("Success: %s" % i)
+        else:
+            print("ERROR:", i)
+            print("Expected:", o)
+            print("Got:", got)
