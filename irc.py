@@ -163,7 +163,7 @@ def socket_receive(sock):
     try: receive_loop(sock, incoming)
     except Exception as err:
         # Usually IOError, EOFError, socket.error, or ssl.SSLError
-        ...
+        debug(str(err))
     incoming.put(("disco_receiving",))
 
 def flood_protection(recent):
@@ -223,8 +223,16 @@ def command_path(base, cmd):
         return None
     return path
 
+def utf8(obj):
+    return str(obj).encode("utf-8", "replace")
+
+def utf8dict(data):
+    return {utf8(key): utf8(value) for key, value in data.items()}
+
 def process(env, cmd, path, arg):
-    octets = arg.encode("utf-8", "replace")
+    path = utf8(path)
+    env = utf8dict(env)
+    octets = utf8(arg)
 
     try: proc = subprocess.Popen([path, octets], env=env,
         stdin=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -374,7 +382,10 @@ class Saxo(object):
         host = self.opt["server"]["host"]
         port = int(self.opt["server"]["port"])
 
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        debug("Connecting to %s:%s" % (host, port))
+        # self.sock.connect((host, port))
+        self.sock = socket.create_connection((host, port))
+        # self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if "ssl" in self.opt["server"]:
             import ssl
             debug("Warning: Using SSL, but not validating the cert!")
@@ -382,9 +393,6 @@ class Saxo(object):
                 self.sock,
                 server_side=False,
                 cert_reqs=ssl.CERT_NONE) # TODO: or CERT_REQUIRED
-
-        debug("Connecting to %s:%s" % (host, port))
-        self.sock.connect((host, port))
 
     def disconnect(self):
         # NOTE: *Do not* close the sending thread gracefully

@@ -30,6 +30,9 @@ def page(url, username=None):
 
     page = saxo.request(url, follow=True)
     text = page["text"]
+    text = text.replace(
+    '<span class="tco-ellipsis"><span class="invisible">\xA0</span>…</span>',
+    '')
 
     username = None
     retweeted = None

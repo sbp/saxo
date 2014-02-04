@@ -104,6 +104,7 @@ def c(arg):
             if pod_id not in acceptable:
                 result.append(pods[pod_id])
 
+    result = [item for item in result if item]
     result = snug(result, limit)
     if result:
         return prefix + "; ".join(result)

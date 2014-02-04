@@ -19,11 +19,21 @@ def optflag(arg):
         flag = flag[1:]
     return flag, arg
 
+# https://stackoverflow.com/questions/10823877
+def flatten(container):
+    for i in container:
+        if isinstance(i, list) or isinstance(i, tuple):
+            for j in flatten(i):
+                yield j
+        else:
+            yield i
+
 def translate(text, source="auto", target=None):
     ua = "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11"
     if target is None:
         target = "en"
 
+    text = text.strip('" ')
     page = saxo.request(
         "http://translate.google.com/translate_a/t",
         headers={"User-Agent": ua},
@@ -43,19 +53,16 @@ def translate(text, source="auto", target=None):
 
     text = page["text"]
     while ",," in text:
-        text = text.replace(",,", ",null,")
+        text = text.replace(",,", ",")
+    text = text.replace("[,", "[")
 
     try: js = json.loads(text)
     except ValueError:
-        text = text.replace(",,", ",")
-        text = text.replace("[,", "[")
-        js = json.loads(text)
+        return "Problem loading the JSON"
 
-    if len(js) > 2:
-        source = js[2]
-    else:
-        source  = "?"
-    translation = "".join(part[0] for part in js[0])
+    js = list(flatten(js))
+    source = js[4] if len(js) > 4 else "?"
+    translation = js[0] if js else "?"
     return translation.replace(" ,", ","), source, target
 
 @saxo.pipe
