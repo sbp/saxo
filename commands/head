@@ -7,11 +7,22 @@ import saxo
 
 @saxo.pipe
 def head(arg):
+    if " " in arg:
+        arg, header = arg.split(" ", 1)
+    else:
+        header = None
+
     arg = arg if arg else saxo.env("url")
     if not arg:
         return "Please supply a URL"
 
     page = saxo.request(arg)
+    if header is not None:
+        value = page["headers"].get(header.lower())
+        if value is not None:
+            return header + ": " + value
+        return "No such header"
+
     values = [str(page["status"])]
 
     if "mime" in page:

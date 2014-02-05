@@ -1,2 +1,0 @@
-#!/usr/bin/env python3
-print("export EXAMPLE=hello\nexport EXAMPLE2=hello2")

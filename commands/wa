@@ -8,9 +8,14 @@ import subprocess
 
 import saxo
 
+def utf8(obj):
+    return str(obj).encode("utf-8", "replace")
+
 # TODO: Generic shell command
 def shell(*args):
-    return str(subprocess.check_output(list(args)), "utf-8").rstrip("\r\n")
+    args = [utf8(arg) for arg in args]
+    output = subprocess.check_output(args)
+    return str(output, "utf-8").rstrip("\r\n")
 
 @saxo.pipe
 def wa(arg):

@@ -313,21 +313,39 @@ class Saxo(object):
         common.populate(saxo_path, self.base)
 
         # Load events
+        first = not self.events
         self.events.clear()
+
+        # This means we're using plugins as a namespace module
+        # Might have to move saxo.path's plugins/ to something else
+        # Otherwise it gets unionised into the namespace module
+        # if self.base not in sys.path:
+        # - not needed, because we clear up below
+        sys.path[:0] = [self.base]
+
+        if first and ("plugins" in sys.modules):
+            raise ImportError("'plugins' duplicated")
         plugins = os.path.join(self.base, "plugins")
-        sys.path[:0] = [plugins]
+        plugins_package = importlib.__import__("plugins")
+        if next(iter(plugins_package.__path__)) != plugins:
+            # This is very unlikely to happen, because we pushed self.base
+            # to the front of sys.path, but perhaps some site configuration
+            # or other import mechanism may affect this
+            raise ImportError("non-saxo 'plugins' module")
 
         setups = {}
         for name in os.listdir(plugins):
             if ("_" in name) or (not name.endswith(".py")):
                 continue
 
-            name = name[:-3]
+            name = "plugins." + name[:-3]
             if not name in sys.modules:
                 try: module = importlib.import_module(name)
                 except Exception as err:
                     debug("Error loading %s:" % name, err)
             else:
+                if first:
+                    raise ImportError("%r duplicated" % name)
                 module = sys.modules[name]
                 try: module = imp.reload(module)
                 except Exception as err:
@@ -351,7 +369,8 @@ class Saxo(object):
 
         graph = {}
         for setup in setups.values():
-            graph[setup.saxo_name] = setup.saxo_deps
+            deps = ["plugins." + dep for dep in setup.saxo_deps]
+            graph[setup.saxo_name] = deps
 
         database_filename = os.path.join(self.base, "database.sqlite3")
         with sqlite.Database(database_filename) as self.db:

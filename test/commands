@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
 if [ ! -x test/shell-commands ]
 then echo Error: test/shell-commands not found
      exit 1

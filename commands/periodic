@@ -38,6 +38,7 @@ def periodic(arg):
     result = snug(result, 128)
 
     if result:
-        return "Periodic tasks coming up: " + ", ".join(result)
+        prefix = "There are %s periodic tasks. Coming up: " % len(periodics)
+        return prefix + ", ".join(result)
     else:
         return "Sorry, no periodic tasks found"
