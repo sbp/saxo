@@ -19,7 +19,12 @@
 # - Delete and select methods for sqlite.Table
 
 import os
+import sys
+
 from collections import namedtuple
+
+if sys.version_info < (3, 3):
+    raise Exception("Requires Python 3.3 or later")
 
 path = None
 
@@ -43,10 +48,11 @@ if path is None:
 with open(os.path.join(path, "version")) as f:
     version = f.read().rstrip("\r\n")
 
-if (os.environ.get("SAXO_VERSION") or version) != version:
-    import sys
+# Move this to saxo.pipe?
+saxo_version = os.environ.get("SAXO_VERSION")
+if (saxo_version or version) != version:
     message = "Error: Version mismatch: Saxo %s attempted to import Saxo %s"
-    msg = message % (version, os.environ.get("SAXO_VERSION"))
+    msg = message % (version, saxo_version)
     print(msg)
     raise ImportError(msg)
 
@@ -254,7 +260,6 @@ def pipe(function):
     # try import __main__ as main; main.__name__?
     # Doesn't work. Would probably have to do:
     # @saxo.command(name=__name__)
-    import sys
 
     # Save PEP 3122!
     if "." in __name__:

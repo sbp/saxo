@@ -21,16 +21,12 @@ regex_twitter_b = re.compile(r"(?ims)<b>(.+?)</b>")
 regex_twitter_follow = re.compile(r'action="/([^/]+)/follow"')
 regex_twitter_canonical = \
     re.compile(r'rel="canonical" href="https?://twitter.com/([^/\">]+)')
+tco = '<span class="tco-ellipsis"><span class="invisible">\xA0</span>…</span>'
 
 def page(url, username=None):
-    if "/status" in url:
-        url = url.replace("//twitter", "//mobile.twitter")
-
     page = saxo.request(url, follow=True)
     text = page["text"]
-    text = text.replace(
-    '<span class="tco-ellipsis"><span class="invisible">\xA0</span>…</span>',
-    '')
+    text = text.replace(tco, "")
 
     username = None
     retweeted = None

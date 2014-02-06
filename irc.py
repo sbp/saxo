@@ -316,6 +316,18 @@ class Saxo(object):
         first = not self.events
         self.events.clear()
 
+        def module_exists(name):
+            try: imp.find_module(name)
+            except ImportError:
+                return False
+            else: return True
+
+        if first and module_exists("plugins"):
+            debug("Warning: a 'plugins' module already exists")
+
+        if first and ("plugins" in sys.modules):
+            raise ImportError("'plugins' duplicated")
+
         # This means we're using plugins as a namespace module
         # Might have to move saxo.path's plugins/ to something else
         # Otherwise it gets unionised into the namespace module
@@ -323,8 +335,6 @@ class Saxo(object):
         # - not needed, because we clear up below
         sys.path[:0] = [self.base]
 
-        if first and ("plugins" in sys.modules):
-            raise ImportError("'plugins' duplicated")
         plugins = os.path.join(self.base, "plugins")
         plugins_package = importlib.__import__("plugins")
         if next(iter(plugins_package.__path__)) != plugins:
@@ -343,9 +353,9 @@ class Saxo(object):
                 try: module = importlib.import_module(name)
                 except Exception as err:
                     debug("Error loading %s:" % name, err)
+            elif first:
+                raise ImportError("%r duplicated" % name)
             else:
-                if first:
-                    raise ImportError("%r duplicated" % name)
                 module = sys.modules[name]
                 try: module = imp.reload(module)
                 except Exception as err:
