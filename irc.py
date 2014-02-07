@@ -242,7 +242,11 @@ def process(env, cmd, path, arg):
         # Might have been removed just after running this thread
         return
     else:
-        try: outs, errs = proc.communicate(octets + b"\n", timeout=12)
+        authorised = "SAXO_AUTHORISED" in env
+        private = not env.get("SAXO_SENDER", "#").startswith("#")
+        timeout = 36 if (authorised and private) else 12
+
+        try: outs, errs = proc.communicate(octets + b"\n", timeout=timeout)
         except subprocess.TimeoutExpired:
             proc.kill()
             # TODO: Use actual prefix
