@@ -5,65 +5,48 @@
 
 import os
 import re
+import subprocess
 
 import saxo
 
-def search_by_char(db, char):
-    codepoint = ord(char)
-    query = "SELECT * FROM saxo_unicode WHERE codepoint = ?"
-    for row in db.query(query, codepoint):
-        return "U+%s %s (%s)" % (row[0], row[2], row[7])
+def utf8(obj):
+    return str(obj).encode("utf-8", "replace")
 
-def search_by_name(db, search):
-    regex_metachar = re.compile("[%s]" % re.escape(r"$()*+.?[\]^{|}"))
-    if regex_metachar.search(search):
-        pattern = search
-    else:
-        pattern = ".*".join(r"\b" + word for word in search.split(" "))
-    pattern = "(?i)" + pattern
-
-    results = []
-    query = "SELECT * FROM saxo_unicode WHERE name REGEXP ?"
-    for row in db.query(query, pattern):
-        codepoint = row[1]
-        name = row[2]
-
-        length = len(name) / 60
-        length = length if (length <= .5) else .5
-
-        position = codepoint / 0xFFFF
-        position = position if (position <= 1) else 1
-
-        weight = length + position
-        # DerivedAge might make a good weight
-
-        results.append((weight, row))
-
-    if not results:
-        return "No characters found"
-
-    for weight, row in sorted(results):
-        # hexcode, name, display
-        return "U+%s %s (%s)" % (row[0], row[2], row[7])
+# TODO: Generic shell command
+def shell(*args):
+    args = [utf8(arg) for arg in args]
+    output = subprocess.check_output(args)
+    return str(output, "utf-8").rstrip("\r\n")
 
 @saxo.pipe
-def u(arg):
+def unicode(arg):
     if not arg:
-        return "Search for Unicode characters"
+        return "Search for a unicode character"
 
-    if not os.environ.get("SAXO_BASE"):
-        base = os.path.expanduser("~/.saxo")
-        if os.path.isdir(base):
-            os.environ["SAXO_BASE"] = base
-        else:
-            return "Sorry, can't find the Unicode database"
+    # flag, arg = irc.optflag(arg=args.text)
 
-    with saxo.database() as db:
-        if not "saxo_unicode" in db:
-            return "Get an admin to run .update-unicode-data first"
+    digit = re.compile("[0-9]")
+    hexcode = re.compile("(?i)^[0-9A-F]{2,6}$")
+    codepoint = re.compile(r"(?i)^(U\+|\\u)[0-9A-F]{2,6}$")
+    simple = re.compile(r"^[\x20-\x7E]+$")
 
-        # TODO: Search by hexcode, search by character
-        if len(arg) == 1:
-            if ord(arg) > 0x80:
-                return search_by_char(db, arg)
-        return search_by_name(db, arg)
+    commands = os.path.dirname(__file__)
+    by_char = os.path.join(commands, "unicode-by-character")
+    unicode_by_character = lambda arg: shell(by_char, arg)
+
+    by_cp = os.path.join(commands, "unicode-by-codepoint")
+    unicode_by_codepoint = lambda arg: shell(by_cp, arg)
+
+    by_name = os.path.join(commands, "unicode-by-name")
+    unicode_by_name = lambda arg: shell(by_name, arg)
+
+    if len(arg) == 1:
+        return unicode_by_character(arg)
+    elif codepoint.match(arg):
+        return unicode_by_codepoint(arg)
+    elif digit.search(arg) and hexcode.match(arg):
+        return unicode_by_codepoint(arg)
+    elif not simple.match(arg):
+        return unicode_by_character(arg)
+    else:
+        return unicode_by_name(arg)

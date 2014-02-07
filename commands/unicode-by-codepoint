@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import os
+import saxo
+
+HEXCODE = 0
+CODEPOINT = 1
+NAME = 2
+CURRENT = 3
+ANCIENT = 4
+CATEGORY = 5
+CHARACTER = 6
+DISPLAY = 7
+
+@saxo.pipe
+def unicode_by_codepoint(arg):
+    if not arg:
+        return "Search for a unicode character by hexadecimal codepoint"
+
+    for prefix in ("U+", "u+", r"\u"):
+        if arg.startswith(prefix):
+            arg = arg[len(prefix):]
+            break
+
+    arg = arg.upper()
+    allowed = set("0123456789ABCDEF")
+    if (len(arg) not in {4,5,6}) or (set(arg) - allowed):
+        return "Usage: search for a hexadecimal codepoint, [0-9A-F]{4,6}"
+
+    arg = "%04X" % int(arg, 16)
+    base = saxo.env("base") or os.path.expanduser("~/.saxo")
+    path = os.path.join(base, "database.sqlite3")
+    # TODO: saxo.database(well_known=True)
+    # or, user=True
+    with saxo.database(path) as db:
+        if "saxo_unicode" not in db:
+            return "The unicode database needs to be updated"
+
+        query = "SELECT * FROM saxo_unicode WHERE hexcode = ?"
+        rows = list(db.query(query, arg))
+
+    if len(rows) > 1:
+        return "There was an error, multiple rows returned"
+    elif not rows:
+        return "No information found about that codepoint"
+
+    row = rows[0]
+    return "U+%s %s (%s)" % (row[HEXCODE], row[NAME], row[DISPLAY])

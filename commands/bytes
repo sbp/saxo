@@ -9,5 +9,12 @@ import saxo
 def _bytes(arg):
     if not arg:
         return "Zero-length input"
-    parts = ["%02X" % b for b in arg.encode("utf-8")]
+
+    if arg.startswith(":dec "):
+        arg = arg[5:]
+        format = "%d"
+    else:
+        format = "%02X"
+
+    parts = [format % b for b in arg.encode("utf-8")]
     return " ".join(parts) + " (as utf-8)"
