@@ -9,4 +9,4 @@ import saxo
 @saxo.pipe
 def twop(arg):
     page = saxo.request("http://services.w3.org/xslt", query={"xslfile": "http://www.websitedev.de/temp/mobile-twitter-toptweet.xslt", "xmlfile": "http://services.w3.org/tidy/tidy?docAddr=https%3A%2F%2Fmobile.twitter.com%2Fsearch%3Fq%3D{}".format(quote(arg.replace(" ", "+"))), "content-type": "text/plain;charset=utf-8", "submit": "transform"})
-    return page["text"]
+    return page["text"] or "No result found"
