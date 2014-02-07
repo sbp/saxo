@@ -31,11 +31,7 @@ def unicode_by_codepoint(arg):
         return "Usage: search for a hexadecimal codepoint, [0-9A-F]{4,6}"
 
     arg = "%04X" % int(arg, 16)
-    base = saxo.env("base") or os.path.expanduser("~/.saxo")
-    path = os.path.join(base, "database.sqlite3")
-    # TODO: saxo.database(well_known=True)
-    # or, user=True
-    with saxo.database(path) as db:
+    with saxo.database(dotdir=True) as db:
         if "saxo_unicode" not in db:
             return "The unicode database needs to be updated"
 

@@ -22,9 +22,7 @@ def unicode_by_character(arg):
         arg = arg[:8]
         ellipsis = True
 
-    base = saxo.env("base") or os.path.expanduser("~/.saxo")
-    path = os.path.join(base, "database.sqlite3")
-    with saxo.database(path) as db:
+    with saxo.database(dotdir=True) as db:
         if "saxo_unicode" not in db:
             return "The unicode database needs to be updated"
 

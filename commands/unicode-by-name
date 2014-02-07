@@ -45,9 +45,7 @@ def unicode_by_name(arg):
     if not arg:
         return "Search for Unicode characters"
 
-    base = saxo.env("base") or os.path.expanduser("~/.saxo")
-    path = os.path.join(base, "database.sqlite3")
-    with saxo.database(path) as db:
+    with saxo.database(dotdir=True) as db:
         if not "saxo_unicode" in db:
             return "The unicode database needs to be updated"
 

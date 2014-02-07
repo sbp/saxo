@@ -209,7 +209,7 @@ def data(name, value=None, *, command=None, check=True, delete=False):
             return result
 
 @public
-def database(name=None):
+def database(name=None, dotdir=False):
     # Save PEP 3122!
     if "." in __name__:
         from .sqlite import Database
@@ -219,12 +219,16 @@ def database(name=None):
     if name is None:
         base = env("base")
         if base is None:
-            raise ValueError("No SAXO_BASE found")
+            if dotdir is True:
+                base = os.path.expanduser("~/.saxo")
+            else:
+                raise ValueError("No SAXO_BASE found")
         name = os.path.join(base, "database.sqlite3")
 
     return Database(name)
 
 # saxo.database.path?
+# TODO: Does saxo.database().path work?
 
 # saxo.env("base")
 # saxo.env("bot")
