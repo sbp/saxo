@@ -13,6 +13,10 @@ _regex_key = re.compile(r'([^=]+)')
 _regex_value = re.compile(r'("[^"\\]*(?:\\.[^"\\]*)*"|[^;]+)')
 
 user_agent = "Mozilla/5.0 (Services)"
+modern_user_agent = " ".join([
+    "Mozilla/5.0",
+    "(Macintosh; Intel Mac OS X 10.9; rv:26.0)"
+    "Gecko/20100101 Firefox/26.0"])
 
 def content_type(info):
     mime = None
@@ -76,12 +80,12 @@ def decode_entities(hypertext):
     return _regex_entity.sub(default, hypertext)
 
 def request(url, query=None, data=None, method="GET",
-        limit=None, follow=True, headers=None):
+        limit=None, follow=True, headers=None, modern=False):
     headers = {} if (headers is None) else headers
 
     response = {}
     if "User-Agent" not in headers:
-        headers["User-Agent"] = user_agent
+        headers["User-Agent"] = modern_user_agent if modern else user_agent
     response["request-headers"] = headers
 
     safe = "".join(chr(i) for i in range(0x01, 0x80))

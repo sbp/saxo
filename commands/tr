@@ -17,7 +17,6 @@ def optflag(arg):
     return flag, arg
 
 def translate(text, source="auto", target=None):
-    ua = "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11"
     phonetic = False
 
     if target == "p":
@@ -29,7 +28,7 @@ def translate(text, source="auto", target=None):
     text = text.strip('" ')
     page = saxo.request(
         "http://translate.google.com/translate_a/t",
-        headers={"User-Agent": ua},
+        modern=True,
         query = {
             "client": "t",
             "hl": "en",
