@@ -85,6 +85,7 @@ def request(url, query=None, data=None, method="GET",
 
     response = {}
     if "User-Agent" not in headers:
+        modern = modern is True
         headers["User-Agent"] = modern_user_agent if modern else user_agent
     response["request-headers"] = headers
 
