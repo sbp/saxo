@@ -9,6 +9,8 @@ import re
 import saxo
 
 regex_results = re.compile(r"(?i)([0-9,]+) results?")
+user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:26.0) " + \
+    "Gecko/20100101 Firefox/26.0"
 
 @saxo.pipe
 def gc(arg):
@@ -16,7 +18,8 @@ def gc(arg):
         return "Count the number of results for a phrase on Google"
 
     query = {"hl": "en", "q": arg}
-    page = saxo.request("https://www.google.com/search", query=query)
+    page = saxo.request("https://www.google.com/search", query=query,
+                        headers={"User-Agent": user_agent})
 
     if "No results found for" in page["text"]:
         return "0"
@@ -24,4 +27,6 @@ def gc(arg):
         return "0"
 
     for result in regex_results.findall(page["text"]):
-        return result
+        if result:
+            return result
+    return "Sorry, there was an error"

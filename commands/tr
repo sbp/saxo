@@ -16,17 +16,14 @@ def optflag(arg):
         flag = flag[1:]
     return flag, arg
 
-# https://stackoverflow.com/questions/10823877
-def flatten(container):
-    for item in container:
-        if isinstance(item, list):
-            yield from flatten(item)
-        else:
-            yield item
-
 def translate(text, source="auto", target=None):
     ua = "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11"
-    if target is None:
+    phonetic = False
+
+    if target == "p":
+        target = "en"
+        phonetic = True
+    elif target is None:
         target = "en"
 
     text = text.strip('" ')
@@ -42,23 +39,25 @@ def translate(text, source="auto", target=None):
             "otf": "1",
             "ssel": "0",
             "tsel": "0",
-            "uptl": "en",
             "sc": "1",
             "text": text
         })
 
     text = page["text"]
     while ",," in text:
-        text = text.replace(",,", ",")
-    text = text.replace("[,", "[")
+        text = text.replace(",,", ",null,")
+    text = text.replace("[,", "[null,")
+    text = text.replace(",]", ",null]")
 
     try: js = json.loads(text)
     except ValueError:
         return "Problem loading the JSON"
 
-    js = list(flatten(js))
-    source = js[4] if len(js) > 4 else "?"
-    translation = js[0] if js else "?"
+    if not phonetic:
+        translation = js[0][0][0]
+    else:
+        translation = js[0][0][3] or js[0][0][0]
+    source = js[2]
     return translation.replace(" ,", ","), source, target
 
 @saxo.pipe

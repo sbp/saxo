@@ -17,6 +17,13 @@ def head(arg):
         return "Please supply a URL"
 
     page = saxo.request(arg)
+
+    if header == "*":
+        result = ", ".join([key for key in page["info"]])
+        if len(result) > 256:
+            result = result[:256] + "..."
+        return result
+
     if header is not None:
         value = page["headers"].get(header.lower())
         if value is not None:

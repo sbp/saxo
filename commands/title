@@ -52,6 +52,8 @@ def title(url):
         url = saxo.env("url")
     if not url:
         return "Sorry, no link found to title"
+    if " " in url:
+        return "Sorry, links cannot contain spaces"
 
     if not url.startswith("http"):
         url = "http://" + url
@@ -67,6 +69,8 @@ def title(url):
         return url.rsplit(".html", 1)[0].rsplit("/").pop()
 
     page = saxo.request(url, limit=262144, follow=True)
+    if "html" not in page:
+        return "Sorry, page isn't HTML"
     text = regex_script.sub("", page["html"])
     search = regex_title.search(text)
     if search:

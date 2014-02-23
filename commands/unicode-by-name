@@ -18,7 +18,13 @@ def search_by_name(db, search):
 
     results = []
     query = "SELECT * FROM saxo_unicode WHERE name REGEXP ?"
-    for row in db.query(query, pattern):
+
+    try: rows = list(db.query(query, pattern))
+    except: 
+        # OperationalError, if e.g. regexp is "??"
+        rows = list(db.query(query, "(?i)" + re.escape(search)))
+
+    for row in rows:
         codepoint = row[1]
         name = row[2]
 

@@ -23,8 +23,13 @@ regex_twitter_canonical = \
     re.compile(r'rel="canonical" href="https?://twitter.com/([^/\">]+)')
 tco = '<span class="tco-ellipsis"><span class="invisible">\xA0</span>…</span>'
 
+class NotFound(Exception):
+    ...
+
 def page(url, username=None):
     page = saxo.request(url, follow=True)
+    if page["status"] == 404:
+        raise NotFound("No such tweet")
     text = page["text"]
     text = text.replace(tco, "")
 
@@ -87,7 +92,7 @@ def format_tweet(username, retweeted, tweet):
         return "%s (@%s, RT @%s)" % (tweet, username, retweeted)
     return "%s (@%s)" % (tweet, username)
 
-def get_tweet(username=None, tweet=None, url=None):
+def get_tweet_basic(username=None, tweet=None, url=None):
     if username:
         url = "https://twitter.com/" + username + "?" + str(time.time())
         username, retweeted, tweet = page(url, username=username)
@@ -103,6 +108,11 @@ def get_tweet(username=None, tweet=None, url=None):
         return format_tweet(username, retweeted, tweet)
 
     raise ValueError("Needed username, id, or url")
+
+def get_tweet(username=None, tweet=None, url=None):
+    try: return get_tweet_basic(username=username, tweet=tweet, url=url)
+    except NotFound:
+        return "No such tweet"
 
 @saxo.pipe
 def tw(arg):

@@ -70,7 +70,10 @@ def decode_entities(hypertext):
             return chr(html.entities.name2codepoint[name])
         return "[" + name + "]"
 
-    return _regex_entity.sub(entity, hypertext)
+    def default(match):
+        try: return entity(match)
+        except: return match.group(1)
+    return _regex_entity.sub(default, hypertext)
 
 def request(url, query=None, data=None, method="GET",
         limit=None, follow=True, headers=None):
