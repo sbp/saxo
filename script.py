@@ -6,6 +6,7 @@ import codecs
 import os
 import signal
 import sys
+import threading
 import time
 
 # Save PEP 3122!
@@ -46,6 +47,16 @@ def action(function):
     action.names[function.__name__] = function
     return function
 action.names = {}
+
+lock = threading.Lock()
+
+def debug(*args, **kargs):
+    with lock:
+        try:
+            print(*args, **kargs)
+            sys.stdout.flush()
+        except BrokenPipeError:
+            sys.exit()
 
 # Options
 
@@ -249,12 +260,12 @@ def start(args):
     except ConnectionRefusedError as err:
         ...
     except PermissionError as err:
-        print("Error: Unable to connect to internal socket", file=sys.stderr)
-        print("Check permissions on the config dir", file=sys.stderr)
+        debug("Error: Unable to connect to internal socket", file=sys.stderr)
+        debug("Check permissions on the config dir", file=sys.stderr)
         sys.stderr.flush()
         sys.exit()
     else:
-        print("Warning: Client may already have been running!")
+        debug("Warning: Client may already have been running!")
         sys.stdout.flush()
 
     pidfile = os.path.join(base, "pid")
@@ -291,7 +302,7 @@ def start(args):
     if args.action == "start":
         # Otherwise you get recursion if args.action == "restart"
         os.environ["SAXO_BASE"] = base
-        sys_args = json.dumps(sys.argv[1:])
+        sys_args = json.dumps(args.original)
         data("args", sys_args, command="script.py", check=False)
     
     # Save PEP 3122!
@@ -316,10 +327,15 @@ def restart(args):
         from saxo import data, version
 
     sys_args = json.loads(data("args", command="script.py", check=False))
-    print("Stopping existing instance...")
+    if sys_args[0] == "restart":
+        debug("Recursion detected!", sys_args)
+        debug("Not restarting")
+        sys.exit(1)
+
+    debug("Stopping existing instance...")
     stop(args)
     argv = [sys.argv[0]] + sys_args
-    print("Restarting using:", argv)
+    debug("Restarting using:", argv)
     main(argv, version)
 
 @action
@@ -334,11 +350,11 @@ def status(args):
 
     try: client("noop", base=base)
     except FileNotFoundError as err:
-        print("not running")
+        debug("not running")
     except ConnectionRefusedError as err:
-        print("not running")
+        debug("not running")
     else:
-        print("running")
+        debug("running")
 
 @action
 def stop(args):
@@ -525,6 +541,7 @@ def main(argv, v):
         help="the path to the saxo configuration directory")
 
     args = parser.parse_args(argv[1:])
+    args.original = argv[1:]
 
     if args.output:
         print("Sorry, -o / --output has been removed!")
