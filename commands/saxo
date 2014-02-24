@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import saxo
+
+info = {
+    "": "Learn more about saxo at http://inamidst.com/saxo/",
+    "bug": "Please report bugs to https://github.com/sbp/saxo/issues/new",
+    "issue": "https://github.com/sbp/saxo/issues/new",
+    "bugs": "https://github.com/sbp/saxo/issues?state=open",
+    "issues": "https://github.com/sbp/saxo/issues?state=open",
+    "commits": "https://github.com/sbp/saxo/commits/master",
+    "homepage": "http://inamidst.com/saxo/",
+    "pypi": "https://pypi.python.org/pypi/saxo",
+    "install": "$ pip3 install saxo",
+    "installation": "$ pip3 install saxo",
+    "download": "https://github.com/sbp/saxo/releases",
+    "author": "Saxo is by Sean B. Palmer, http://inamidst.com/sbp/",
+    "request": "https://github.com/sbp/saxo/compare/",
+    "requests": "https://github.com/sbp/saxo/pulls",
+    "forks": "https://github.com/sbp/saxo/network",
+    "version": saxo.version
+}
+
+
+@saxo.command()
+def _saxo(arg):
+    return info.get(arg, "?")

@@ -234,14 +234,15 @@ def log(args):
 
 @action
 def start(args):
-    base = base_option(args)
+    import json
 
     # Quit any previously connected instances
     if "." in __name__:
-        from .saxo import client
+        from .saxo import client, data
     else:
-        from saxo import client
+        from saxo import client, data
 
+    base = base_option(args)
     try: client("quit", base=base)
     except FileNotFoundError as err:
         ...
@@ -287,6 +288,12 @@ def start(args):
                 os.remove(pidfile)
         atexit.register(delete_pidfile)
 
+    if args.action == "start":
+        # Otherwise you get recursion if args.action == "restart"
+        os.environ["SAXO_BASE"] = base
+        sys_args = json.dumps(sys.argv[1:])
+        data("args", sys_args, command="script.py", check=False)
+    
     # Save PEP 3122!
     if "." in __name__:
         from . import irc
@@ -295,6 +302,25 @@ def start(args):
 
     irc.start(base)
     return 0
+
+@action
+def restart(args):
+    import json
+
+    base = base_option(args)
+    os.environ["SAXO_BASE"] = base
+
+    if "." in __name__:
+        from .saxo import data, version
+    else:
+        from saxo import data, version
+
+    sys_args = json.loads(data("args", command="script.py", check=False))
+    print("Stopping existing instance...")
+    stop(args)
+    argv = [sys.argv[0]] + sys_args
+    print("Restarting using:", argv)
+    main(argv, version)
 
 @action
 def status(args):
@@ -516,6 +542,21 @@ def main(argv, v):
             code = action.names[args.action](args)
             if isinstance(code, int):
                 sys.exit(code)
+        elif args.action.startswith("."):
+            # Save PEP 3122!
+            if "." in __name__:
+                from . import saxo
+            else:
+                import saxo
+
+            def do(cmd, arg):
+                import subprocess
+                cmd = os.path.join(saxo.path, "commands", cmd)
+                try: octets = subprocess.check_output([cmd, arg])
+                except Exception as err:
+                    raise err # return "Error: %s" % err
+                return octets.decode("utf-8").rstrip("\r\n")
+            print(do(args.action[1:], args.directory or ""))
         else:
             common.error("unrecognised action: %s" % args.action, code=2)
 

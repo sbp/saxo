@@ -3,6 +3,7 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
+import os
 import saxo
 
 def content(*segments):
@@ -10,7 +11,7 @@ def content(*segments):
         with open(os.path.join(*segments), "r", encoding="ascii") as f:
             text = f.read()
         return text
-    except:
+    except Exception as err:
         return None
 
 @saxo.pipe
