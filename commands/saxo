@@ -21,7 +21,8 @@ info = {
     "request": "https://github.com/sbp/saxo/compare/",
     "requests": "https://github.com/sbp/saxo/pulls",
     "forks": "https://github.com/sbp/saxo/network",
-    "version": saxo.version
+    "version": saxo.version,
+    "source": "https://github.com/sbp/saxo"
 }
 
 
