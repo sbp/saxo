@@ -10,10 +10,7 @@ import saxo
 def btc(arg):
     if arg:
         return "This command takes no argment"
-    url = "https://api.bitcoincharts.com/v1/markets.json"
+    url = "https://api.bitcoinaverage.com/ticker/global/all"
     page = saxo.request(url)
     data = json.loads(page["text"])
-    for trade in data:
-        if trade.get("symbol") == "btceUSD":
-            return str(trade["avg"])[:6] + " USD (btce)"
-    return "No data found"
+    return str(data["USD"]["last"]) + " USD (BitcoinAverage)"
