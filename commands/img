@@ -10,8 +10,7 @@ import saxo
 def img(arg):
     page = saxo.request(
         "http://ajax.googleapis.com/ajax/services/search/images",
-        query={"q": arg, "v": "1.0", "safe": "off"}
-    )
+        query={"q": arg, "v": "1.0", "safe": "off"}, modern=True)
     data = json.loads(page["text"])
     try: result = data["responseData"]["results"][0]["unescapedUrl"]
     except (KeyError, IndexError, TypeError):
