@@ -16,6 +16,8 @@ def source(arg):
     github = "https://github.com/sbp/saxo/blob/master/commands/"
     raw = "https://raw2.github.com/sbp/saxo/master/commands/"
     base = saxo.env("base")
+    if base is None:
+        return "Sorry, this command requires a running bot"
     command = os.path.join(base, "commands", arg)
     if os.path.isfile(command):
         with open(command) as f:
