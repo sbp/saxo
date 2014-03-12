@@ -8,7 +8,7 @@ import saxo
 
 @saxo.pipe
 def btc(arg):
-    if arg not in {"£", ":gbp"}:
+    if arg and (arg not in {"£", ":gbp"}):
         return "This command takes no argument"
     url = "https://api.bitcoinaverage.com/ticker/global/all"
     page = saxo.request(url)
