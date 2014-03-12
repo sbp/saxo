@@ -5,7 +5,10 @@ commands/authorised
 You are not an authorised user
 
 commands/btc
-927.85 USD (mtgox)
+630.94 USD (BitcoinAverage)
+
+commands/bytes ê
+C3 AA (as utf-8)
 
 commands/c 1 + 1
 2
@@ -20,13 +23,13 @@ commands/g reddit
 http://www.reddit.com/
 
 commands/gc git mercurial darcs
-937,000
+145,000
 
 commands/gcalc 1 + 2
 1 + 2 = 3
 
 commands/gcs "a b c" a b c
-a (12,500,000,000), c (5,260,000,000), b (4,220,000,000), "a b c" (186,000,000)
+a (12,100,000,000), c (5,170,000,000), b (4,610,000,000), "a b c" (184,000,000)
 
 commands/geo London, United Kingdom
 result: London, UK at 51.509,-0.125 to wit http://google.com/maps?q=51.509,-0.125
@@ -35,7 +38,7 @@ commands/github-test sbp/saxo
 Quick and flexible irc bot, extensible in any language
 
 commands/head https://github.com/
-200, text/html, utf-8 (Content-Type, HTML), 14475 bytes
+200, text/html, utf-8 (Content-Type, HTML), 15295 bytes
 
 commands/img trust me, I am science
 http://denver.mylittlefacewhen.com/media/f/img/mlfw1743-1319430665.jpg
@@ -47,6 +50,9 @@ commands/join #channel
 
 commands/leave #channel
 
+commands/len ö
+1 chars, 2 bytes (utf-8)
+
 commands/leo Möwe
 die Möwe Pl.: die Möwen = gull / die Möwe (Ornithologie) Pl.: die Möwen = sea gull (zool.), sea-gull (zool.), seagull (zool.) - http://dict.leo.org/ende/?search=M%C3%B6we
 
@@ -54,10 +60,14 @@ commands/location http://bit.ly/1eo3OVg
 https://github.com/sbp/saxo
 
 commands/news Tony Blair
-http://www.theguardian.com/media/2014/feb/03/adam-boulton-cameron-spin-doctors-alastair-campbells
+http://www.theguardian.com/politics/2014/feb/26/tony-blair-new-labour-hero-political-embarrassment-murdoch
+
+commands/nokiageo London
+London near United Kingdom (51.506420, -0.12721)
+
 
 commands/npl
-2014-02-04 23:04:36.872180 UTC
+2014-03-12 00:26:19.949133 UTC
 
 commands/off off
 
@@ -80,29 +90,35 @@ commands/py repr(u"\u203d".encode("utf-8"))
 commands/quit
 
 commands/reddit-random-test
-http://i.imgur.com/Hi6JFTJ.jpg
+http://i.imgur.com/DPGYWTC.jpg
 
 commands/reload
 
 commands/remove-unicode-data
 
+commands/saxo issue
+https://github.com/sbp/saxo/issues/new
+
 commands/seen sbp
 Sorry, this command requires an IRC instance
 
 commands/sleep 1
-Slept for 1.0009851455688477 seconds
+Slept for 1.0009958744049072 seconds
+
+commands/source source
+TypeError: unsupported operand type(s) for +=: 'NoneType' and 'str' (source:19)
 
 commands/ssl musalbas.com
 Certificate verified: success, (Perfect) Forward secrecy: success, Cipher: ECDHE-RSA-RC4-SHA, SSL version: TLSv1/SSLv3, Number of bits: 128, Algorithm bits: 128
 
 commands/suggest you are an
-Perhaps you are an: ~idiot, ~idiot virus, ~overcomer, ~awesome god, ~idiot hahaha, ~idiot song, ~ironman, ~acceptable level of threat, ~inspiration, ~amazing person
+Perhaps you are an: ~idiot, ~idiot virus, ~idiot hahaha, ~overcomer, ~idiot song, ~awesome god, ~inspiration, ~obsession, ~angel, ~amazing person
 
 commands/t https://github.com/
 GitHub · Build software better, together.
 
 commands/time
-Tue Feb  4 23:04:43 2014
+Wed Mar 12 00:26:26 2014
 
 commands/title http://inamidst.com/
 Website of Sean B. Palmer
@@ -111,16 +127,25 @@ commands/to dpk hello
 Sorry, I don't know your nickname
 
 commands/tr Möwe
-seagull (noun » en). translate.google.com
+seagull (de » en). translate.google.com
 
 commands/tw 423448345500061696
 These recent Whits essays—e.g. DRM machines, The executable word, and True source—are a kind of computing manifesto (@sbp)
 
 commands/twop @sbp
-“This chap loves Pinkie Pie. I hope he pulls through. gofundme.com/MichaelMorones…” — Sean B. Palmer, @sbp in tw:430401628009549826
+“@propylonsean The first link, footnote [1], in your 2002 essay propylon.com/news/ctoarticl… is broken. Do you recall what it pointed to?” — Sean B. Palmer, @sbp in tw:441917495445028865
 
 commands/u interrobang
 U+203D INTERROBANG (‽)
+
+commands/unicode-by-character æ
+U+00E6 LATIN SMALL LETTER AE (æ)
+
+commands/unicode-by-codepoint 203D
+U+203D INTERROBANG (‽)
+
+commands/unicode-by-name circ kata tu
+U+32E1 CIRCLED KATAKANA TU (㋡)
 
 commands/update-unicode-data
 
@@ -131,7 +156,7 @@ commands/url
 Sorry, no URL was found
 
 commands/version
-saxo 0.3.0
+saxo 0.3.1-bis (754984618b)
 
 commands/visit #channel
 
