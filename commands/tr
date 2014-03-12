@@ -53,7 +53,7 @@ def translate(text, source="auto", target=None):
         return "Problem loading the JSON"
 
     if not phonetic:
-        translation = js[0][0][0]
+        translation = "".join(t[0] for t in js[0])
     else:
         translation = js[0][0][3] or js[0][0][0]
     source = js[2]
