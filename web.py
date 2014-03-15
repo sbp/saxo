@@ -172,16 +172,17 @@ def request(url, query=None, data=None, method="GET",
 
     if "octets" in response:
         def guess_encoding(response):
-            try: response["text"] = response["octets"].decode("iso-8859-1")
+            try: response["text"] = response["octets"].decode("utf-8")
             except UnicodeDecodeError:
-                response["text"] = response["octets"].decode("utf-8", "replace")
-                response["encoding"] = "utf-8"
-            else:
+                response["text"] = response["octets"].decode("iso-8859-1")
                 response["encoding"] = "iso-8859-1"
+            else:
+                response["encoding"] = "utf-8"
             response["encoding-source"] = "heuristic"
 
         if "encoding" in response:
-            try: response["text"] = response["octets"].decode(response["encoding"])
+            encoding = response["encoding"]
+            try: response["text"] = response["octets"].decode(encoding)
             except (UnicodeDecodeError, LookupError):
                 guess_encoding(response)
         else:

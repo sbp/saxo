@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import urllib.parse
+import saxo
+
+@saxo.pipe
+def r2r(arg):
+    arg = urllib.parse.quote(arg)
+    page = saxo.request("http://dpk.io/s2/rome2rio/" + arg)
+    return page["text"]
