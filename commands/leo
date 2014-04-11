@@ -10,7 +10,7 @@ import saxo
 def leo(arg):
     page = saxo.request("http://dict.leo.org/ende", query={"search": arg})
     regex_whitespace = re.compile(r"[ \t\r\n\xA0]+")
-    regex_td = re.compile(r'(?ims)<td class="text" lang="..">(.*?)</td>')
+    regex_td = re.compile(r'(?ims)<td[^>]* lang="..">(.*?)</td>')
 
     def normalise(text):
         text = re.sub(r"<[^>]+>", "", text)

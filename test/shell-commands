@@ -13,6 +13,7 @@ show() {
 show commands/at 15:00Z hello
 show commands/authorised
 show commands/btc
+show commands/bytes 'ê'
 show commands/c 1 + 1
 show commands/distance London ... Paris
 show commands/ety love
@@ -27,9 +28,11 @@ show commands/img trust me, I am science
 show commands/in 10s hello
 show commands/join '#channel'
 show commands/leave '#channel'
+show commands/len 'ö'
 show commands/leo 'Möwe'
 show commands/location http://bit.ly/1eo3OVg
 show commands/news Tony Blair
+show commands/nokiageo London
 show commands/npl
 show commands/off off
 show commands/on on
@@ -43,8 +46,10 @@ show commands/quit
 show commands/reddit-random-test
 show commands/reload
 show commands/remove-unicode-data
+show commands/saxo issue
 show commands/seen sbp
 show commands/sleep 1
+show commands/source source
 show commands/ssl musalbas.com
 show commands/suggest you are an
 show commands/t https://github.com/
@@ -55,6 +60,9 @@ show commands/tr 'Möwe'
 show commands/tw 423448345500061696
 show commands/twop @sbp
 show commands/u interrobang
+show commands/unicode-by-character 'æ'
+show commands/unicode-by-codepoint 203D
+show commands/unicode-by-name circ kata tu
 show commands/update-unicode-data
 show commands/upper abc
 show commands/url
