@@ -12,6 +12,9 @@ def connected(irc):
 def first(irc):
     irc.send("NICK", irc.config["nick"])
     irc.send("USER", irc.config["nick"], "+iw", irc.config["nick"], "saxo")
+
+@saxo.event("001")
+def welcomed(irc):
     for channel in irc.config["channels"].split(" "):
         irc.send("JOIN", channel)
     irc.send("WHO", irc.config["nick"])
@@ -26,4 +29,4 @@ def who(irc):
 
 @saxo.event("PING")
 def ping(irc):
-    irc.send("PONG", irc.config["nick"])
+    irc.send("PONG", irc.parameters[0])
