@@ -13,6 +13,9 @@ def ssl(arg):
     arg = arg.split("//", 1).pop()
     arg = arg.split("/", 1)[0]
     page = saxo.request("http://dpk.io/ssl/" + arg)
-    items = enumerate((a or b) for (a, b) in item.findall(page["text"]))
+    text = page["text"]
+    if "<h2>Error" in text:
+        return "Error: " + text.split("<p>", 1).pop().split("\n", 1)[0]
+    items = enumerate((a or b) for (a, b) in item.findall(text))
     items = (item + ("," if (i % 2) else ":") for (i, item) in items)
     return " ".join(items).rstrip(",")
