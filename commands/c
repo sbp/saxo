@@ -50,8 +50,15 @@ def c(arg):
     else:
         limit = 128
 
+    if arg.startswith(":link "):
+        link = True
+        arg = arg[6:]
+    else:
+        link = False
     page = saxo.request("http://www.wolframalpha.com/input/",
                         query={"asynchronous": "false", "i": arg})
+    if link:
+        return page["url"]
     text = page["text"]
 
     labels = {}
