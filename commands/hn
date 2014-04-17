@@ -7,7 +7,7 @@ import json
 import saxo
 
 @saxo.pipe
-def cc(arg):
+def hn(arg):
     if not arg:
         rank = 1
     else:
