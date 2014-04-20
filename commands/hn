@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+
+# Created by Mustafa Al-Bassam
+
+import json
+
+import saxo
+
+@saxo.pipe
+def hn(arg):
+    if not arg:
+        rank = 1
+    else:
+        try:
+            rank = int(arg)
+            if rank < 1 or rank > 30:
+                raise ValueError
+        except ValueError:
+            return "Argument must be an integer between 1 and 30"
+
+    page = saxo.request("https://hnify.herokuapp.com/get/top")
+    data = json.loads(page["text"])
+    story = data["stories"][rank - 1]
+
+    return story["title"] + ": " + story["link"]
