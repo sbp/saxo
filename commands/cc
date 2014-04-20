@@ -3,24 +3,21 @@
 # Created by Mustafa Al-Bassam
 
 import json
-
 import saxo
 
 @saxo.pipe
 def cc(arg):
-    page = saxo.request("http://coinmarketcap.northpole.ro/api/" + arg.lower()
-                        + ".json")
+    api = "http://coinmarketcap.northpole.ro/api/%s.json"
+    page = saxo.request(api % arg.lower())
 
-    try:
-        data = json.loads(page["text"])
+    try: data = json.loads(page["text"])
     except ValueError:
         return "No data available on that alleged cryptocurrency"
 
-    result = data["name"] + ". "
-    result += "Price: $" + data["price"] + ". "
-    result += "Market cap: $" + data["marketCap"] + ". "
-    result += "Current supply: " + data["totalSupply"] + ". "
-    result += "Volume (24h): " + data["volume24"] + ". "
-    result += "Change (24h): " + data["change24"].replace(" ", "") + "."
-
-    return result
+    result = [data["name"] + ".",
+              "Price: $" + data["price"] + ".",
+              "Market cap: $" + data["marketCap"] + ".",
+              "Current supply: " + data["totalSupply"] + ".",
+              "Volume (24h): " + data["volume24"] + ".",
+              "Change (24h): " + data["change24"].replace(" ", "") + "."]
+    return " ".join(result)

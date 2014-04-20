@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Created by @nyuszika7h
+# Inspired by code by @myano
+
 import collections
 import json
 
