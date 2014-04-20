@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+
+import collections
+import json
+
+import saxo
+
+url = 'http://freegeoip.net/json/{0}'
+separator = ' | '
+
+
+@saxo.pipe
+def geoip(arg):
+    page = saxo.request(url.format(arg))
+
+    try:
+        data = json.loads(page['text'])
+    except ValueError:
+        return 'freegeoip.net said: {0}'.format(page['text'])
+
+    info = []
+
+    attrs = collections.OrderedDict([
+        ('ip', 'IP'),
+        ('city', 'City'),
+        ('region_name', 'State'),
+        ('country_name', 'Country'),
+        ('zipcode', 'ZIP'),
+        ('latitude', 'Latitude'),
+        ('longitude', 'Longitude')
+    ])
+
+    for key, name in attrs.items():
+        if key in data and data[key]:
+            info.append('{0}: {1}'.format(name, data[key]))
+
+    return separator.join(info)
