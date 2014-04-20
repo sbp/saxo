@@ -38,8 +38,7 @@ def geoip(arg):
 
     for key, name in attrs.items():
         if key == 'ip' and re.match(ip_re, arg):
-            try:
-                hostname = socket.gethostbyaddr(arg)[0]
+            try: hostname = socket.gethostbyaddr(arg)[0]
             except socket.error:
                 pass
             else:

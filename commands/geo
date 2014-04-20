@@ -11,4 +11,7 @@ def geo(arg):
     nick = os.environ.get("SAXO_NICK", "result")
     page = saxo.request("http://websitedev.de/temp-bin/geo.php",
                         query={"nick": nick, "q": arg})
-    return page["text"]
+    text = page["text"]
+    if not text.startswith(nick):
+        text = text.replace("\\\\", "\\")
+    return text
