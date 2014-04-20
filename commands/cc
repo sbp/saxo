@@ -20,7 +20,7 @@ def cc(arg):
     result += "Price: $" + data["price"] + ". "
     result += "Market cap: $" + data["marketCap"] + ". "
     result += "Current supply: " + data["totalSupply"] + ". "
-    result += "Volume (24h): " + data["volume24"] + ". "
+    result += "Volume (24h): $" + data["volume24"] + ". "
     result += "Change (24h): " + data["change24"].replace(" ", "") + "."
 
     return result
