@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+
+# Created by @nyuszika7h
+# Inspired by code by @myano
+
+import collections
+import json
+import re
+import socket
+
+import saxo
+
+url = 'http://freegeoip.net/json/{0}'
+separator = ' | '
+ip_re = r'(?:\d{1,3}\.){3}\d{1,3}$'
+
+
+@saxo.pipe
+def geoip(arg):
+    page = saxo.request(url.format(arg))
+
+    try:
+        data = json.loads(page['text'])
+    except ValueError:
+        return 'freegeoip.net said: {0}'.format(page['text'])
+
+    info = []
+
+    attrs = collections.OrderedDict([
+        ('ip', 'IP'),
+        ('city', 'City'),
+        ('region_name', 'State'),
+        ('country_name', 'Country'),
+        ('zipcode', 'ZIP'),
+        ('latitude', 'Latitude'),
+        ('longitude', 'Longitude')
+    ])
+
+    for key, name in attrs.items():
+        if key == 'ip' and re.match(ip_re, arg):
+            try: hostname = socket.gethostbyaddr(arg)[0]
+            except socket.error:
+                pass
+            else:
+                info.append('Hostname: {0}'.format(hostname))
+        elif key in data and data[key]:
+            info.append('{0}: {1}'.format(name, data[key]))
+
+    return separator.join(info)
