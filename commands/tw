@@ -94,9 +94,8 @@ def format_tweet(username, retweeted, tweet):
 
 def get_tweet_basic(username=None, tweet=None, url=None):
     if username:
-        url = "https://twitter.com/" + username + "?" + str(time.time())
-        username, retweeted, tweet = page(url, username=username)
-        return format_tweet(username, retweeted, tweet)
+        page = saxo.request("http://dpk.io/services/tw/" + username)
+        return page["text"]
 
     elif tweet:
         url = "https://twitter.com/twitter/status/" + tweet
