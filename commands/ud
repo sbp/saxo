@@ -11,4 +11,7 @@ def ud(arg):
     url = "http://api.urbandictionary.com/v0/define"
     page = saxo.request(url, query={"term": arg})
     data = json.loads(page["text"])
-    return data["list"][0]["definition"].replace("\r\n", " ")
+    defs = data["list"]
+    if not defs:
+        return "Sorry, no definitions found"
+    return defs[0]["definition"].replace("\r\n", " ")
