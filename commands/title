@@ -63,7 +63,7 @@ def title(url):
 
     for blacklisted in blacklist:
         if blacklisted in url:
-            return
+            return "Sorry, domain is blacklisted"
 
     if "nytimes.com" in url:
         return url.rsplit(".html", 1)[0].rsplit("/").pop()
@@ -80,14 +80,14 @@ def title(url):
         title = title.replace("\r", "")
         title = title.replace("\n", "")
 
-        title = longest(title, " : ")
-        title = longest(title, " | ")
-        title = longest(title, "| ")
-        title = longest(title, " — ")
-        if "youtube.com" not in url:
-            title = longest(title, " - ")
-        elif title.endswith(" - YouTube"):
-            title = title[:-10]
+        # title = longest(title, " : ")
+        # title = longest(title, " | ")
+        # title = longest(title, "| ")
+        # title = longest(title, " — ")
+        # if "youtube.com" not in url:
+        #     title = longest(title, " - ")
+        # elif title.endswith(" - YouTube"):
+        #     title = title[:-10]
         title = title.replace('"', "'")
         return title.strip()
     return "No title found"
