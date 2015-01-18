@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import urllib.parse
+import saxo
+
+@saxo.pipe
+def weather(arg):
+    arg = urllib.parse.quote(arg)
+    page = saxo.request("http://dpk.io/services/weather/" + arg)
+    return page["text"]
