@@ -132,4 +132,5 @@ def tw(arg):
     else:
         return "Expected a link, a username, or a tweet id"
 
+    tweet = tweet.replace(" pic.twitter.com/", " https://pic.twitter.com/")
     return tweet

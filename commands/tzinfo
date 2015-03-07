@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import itertools
+import os
+import struct
+import sys
+import time
+
+def parse(name):
+    # Specification from http://69.36.11.139/tzdb/tzfile-format.html
+    # tzfile(5) also gives the information, though less clearly
+
+    with open(name, "rb") as f:
+        def get(struct_format):
+            struct_format = "> " + struct_format
+            file_bytes = f.read(struct.calcsize(struct_format))
+            return struct.unpack(struct_format, file_bytes)
+    
+        header, version, future_use = get("4s c 15s")
+    
+        counts = {}
+        for name in ("ttisgmt", "ttisstd", "leap", "time", "type", "char"):
+            counts[name] = get("l")[0]
+    
+        transitions = get("%sl" % counts["time"])
+        indices = get("%sB" % counts["time"])
+    
+        ttinfo = []
+        for current in range(counts["type"]):
+            ttinfo_struct = get("l?B")
+            ttinfo.append(ttinfo_struct)
+    
+        abbreviations = get("%sc" % counts["char"])
+
+    index = 0
+    abbreviation_indices = {}
+    for abbreviation in b"".join(abbreviations).split(b"\x00"):
+        abbreviation_indices[index] = abbreviation.decode("us-ascii")
+        index += len(abbreviation) + 1
+
+    for current, ttinfo_struct in enumerate(ttinfo):
+        replacement = abbreviation_indices[ttinfo_struct[2]]
+        ttinfo[current] = (ttinfo_struct[0], ttinfo_struct[1], replacement)
+
+    offset, dst, abbreviation = ttinfo[0]
+    tzinfo = [(None, offset, dst, abbreviation)]
+    for transition, index in zip(transitions, indices):
+        offset, dst, abbreviation = ttinfo[index]
+        tzinfo.append((transition, offset, dst, abbreviation))
+
+    return tzinfo
+
+def window(seq, n=2):
+    "Returns a sliding window (of width n) over data from the iterable"
+    "   s -> (s0,s1,...s[n-1]), (s1,s2,...,sn), ...                   "
+    it = iter(seq)
+    result = tuple(itertools.islice(it, n))
+    if len(result) == n:
+        yield result    
+    for elem in it:
+        result = result[1:] + (elem,)
+        yield result
+
+def main(zone):
+    import re
+    regex_zone = re.compile("(?i)^[A-Z0-9_]+/[A-Z0-9_]+$")
+    if regex_zone.match(zone):
+        now = time.time()
+        name = "/usr/share/zoneinfo/" + zone
+        if not os.path.isfile(name):
+            print("Unknown zone name")
+        tzinfo = parse(name)
+        for a, b in window(tzinfo):
+            if now < (b[0] or 0):
+                offset = a[1] / 3600
+                if not (offset % 1):
+                    offset = int(offset)
+                print("%+d (%s)" % (offset, a[3]))
+                return
+    else:
+        print("Not a valid zone name")
+
+if __name__ == "__main__":
+    main(sys.argv[1])

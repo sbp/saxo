@@ -12,7 +12,3 @@ publish:
 	git tag `cat version`
 	git push
 	git push --tags
-
-# .PHONY: test
-# test:
-# 	./saxo test

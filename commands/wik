@@ -45,11 +45,18 @@ def article_search(term, language):
         url = url.split("?", 1)[0]
     return url[len("http://%s/wiki/" % site):].replace("_", " ")
 
+def optflag(arg, flag=None):
+    if arg.startswith(":"):
+        if " " in arg:
+            flag, arg = arg.split(" ", 1)
+        else:
+            flag, arg = arg, ""
+        flag = flag[1:]
+    return arg, flag
+
 @saxo.pipe
 def wik(arg):
-    term = arg
-    # TODO: Allow :fr style flags
-    language = "en"
+    term, language = optflag(arg, "en")
     debug = []
 
     def underscored(term):
