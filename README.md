@@ -30,6 +30,10 @@ Try the [docs](docs) directory:
 * [Write saxo commands](docs/write-commands.md)
 * [Changes](docs/changes.md)
 
+## Credits
+
+Thanks to Scott Arciszewski and many others!
+
 ## License
 
 [Apache License](https://en.wikipedia.org/wiki/Apache_License) 2.0.
