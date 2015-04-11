@@ -1,2 +1,48 @@
-#!/bin/bash
-echo 'Replacement .tr service required, please contact sbp'
+#!/usr/bin/env python3
+
+import urllib.parse
+import saxo
+
+form = "sl=%s&tl=%s&js=n&prev=_t&hl=en&ie=UTF-8&text=%s&file=&edit-text="
+
+def optflag(arg):
+    flag = None
+    if arg.startswith(":"):
+        if " " in arg:
+            flag, arg = arg.split(" ", 1)
+        else:
+            flag, arg = arg, ""
+        flag = flag[1:]
+    return flag, arg
+
+@saxo.command()
+def tr(arg):
+    if not arg:
+        return "Translate text from one language to another"
+
+    source, arg = optflag(arg)
+    target, phrase = optflag(arg)
+
+    source = source or "auto"
+    target = target or "en"
+
+    data = form % (source, target, urllib.parse.quote(phrase))
+    text = saxo.lynx("https://translate.google.co.uk/",
+        data=data.encode("ascii"), source=False)
+    if text == "LynxNotFound":
+        return "This command requires lynx to be installed"
+
+    result = []
+    accept = False
+    for line in text.splitlines():
+        if accept is True:
+            if "Google Translate for Business" in line:
+                break
+            line = line.strip("_ ")
+            if line:
+                result.append(line)
+        elif "Help improve Google Translate" in line:
+            accept = True
+    translation = " ".join(result) or "?"
+    msg = "%s (%s » %s). translate.google.co.uk"
+    return msg % (translation, source, target)

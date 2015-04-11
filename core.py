@@ -250,6 +250,15 @@ def event(command="*"):
     return decorate
 
 @public
+def lynx(*args, **kargs):
+    # Save PEP 3122!
+    if "." in __name__:
+        from . import web
+    else:
+        import web
+    return web.lynx(*args, **kargs)
+
+@public
 def pipe(function):
     # This gives you:
     # * concise code
@@ -322,7 +331,6 @@ def request(*args, **kargs):
         from . import web
     else:
         import web
-
     return web.request(*args, **kargs)
 
 @public

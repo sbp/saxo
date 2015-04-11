@@ -83,6 +83,14 @@ def decode_entities(hypertext):
         except: return match.group(1)
     return _regex_entity.sub(default, hypertext)
 
+def construct(url, query=None):
+    safe = "".join(chr(i) for i in range(0x01, 0x80))
+    base = urllib.parse.quote(url, safe=safe)
+    if query:
+        query = urllib.parse.urlencode(query)
+        return "?".join((base, query))
+    return base
+
 def request(url, query=None, data=None, method="GET",
         limit=None, follow=True, headers=None, modern=False):
     headers = {} if (headers is None) else headers
@@ -199,3 +207,20 @@ def request(url, query=None, data=None, method="GET",
                 response["decoded-entities"] = True
 
     return response
+
+def lynx(url, query=None, data=None, source=True):
+    import subprocess
+    url = construct(url, query=query)
+    command = ["lynx"]
+    if data is not None:
+        command.append("--post_data")
+    command.append("--dump")
+    if source is True:
+        command.append("--source")
+    command.append(url)
+    try: octets = subprocess.check_output(command, input=data)
+    except FileNotFoundError as err:
+        return "LynxNotFound"
+    except Exception as err:
+        return "Error: %s" % err
+    return octets.decode("utf-8", "ignore")
