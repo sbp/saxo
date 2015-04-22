@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import urllib.parse
-import saxo
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
 
-form = "sl=%s&tl=%s&js=n&prev=_t&hl=en&ie=UTF-8&text=%s&file=&edit-text="
+import re
+import saxo
 
 def optflag(arg):
     flag = None
@@ -26,23 +27,16 @@ def tr(arg):
     source = source or "auto"
     target = target or "en"
 
-    data = form % (source, target, urllib.parse.quote(phrase))
-    text = saxo.lynx("https://translate.google.co.uk/",
-        data=data.encode("ascii"), source=False)
-    if text == "LynxNotFound":
-        return "This command requires lynx to be installed"
+    page = saxo.request("https://translate.google.co.uk/", method="POST",
+        data={"sl": source, "tl": target, "js": "n", "prev": "_t", "hl": "en",
+              "ie": "UTF-8", "text": phrase, "file": "", "edit-text": ""})
+    text = page["text"]
 
-    result = []
-    accept = False
-    for line in text.splitlines():
-        if accept is True:
-            if "Google Translate for Business" in line:
-                break
-            line = line.strip("_ ")
-            if line:
-                result.append(line)
-        elif "Help improve Google Translate" in line:
-            accept = True
-    translation = " ".join(result) or "?"
+    result = re.compile(r"id=result_box(.*?)</div>")
+    match = result.search(text)
+    if not match:
+        return "Sorry, no translation found"
+    tag = re.compile("<[^>]+>")
+    translation = tag.sub("", "<" + match.group(1))
     msg = "%s (%s » %s). translate.google.co.uk"
     return msg % (translation, source, target)

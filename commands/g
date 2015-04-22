@@ -3,23 +3,43 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import json
 import re
 import urllib.parse
+
 import saxo
 
-r_url = re.compile(r'(?ims)class="r".*?<a href="(.*?)"')
+def bing(arg):
+    regex_bing_result = re.compile(r"<h2><a href=\"([^\"]+)\"")
+    page = saxo.request(
+        "http://www.bing.com/search",
+        query={"mkt": "en-GB", "q": arg}, modern=True
+    )
 
-@saxo.pipe
+    for url in regex_bing_result.findall(page["text"]):
+        if "r.msn.com/" in url:
+            continue
+        if url.startswith("/"):
+            continue
+        return url
+    return "No result found"
+
+@saxo.command()
 def g(arg):
     if not arg:
-        return "Search for a phrase on Google"
+        return "Search using Google (or Bing)"
 
-    page = saxo.request("https://www.google.com/search",
-        query={"q": arg}, modern=True)
+    base = "http://www.google.co.uk/search"
+    query = "ie=UTF-8&hl=en-GB&source=hp&q=%s&btnG=Google+Search&gbv=1"
+    url = base + "?" + (query % urllib.parse.quote(arg))
 
-    for url in r_url.findall(page["text"]):
-        if url.startswith("/"):
-           continue
-        return urllib.parse.unquote(url)
-    return "No result for %s" % arg
+    text = saxo.lynx(url, source=False)
+    if text == "LynxNotFound":
+        return bing(arg)
+
+    for line in text.splitlines():
+        if "url?q=" in line:
+            link = line.split(". ").pop().strip()
+            q = urllib.parse.urlparse(link).query
+            r = urllib.parse.parse_qs(q).get("q")
+            return r.pop(0)
+    return bing(arg)

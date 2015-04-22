@@ -145,7 +145,7 @@ def request(url, query=None, data=None, method="GET",
             a.lower(): b for (a, b) in response["info"].items()
         }
 
-        if method == "GET":
+        if method in {"GET", "POST"}:
             if limit is None:
                 response["octets"] = res.read()
             else:
@@ -217,6 +217,7 @@ def lynx(url, query=None, data=None, source=True):
     command.append("--dump")
     if source is True:
         command.append("--source")
+    # command.append("--accept_all_cookies")
     command.append(url)
     try: octets = subprocess.check_output(command, input=data)
     except FileNotFoundError as err:
