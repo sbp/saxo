@@ -13,10 +13,14 @@ _regex_key = re.compile(r'([^=]+)')
 _regex_value = re.compile(r'("[^"\\]*(?:\\.[^"\\]*)*"|[^;]+)')
 
 user_agent = "Mozilla/5.0 (Services)"
+# modern_user_agent = " ".join([
+#     "Mozilla/5.0",
+#     "(Macintosh; Intel Mac OS X 10.9; rv:26.0)"
+#     "Gecko/20100101 Firefox/26.0"])
 modern_user_agent = " ".join([
     "Mozilla/5.0",
-    "(Macintosh; Intel Mac OS X 10.9; rv:26.0)"
-    "Gecko/20100101 Firefox/26.0"])
+    "(Macintosh; Intel Mac OS X 10.10; rv:37.0)"
+    "Gecko/20100101 Firefox/37.0"])
 
 def content_type(info):
     mime = None
@@ -79,6 +83,14 @@ def decode_entities(hypertext):
         except: return match.group(1)
     return _regex_entity.sub(default, hypertext)
 
+def construct(url, query=None):
+    safe = "".join(chr(i) for i in range(0x01, 0x80))
+    base = urllib.parse.quote(url, safe=safe)
+    if query:
+        query = urllib.parse.urlencode(query)
+        return "?".join((base, query))
+    return base
+
 def request(url, query=None, data=None, method="GET",
         limit=None, follow=True, headers=None, modern=False):
     headers = {} if (headers is None) else headers
@@ -133,7 +145,7 @@ def request(url, query=None, data=None, method="GET",
             a.lower(): b for (a, b) in response["info"].items()
         }
 
-        if method == "GET":
+        if method in {"GET", "POST"}:
             if limit is None:
                 response["octets"] = res.read()
             else:
@@ -195,3 +207,21 @@ def request(url, query=None, data=None, method="GET",
                 response["decoded-entities"] = True
 
     return response
+
+def lynx(url, query=None, data=None, source=True):
+    import subprocess
+    url = construct(url, query=query)
+    command = ["lynx"]
+    if data is not None:
+        command.append("--post_data")
+    command.append("--dump")
+    if source is True:
+        command.append("--source")
+    # command.append("--accept_all_cookies")
+    command.append(url)
+    try: octets = subprocess.check_output(command, input=data)
+    except FileNotFoundError as err:
+        return "LynxNotFound"
+    except Exception as err:
+        return "Error: %s" % err
+    return octets.decode("utf-8", "ignore")

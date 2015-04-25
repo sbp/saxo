@@ -119,9 +119,11 @@ def tw(arg):
         arg = saxo.env("url")
         if arg is None:
             return "Show a tweet from a link, username, or tweet id"
-
+        
     if arg.startswith("@"):
         arg = arg[1:]
+    elif "//mobile.twitter.com" in arg:
+        arg = arg.replace("//mobile.twitter.com", "//twitter.com")
 
     if set(arg) <= set("0123456789"):
         tweet = get_tweet(tweet=arg)

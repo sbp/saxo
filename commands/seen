@@ -27,8 +27,9 @@ def seen(arg):
                         private = True
                         break
                 if not private:
-                    formatted = time.ctime(unixtime)
-                    return "%s was on %s at %s" % (nick, channel, formatted)
+                    unixtime = time.gmtime(unixtime)
+                    when = time.strftime("%d %b %Y %H:%M:%S UTC", unixtime)
+                    return "%s was on %s at %s" % (nick, channel, when)
                 return "Sorry, there is no available data"
         else:
             return "Sorry, there is no saxo_seen database table"

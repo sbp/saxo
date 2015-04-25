@@ -3,7 +3,7 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import json
+import re
 import saxo
 
 def optflag(arg):
@@ -16,59 +16,27 @@ def optflag(arg):
         flag = flag[1:]
     return flag, arg
 
-def translate(text, source="auto", target=None):
-    phonetic = False
-
-    if target == "p":
-        target = "en"
-        phonetic = True
-    elif target is None:
-        target = "en"
-
-    text = text.strip('" ')
-    page = saxo.request(
-        "http://translate.google.com/translate_a/t",
-        modern=True,
-        query = {
-            "client": "t",
-            "hl": "en",
-            "sl": source,
-            "tl": target,
-            "multires": "1",
-            "otf": "1",
-            "ssel": "0",
-            "tsel": "0",
-            "sc": "1",
-            "text": text
-        })
-
-    text = page["text"]
-    while ",," in text:
-        text = text.replace(",,", ",null,")
-    text = text.replace("[,", "[null,")
-    text = text.replace(",]", ",null]")
-
-    try: js = json.loads(text)
-    except ValueError:
-        return "Problem loading the JSON"
-
-    if not phonetic:
-        translation = "".join(t[0] for t in js[0])
-    else:
-        translation = js[0][0][3] or js[0][0][0]
-    source = js[2]
-    return translation.replace(" ,", ","), source, target
-
-@saxo.pipe
+@saxo.command()
 def tr(arg):
     if not arg:
         return "Translate text from one language to another"
 
     source, arg = optflag(arg)
-    target, text = optflag(arg)
+    target, phrase = optflag(arg)
 
-    translation, source, target = translate(text, source, target)
+    source = source or "auto"
+    target = target or "en"
 
-    t = translation[:-1] if translation.endswith(".") else translation
-    msg = "%s (%s » %s). translate.google.com"
+    page = saxo.request("https://translate.google.co.uk/", method="POST",
+        data={"sl": source, "tl": target, "js": "n", "prev": "_t", "hl": "en",
+              "ie": "UTF-8", "text": phrase, "file": "", "edit-text": ""})
+    text = page["text"]
+
+    result = re.compile(r"id=result_box(.*?)</div>")
+    match = result.search(text)
+    if not match:
+        return "Sorry, no translation found"
+    tag = re.compile("<[^>]+>")
+    translation = tag.sub("", "<" + match.group(1))
+    msg = "%s (%s » %s). translate.google.co.uk"
     return msg % (translation, source, target)

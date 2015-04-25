@@ -29,7 +29,7 @@ def t(arg):
 
     if arg[0] in "0123456789":
         return shell(tw, arg)
-    elif "//twitter.com/" in arg:
+    elif ("//twitter.com/" in arg) or ("//mobile.twitter.com/" in arg):
         return shell(tw, arg)
     elif "/" in arg:
         return shell(title, arg)
