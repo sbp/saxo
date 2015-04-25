@@ -70,4 +70,5 @@ def main(arg):
     args = (unixtime, "msg", (sender, message))
     saxo.client("schedule", *args)
 
-    return "%s: Will remind at %s" % (nick, time.ctime(unixtime))
+    when = time.strftime("%d %b %Y %H:%M:%S UTC", time.gmtime(unixtime))
+    return "%s: Will remind at %s" % (nick, when)
