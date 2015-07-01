@@ -75,7 +75,7 @@ def article_search(term, language):
         return
     if "?" in url:
         url = url.split("?", 1)[0]
-    return url[len("http://%s/wiki/" % site):].replace("_", " ")
+    return url[len("https://%s/wiki/" % site):].replace("_", " ")
 
 def optflag(arg, flag=None):
     if arg.startswith(":"):
@@ -134,9 +134,8 @@ def wik(arg):
 
     for attempt in range(2):
         # See if the article actually exists first, with following on
-        uri = "https://%s.wikipedia.org/wiki/%s" % \
-                (language, underscored(term))
-        page = saxo.request(uri.replace("wiki//", "wiki/"), follow=True)
+        page = saxo.request("https://%s.wikipedia.org/wiki/%s" %
+                (language, underscored(term)), follow=True)
 
         # @@ it's an int here? huh
         if page["status"] != 200:
