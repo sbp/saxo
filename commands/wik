@@ -23,17 +23,49 @@ regex_tr = re.compile(r"(?ims)<tr.*?</(tr|table)>")
 regex_footnote = re.compile(r"[|]*\[[0-9]+\][|]*")
 regex_tag = re.compile(r"<[^>]+>")
 
+#######################################################################
 # TODO: Copied from ./g
-def g(arg):
-    page = saxo.request("http://ajax.googleapis.com/ajax/services/search/web",
-        query={"v": "1.0", "safe": "off", "q": arg})
-    data = json.loads(page["text"])
+import re
+import urllib.parse
 
-    if "responseData" in data:
-        if "results" in data["responseData"]:
-            if data["responseData"]["results"]:
-                if "unescapedUrl" in data["responseData"]["results"][0]:
-                    return data['responseData']['results'][0]['unescapedUrl']
+import saxo
+
+def bing(arg):
+    regex_bing_result = re.compile(r"<h2><a href=\"([^\"]+)\"")
+    page = saxo.request(
+        "http://www.bing.com/search",
+        query={"mkt": "en-GB", "q": arg}, modern=True
+    )
+
+    for url in regex_bing_result.findall(page["text"]):
+        if "r.msn.com/" in url:
+            continue
+        if url.startswith("/"):
+            continue
+        return url
+    return "No result found"
+
+def g(arg):
+    if not arg:
+        return "Search using Google (or Bing)"
+
+    base = "http://www.google.co.uk/search"
+    query = "ie=UTF-8&hl=en-GB&source=hp&q=%s&btnG=Google+Search&gbv=1"
+    url = base + "?" + (query % urllib.parse.quote(arg))
+
+    text = saxo.lynx(url, source=False)
+    if text == "LynxNotFound":
+        return bing(arg)
+
+    for line in text.splitlines():
+        if "url?q=" in line:
+            link = line.split(". ").pop().strip()
+            q = urllib.parse.urlparse(link).query
+            r = urllib.parse.parse_qs(q).get("q")
+            return r.pop(0)
+    return bing(arg)
+#
+#######################################################################
 
 def article_search(term, language):
     site = "%s.wikipedia.org" % language
@@ -102,10 +134,9 @@ def wik(arg):
 
     for attempt in range(2):
         # See if the article actually exists first, with following on
-        page = saxo.request(
-            "https://%s.wikipedia.org/wiki/%s" %
-                (language, underscored(term)),
-            follow=True)
+        uri = "https://%s.wikipedia.org/wiki/%s" % \
+                (language, underscored(term))
+        page = saxo.request(uri.replace("wiki//", "wiki/"), follow=True)
 
         # @@ it's an int here? huh
         if page["status"] != 200:
