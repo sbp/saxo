@@ -75,7 +75,7 @@ def article_search(term, language):
         return
     if "?" in url:
         url = url.split("?", 1)[0]
-    return url[len("https://%s/wiki/" % site):].replace("_", " ")
+    return url.split("/wiki/", 1).pop().replace("_", " ")
 
 def optflag(arg, flag=None):
     if arg.startswith(":"):
