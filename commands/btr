@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import json
+import urllib.parse
+import urllib.request
+
+import saxo
+
+q = urllib.parse.quote
+
+def secret_key():
+    key = "btr-key.key"
+    with saxo.database() as db:
+        query = "SELECT * FROM saxo_data where key = ?"
+        try: result = list(db.query(query, key))[0][1]
+        except: result = None
+        return result
+
+def token():
+    tokreq = urllib.parse.urlencode({
+        "client_id": "saxo",
+        "client_secret": secret_key(),
+        "scope": "http://api.microsofttranslator.com/",
+        "grant_type": "client_credentials"
+    }).encode("ascii")
+    oauth2 = "https://datamarket.accesscontrol.windows.net/v2/OAuth2-13"
+    t = urllib.request.urlopen(oauth2, data=tokreq)
+    tokres = json.loads(t.read().decode("ascii"))
+    return tokres.get("access_token")
+
+def optflag(arg, flag=None):
+    if arg.startswith(":"):
+        if " " in arg:
+            flag, arg = arg.split(" ", 1)
+        else:
+            flag, arg = arg, ""
+        flag = flag[1:]
+    return arg, flag
+
+@saxo.command()
+def btr(arg):
+    arg, i = optflag(arg)
+    arg, o = optflag(arg)
+
+    base = "http://api.microsofttranslator.com/v2/Http.svc/Translate"
+    query = "text=%s&from=%s&to=%s"
+    query = query % (q(arg), q(i), q(o))
+
+    class ErrorHandler(urllib.request.HTTPDefaultErrorHandler):
+        def http_error_default(self, req, fp, code, msg, hdrs):
+            return fp
+
+    handlers = [ErrorHandler()]
+    opener = urllib.request.build_opener(*handlers)
+    urllib.request.install_opener(opener)
+
+    bearer = token()
+    if bearer is None:
+        return "No API key set. Get an admin to do it using .btr-key"
+    req = urllib.request.Request("?".join((base, query)), headers={
+        "Authorization": "Bearer %s" % bearer
+    })
+
+    f = urllib.request.urlopen(req)
+    xml = f.read().decode("utf-8")
+    xml = xml.split(">", 1).pop()
+    xml = xml.rsplit("<", 1).pop(0)
+    return '"%s" (Microsoft Translate)' % xml

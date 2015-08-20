@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+# Get your API key by registering at both of these:
+# https://datamarket.azure.com/developer/applications/register
+# https://datamarket.azure.com/dataset/bing/microsofttranslator
+
+import os
+import saxo
+
+@saxo.command(authorised=True, private=True)
+def btr_key(arg):
+    base = saxo.env("base")
+    if not base:
+        return "Error: Missing SAXO_BASE"
+
+    if arg:
+        saxo.data("key", arg)
+        return "Set btr-key.key to %s" % arg
+    else:
+        key = "btr-key.key"
+        with saxo.database() as db:
+            query = "SELECT * FROM saxo_data where key = ?"
+            try: result = list(db.query(query, key))[0][1]
+            except: result = None
+            return result or "Sorry, no key has been set"
