@@ -520,6 +520,40 @@ def test(args):
     else:
         sys.exit(1)
 
+@action
+def soft(args):
+    import site
+
+    if args.directory == "on":
+        # Save PEP 3122!
+        if "." in __name__:
+            from .saxo import path as saxo_path
+        else:
+            from saxo import path as saxo_path
+
+        if not os.path.isdir(site.USER_SITE):
+            os.makedirs(site.USER_SITE)
+            debug("Warning: Created", site.USER_SITE)
+        saxo_pth = os.path.join(site.USER_SITE, "saxo.pth")
+        if not os.path.exists(saxo_pth):
+            with open(saxo_pth, "w") as f:
+                f.write(saxo_path)
+            debug("Created saxo.pth in", site.USER_SITE)
+        else:
+            debug("Error: %s already exists" % saxo_pth, file=sys.stderr)
+            sys.exit(1)
+    elif args.directory == "off":
+        saxo_pth = os.path.join(site.USER_SITE, "saxo.pth")
+        if os.path.isfile(saxo_pth):
+            os.remove(saxo_pth)
+        else:
+            debug("Error: %s not found" % saxo_pth, file=sys.stderr)
+            sys.exit(1)
+        debug("Warning: May also need to remove %s" % site.USER_SITE)
+    else:
+        debug("Error: Was expecting 'on' or 'off'", file=sys.stderr)
+        sys.exit(1)
+
 def main(argv, v):
     # NOTE: No default for argv, because what script name would we use?
     description = "Control saxo irc bot instances"
