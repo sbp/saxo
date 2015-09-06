@@ -263,10 +263,16 @@ def start(args):
         debug("Error: Unable to connect to internal socket", file=sys.stderr)
         debug("Check permissions on the config dir", file=sys.stderr)
         sys.stderr.flush()
-        sys.exit()
+        sys.exit(1)
     else:
         debug("Warning: Client may already have been running!")
         sys.stdout.flush()
+
+    if not os.path.isdir(base):
+        debug("Error: The saxo config dir does not exist", file=sys.stderr)
+        debug("Location: %s" % base, file=sys.stderr)
+        sys.stderr.flush()
+        sys.exit(1)
 
     pidfile = os.path.join(base, "pid")
     if not args.foreground:

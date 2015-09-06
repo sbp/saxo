@@ -5,7 +5,7 @@ commands/authorised
 You are not an authorised user
 
 commands/btc
-630.94 USD (BitcoinAverage)
+243.11 USD (BitcoinAverage)
 
 commands/bytes ê
 C3 AA (as utf-8)
@@ -14,34 +14,34 @@ commands/c 1 + 1
 2
 
 commands/distance London ... Paris
-result: 343.61 km linear distance between London, UK ... Paris, France, see http://google.com/maps?q=to:London+to:Paris
+result: 343.58 km linear distance between London, UK ... Paris, France, see http://google.com/maps?q=to:London+to:Paris
 
 commands/ety love
-"Old English lufu 'love, affection, friendliness,' from Proto-Germanic *lubo (cf. Old High German liubi 'joy,' German Liebe 'love;' Old Norse, Old Frisian, Dutch lof; German Lob 'praise;' Old Saxon liof, Old Frisian liaf, Dutch lief, Old High German liob, German lieb, Gothic liufs 'dear, beloved').  The Germanic wor..." - http://etymonline.com/index.php?term=love
+"Old English lufu 'love, affection, friendliness,' from Proto-Germanic *lubo (cognates: Old High German liubi 'joy,' German Liebe 'love;' Old Norse, Old Frisian, Dutch lof; German Lob 'praise;' Old Saxon liof, Old Frisian liaf, Dutch lief, Old High German liob, German lieb, Gothic liufs 'dear, beloved').  The German..." - http://etymonline.com/index.php?term=love
 
 commands/g reddit
-http://www.reddit.com/
+https://www.reddit.com/
 
 commands/gc git mercurial darcs
-145,000
+51,300
 
 commands/gcalc 1 + 2
 1 + 2 = 3
 
 commands/gcs "a b c" a b c
-a (12,100,000,000), c (5,170,000,000), b (4,610,000,000), "a b c" (184,000,000)
+a (25,270,000,000), c (20,370,000,000), b (17,180,000,000), "a b c" (742,000,000)
 
 commands/geo London, United Kingdom
-result: London, UK at 51.509,-0.125 to wit http://google.com/maps?q=51.509,-0.125
+result: London, UK at 51.507,-0.128 to wit http://google.com/maps?q=51.507,-0.128
 
 commands/github-test sbp/saxo
 Quick and flexible irc bot, extensible in any language
 
 commands/head https://github.com/
-200, text/html, utf-8 (Content-Type, HTML), 15295 bytes
+200, text/html, utf-8 (Content-Type, HTML)
 
 commands/img trust me, I am science
-http://denver.mylittlefacewhen.com/media/f/img/mlfw1743-1319430665.jpg
+http://pinkie.mylittlefacewhen.com/media/f/rsz/mlfw1743_medium.jpg
 
 commands/in 10s hello
 Sorry, couldn't set a reminder!
@@ -54,20 +54,20 @@ commands/len ö
 1 chars, 2 bytes (utf-8)
 
 commands/leo Möwe
-die Möwe Pl.: die Möwen = gull / die Möwe (Ornithologie) Pl.: die Möwen = sea gull (zool.), sea-gull (zool.), seagull (zool.) - http://dict.leo.org/ende/?search=M%C3%B6we
+die Möwe Pl.: die Möwen = gull / die Möwe Pl.: die Möwen (Ornithologie) = sea gull (zool.), sea-gull (zool.), seagull (zool.) - http://dict.leo.org/ende/?search=M%C3%B6we
 
 commands/location http://bit.ly/1eo3OVg
 https://github.com/sbp/saxo
 
 commands/news Tony Blair
-http://www.theguardian.com/politics/2014/feb/26/tony-blair-new-labour-hero-political-embarrassment-murdoch
+http://www.telegraph.co.uk/news/politics/tony-blair/11846645/Families-demand-Tony-Blair-explain-deal-with-Gaddafi-over-terror-payouts.html
 
 commands/nokiageo London
-London near United Kingdom (51.506420, -0.12721)
+London near England, United Kingdom (51.506420, -0.12721)
 
 
 commands/npl
-2014-03-12 00:26:19.949133 UTC
+2015-09-06 14:55:56.465125 UTC
 
 commands/off off
 
@@ -85,12 +85,12 @@ commands/private-channel
 commands/public-channel
 
 commands/py repr(u"\u203d".encode("utf-8"))
-'\xe2\x80\xbd'
+b'\xe2\x80\xbd'
 
 commands/quit
 
 commands/reddit-random-test
-http://i.imgur.com/DPGYWTC.jpg
+http://i.imgur.com/WFxpsF1.gifv
 
 commands/reload
 
@@ -103,22 +103,22 @@ commands/seen sbp
 Sorry, this command requires an IRC instance
 
 commands/sleep 1
-Slept for 1.0009958744049072 seconds
+Slept for 1.0004339218139648 seconds
 
 commands/source source
-TypeError: unsupported operand type(s) for +=: 'NoneType' and 'str' (source:19)
+Sorry, this command requires a running bot
 
 commands/ssl musalbas.com
-Certificate verified: success, (Perfect) Forward secrecy: success, Cipher: ECDHE-RSA-RC4-SHA, SSL version: TLSv1/SSLv3, Number of bits: 128, Algorithm bits: 128
+Certificate verified: success, (Perfect) Forward secrecy: success, Safe from Heartbleed: success, Cipher: ECDHE-RSA-AES128-GCM-SHA256, SSL version: TLSv1/SSLv3, Number of bits: 128, Algorithm bits: 128
 
 commands/suggest you are an
-Perhaps you are an: ~idiot, ~idiot virus, ~idiot hahaha, ~overcomer, ~idiot song, ~awesome god, ~inspiration, ~obsession, ~angel, ~amazing person
+Perhaps you are an: ~idiot, ~idiot virus, ~idiot song, ~inspiration, ~overcomer, ~obsession, ~awesome god, ~idiot hahaha, an~noying in spanish, ~idiot in french
 
 commands/t https://github.com/
-GitHub · Build software better, together.
+GitHub · Where software is built
 
 commands/time
-Wed Mar 12 00:26:26 2014
+06 Sep 2015 14:56:14 UTC
 
 commands/title http://inamidst.com/
 Website of Sean B. Palmer
@@ -127,13 +127,13 @@ commands/to dpk hello
 Sorry, I don't know your nickname
 
 commands/tr Möwe
-seagull (de » en). translate.google.com
+Seagull (auto » en). translate.google.co.uk
 
 commands/tw 423448345500061696
 These recent Whits essays—e.g. DRM machines, The executable word, and True source—are a kind of computing manifesto (@sbp)
 
 commands/twop @sbp
-“@propylonsean The first link, footnote [1], in your 2002 essay propylon.com/news/ctoarticl… is broken. Do you recall what it pointed to?” — Sean B. Palmer, @sbp in tw:441917495445028865
+“Great night with friends tonight @SBP @SLOChamber #hangarparty” — Sean B. Palmer, @timwilliams_slo in tw:639665572867735552
 
 commands/u interrobang
 U+203D INTERROBANG (‽)
@@ -156,12 +156,12 @@ commands/url
 Sorry, no URL was found
 
 commands/version
-saxo 0.3.1-bis (754984618b)
+saxo 0.3.2-bis (d7f75fd454)
 
 commands/visit #channel
 
 commands/w love
-love — noun: 1. (uncountable) Strong affection, 2. An intense feeling of affection and care towards another person — verb: 1. (trans.) To have a strong affection for, 2. (trans.) To need, thrive on
+love — noun: 1. (uncountable) Strong affection, 2. An intense feeling of affection and care towards another person — verb: 1. (usually transitive, sometimes  intransitive) To have a strong affection for (someone or something), 2. (trans.) To need, thrive on
 
 commands/wa 1 + 1
 1+1 = 2
@@ -169,7 +169,7 @@ commands/wa 1 + 1
 commands/which which
 
 commands/wik Love
-"Love refers to a variety of different feelings, states, and attitudes that ranges from interpersonal affection ('I love my mother') to pleasure ('I loved that meal')." - https://en.wikipedia.org/wiki/Love
+"Love is a variety of different feelings, states, and attitudes that ranges from interpersonal affection ('I love my mother') to pleasure ('I loved that meal')." - https://en.wikipedia.org/wiki/Love
 
 commands/wolfram 1 + 1
 1+1 = 2; two; | +: | =: , 1: | 1: | 2; age 6: 3.2 seconds: age 8: 1.8 seconds: age 10: 1.2 seconds: , age 18: 0.83 seconds, (ignoring concentration, repetition, variations in education, etc.)
