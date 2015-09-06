@@ -3,7 +3,9 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-# Get your API key by registering at both of these:
+# Get your API key by following these instructions:
+# http://blogs.msdn.com/b/translation/p/gettingstarted1.aspx
+# Which involves registering in these locations:
 # https://datamarket.azure.com/developer/applications/register
 # https://datamarket.azure.com/dataset/bing/microsofttranslator
 

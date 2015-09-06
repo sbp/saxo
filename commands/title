@@ -27,7 +27,6 @@ def longest(input, sep):
 blacklist = (
     "swhack.com",
     "translate.google.com",
-    "tumbolia.appspot.com",
     "wikia.com",
     "wikipedia.org"
 )

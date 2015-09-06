@@ -13,5 +13,5 @@ def py(arg):
     arg = arg.encode("utf-8", "replace")
     quoted = urllib.parse.quote(arg)
 
-    page = saxo.request("http://tumbolia.appspot.com/py/" + quoted)
+    page = saxo.request("http://dotpy3.herokuapp.com/?" + quoted)
     return page["text"].rstrip("\r\n")

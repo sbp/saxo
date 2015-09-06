@@ -42,8 +42,8 @@ def optflag(arg, flag=None):
 
 @saxo.command()
 def btr(arg):
-    arg, i = optflag(arg)
-    arg, o = optflag(arg)
+    arg, i = optflag(arg, "")
+    arg, o = optflag(arg, "en")
 
     base = "http://api.microsofttranslator.com/v2/Http.svc/Translate"
     query = "text=%s&from=%s&to=%s"
@@ -68,4 +68,4 @@ def btr(arg):
     xml = f.read().decode("utf-8")
     xml = xml.split(">", 1).pop()
     xml = xml.rsplit("<", 1).pop(0)
-    return '"%s" (Microsoft Translate)' % xml
+    return '"%s" (Bing Translate)' % xml
