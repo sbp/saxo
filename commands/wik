@@ -129,6 +129,7 @@ def wik(arg):
     def scrape(block):
         block = block.replace("<sup>", "|")
         block = block.replace("</sup>", "|")
+        block = block.replace("\n", " / ")
         block = regex_tag.sub("", block)
         return regex_footnote.sub("", block)
 

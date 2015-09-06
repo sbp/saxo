@@ -554,6 +554,37 @@ def soft(args):
         debug("Error: Was expecting 'on' or 'off'", file=sys.stderr)
         sys.exit(1)
 
+@action
+def info(args):
+    # Save PEP 3122!
+    if "." in __name__:
+        from .saxo import path as saxo_path
+    else:
+        from saxo import path as saxo_path
+    directory = args.directory
+    args.directory = None
+    base = base_option(args)
+    args.directory = directory
+
+    def check(path):
+        if os.path.isdir(path):
+            print(path)
+        else:
+            debug("-", file=sys.stderr)
+            sys.exit(1)
+
+    if args.directory == "base":
+        check(base)
+    elif args.directory == "path":
+        check(saxo_path)
+    elif args.directory == "base.commands":
+        check(os.path.join(base, "commands"))
+    elif args.directory == "path.commands":
+        check(os.path.join(saxo_path, "commands"))
+    else:
+        debug("?", file=sys.stderr)
+        sys.exit(1)
+
 def main(argv, v):
     # NOTE: No default for argv, because what script name would we use?
     description = "Control saxo irc bot instances"
