@@ -22,6 +22,9 @@ def ajax(arg):
 def bing(arg):
     return saxo.call("bing", arg)
 
+def duck(arg):
+    return saxo.call("duck", arg)
+
 def tor(arg):
     return saxo.call("gtor", arg)
 
@@ -39,7 +42,7 @@ def web(arg):
         return urllib.parse.unquote(url)
     return "No result for %s" % arg
 
-available = {"ajax": ajax, "bing": bing, "tor": tor, "web": web}
+available = {"ajax": ajax, "bing": bing, "duck": duck, "tor": tor, "web": web}
 
 def default(arg):
     if not arg:

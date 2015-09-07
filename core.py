@@ -70,11 +70,14 @@ __all__ = ["path", "version", "version_info"]
 #
 # Other:
 #
+# saxo.call(cmd, arg, methods=None)
 # saxo.client(command, *args, base=None)
+# saxo.commands(methods=None)
 # saxo.database(name=None)
 # saxo.env(name)
 # saxo.request(*args, **kargs)
 # saxo.script(argv)
+# saxo.which(command, methods=None)
 
 # TODO: environment modification?
 
@@ -353,7 +356,7 @@ def _commands(*, methods=None):
     if methods is None:
         # This is intended to be the DWIM approach
         if env("base") or env("commands"):
-            # Caller is IRC or shell with ENV set
+            # Caller is IRC, or shell with ENV set
             methods = {"base", "env"}
         else:
             # Caller is probably from shell
@@ -375,7 +378,8 @@ def _commands(*, methods=None):
     if "caller" in methods:
         # 3. caller: dirname(caller.__file__)
         # http://stackoverflow.com/a/19707917
-        caller_file = sys._getframe(1).f_globals.get("__file__")
+        try: caller_file = sys._getframe(1).f_globals.get("__file__")
+        except: caller_file = None
         if caller_file:
             commands = os.path.dirname(caller)
             if os.path.isdir(commands):
@@ -395,8 +399,7 @@ def _commands(*, methods=None):
 @public
 def commands(*, methods=None):
     for path in _commands(methods=methods):
-        if path is not None:
-            return path
+        return path
     raise ValueError("The saxo commands directory was not found")
 
 @public
@@ -412,8 +415,7 @@ def which(command, *, methods=None):
         return None
 
     for path in _commands(methods=methods):
-        if path is not None:
-            e = executable(path, command)
-            if e is not None:
-                return e
+        e = executable(path, command)
+        if e is not None:
+            return e
     return None

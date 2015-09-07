@@ -26,8 +26,8 @@ def on(arg):
             os.symlink(saxo_command, command)
             return "Symlinked commands/%s to its saxo version" % arg
         else:
-            os.chmod(command, 0o644)
-            return "Changed permissions of commands/%s to 644" % arg
+            os.chmod(command, 0o755)
+            return "Changed permissions of commands/%s to 755" % arg
     elif os.path.exists(command):
         return "Error: Command is not a regular file"
     elif os.path.isfile(saxo_command):

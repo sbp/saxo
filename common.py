@@ -91,6 +91,7 @@ def populate(saxo_path, base):
         if not (os.path.exists(dest) or os.path.islink(dest)):
             symlink(os.path.join(saxo_plugins, name), dest)
 
+    # Why is this being done?
     with open(os.path.join(commands, "saxo.pth"), "w") as f:
         f.write(saxo_path + "\n")
 
