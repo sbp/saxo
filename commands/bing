@@ -10,6 +10,8 @@ import saxo
 
 @saxo.command()
 def bing(arg):
+    if not arg:
+        return "Search for a query on Bing (Web)"
     regex_bing_result = re.compile(r"<h2><a href=\"([^\"]+)\"")
     page = saxo.request("http://www.bing.com/search",
         query={"mkt": "en-GB", "q": arg}, modern=True)

@@ -12,7 +12,7 @@ import saxo
 
 def ajax(arg):
     if not arg:
-        return "Search for a query on Google through Tor (if available)"
+        return "Search for a query on Google (Ajax)"
     arg = urllib.parse.quote(arg)
     page = saxo.request("https://ajax.googleapis.com/ajax/services/search/web",
         query={"v": "1.0", "q": arg}, modern=True)
@@ -27,7 +27,7 @@ def tor(arg):
 
 def web(arg):
     if not arg:
-        return "Search for a phrase on Google"
+        return "Search for a phrase on Google (Web)"
 
     page = saxo.request("https://www.google.com/search",
         query={"q": arg}, modern=True)
