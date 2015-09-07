@@ -14,8 +14,7 @@ def on(arg):
     if "." in arg:
         return "Refusing to touch commands containing '.'"
 
-    base = saxo.env("base")
-    command = os.path.join(base, "commands", arg)
+    command = os.path.join(saxo.commands(), arg)
     saxo_command = os.path.join(saxo.path, "commands", arg)
 
     if os.path.islink(command):

@@ -12,7 +12,7 @@ import saxo
 @saxo.command()
 def gtor(arg):
     if not arg:
-        return "Search for a query on Google (via Tor)"
+        return "Search for a query on Google (Ajax via Tor)"
     arg = urllib.parse.quote(arg)
     url = "https://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=%s"
     try: s = subprocess.check_output(["torsocks", "curl", "-s", url % arg])

@@ -342,24 +342,78 @@ def script(argv):
     main(argv, version)
 
 @public
-def call(cmd, arg, *, caller=None):
+def call(cmd, arg, *, methods=None):
     import subprocess
-    if caller is None:
-        commands = env("commands")
-        if not commands:
-            base = env("base")
-            if not base:
-                # http://stackoverflow.com/a/19707917
-                try: caller = sys._getframe(1).f_globals["__file__"]
-                except: caller = sys.argv[0]
-                commands = os.path.dirname(caller)
-            else:
-                commands = os.path.join(base, "commands")
-    else:
-        commands = os.path.dirname(caller)
-
-    def utf8(obj):
-        return str(obj).encode("utf-8", "replace")
-    path = os.path.join(commands, cmd)
-    output = subprocess.check_output([path, utf8(arg)])
+    cmd = which(cmd, methods=methods)
+    arg = arg.encode("utf-8", "replace")
+    output = subprocess.check_output([cmd, arg])
     return str(output, "utf-8").rstrip("\r\n")
+
+def _commands(*, methods=None):
+    if methods is None:
+        # This is intended to be the DWIM approach
+        if env("base") or env("commands"):
+            # Caller is IRC or shell with ENV set
+            methods = {"base", "env"}
+        else:
+            # Caller is probably from shell
+            methods = {"caller", "argv", "src"}
+
+    paths = []
+    if "base" in methods:
+        # 1. base: $SAXO_BASE/commands
+        base = env("base")
+        if base:
+            commands = os.path.join(base, "commands")
+            if os.path.isdir(commands):
+                paths.append(commands)
+    if "env" in methods:
+        # 2. env: $SAXO_COMMANDS
+        commands = env("commands")
+        if commands and os.path.isdir(commands):
+            paths.append(commands)
+    if "caller" in methods:
+        # 3. caller: dirname(caller.__file__)
+        # http://stackoverflow.com/a/19707917
+        caller_file = sys._getframe(1).f_globals.get("__file__")
+        if caller_file:
+            commands = os.path.dirname(caller)
+            if os.path.isdir(commands):
+                paths.append(commands)
+    if "argv" in methods:
+        # 4. argv: dirname(sys.argv[0])
+        commands = os.path.dirname(sys.argv[0])
+        if os.path.isdir(commands):
+            paths.append(commands)
+    if "src" in methods:
+        # 5. src: saxo/commands
+        commands = os.path.join(path, "commands")
+        if os.path.isdir(commands):
+            paths.append(commands)
+    return paths
+
+@public
+def commands(*, methods=None):
+    for path in _commands(methods=methods):
+        if path is not None:
+            return path
+    raise ValueError("The saxo commands directory was not found")
+
+@public
+def which(command, *, methods=None):
+    if ("." in command) or ("\x00" in command) or ("/" in command):
+        raise ValueError("Command contains disallowed character")
+
+    def executable(directory, command):
+        path = os.path.join(directory, command)
+        # This follows symlinks
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            return path
+        return None
+
+    for path in _commands(methods=methods):
+        if path is not None:
+            e = executable(path, command)
+            if e is not None:
+                return e
+    return None

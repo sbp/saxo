@@ -9,44 +9,23 @@ import subprocess
 
 import saxo
 
-def utf8(obj):
-    return str(obj).encode("utf-8", "replace")
-
-# TODO: Generic shell command
-def shell(*args):
-    args = [utf8(arg) for arg in args]
-    output = subprocess.check_output(args)
-    return str(output, "utf-8").rstrip("\r\n")
-
 @saxo.pipe
 def unicode(arg):
     if not arg:
         return "Search for a unicode character"
-
-    # flag, arg = irc.optflag(arg=args.text)
 
     digit = re.compile("[0-9]")
     hexcode = re.compile("(?i)^[0-9A-F]{2,6}$")
     codepoint = re.compile(r"(?i)^(U\+|\\u)[0-9A-F]{2,6}$")
     simple = re.compile(r"^[\x20-\x7E]+$")
 
-    commands = os.path.dirname(__file__)
-    by_char = os.path.join(commands, "unicode-by-character")
-    unicode_by_character = lambda arg: shell(by_char, arg)
-
-    by_cp = os.path.join(commands, "unicode-by-codepoint")
-    unicode_by_codepoint = lambda arg: shell(by_cp, arg)
-
-    by_name = os.path.join(commands, "unicode-by-name")
-    unicode_by_name = lambda arg: shell(by_name, arg)
-
     if len(arg) == 1:
-        return unicode_by_character(arg)
+        return saxo.call("unicode-by-character", arg)
     elif codepoint.match(arg):
-        return unicode_by_codepoint(arg)
+        return saxo.call("unicode-by-codepoint", arg)
     elif digit.search(arg) and hexcode.match(arg):
-        return unicode_by_codepoint(arg)
+        return saxo.call("unicode-by-codepoint", arg)
     elif not simple.match(arg):
-        return unicode_by_character(arg)
+        return saxo.call("unicode-by-character", arg)
     else:
-        return unicode_by_name(arg)
+        return saxo.call("unicode-by-name", arg)

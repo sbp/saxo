@@ -39,13 +39,19 @@ def web(arg):
         return urllib.parse.unquote(url)
     return "No result for %s" % arg
 
-def default(otherwise):
-    key = "g-default.default"
-    with saxo.database() as db:
-        query = "SELECT * FROM saxo_data where key = ?"
-        try: result = list(db.query(query, key))[0][1]
-        except: result = otherwise
-        return result
+available = {"ajax": ajax, "bing": bing, "tor": tor, "web": web}
+
+def default(arg):
+    if not arg:
+        return saxo.data("default") or "No default has been set"
+    elif saxo.env("authorised") and not saxo.env("sender").startswith("#"):
+        if arg in available:
+            saxo.data("default", arg)
+            return "Set default to %s" % arg
+        else:
+            av = ", ".join(sorted(available.keys()))
+            return "Sorry, %r is not a valid default action (%s)" % (arg, av)
+    return "Action not authorised, please ask an admin"
 
 def optflag(arg, flag=None):
     if arg.startswith(":"):
@@ -58,7 +64,9 @@ def optflag(arg, flag=None):
 
 @saxo.command()
 def g(arg):
-    try: oth = default("bing")
+    try: oth = saxo.data("default") or "bing"
     except: oth = "bing"
     arg, flag = optflag(arg, oth)
-    return {"ajax": ajax, "bing": bing, "tor": tor, "web": web}[flag](arg)
+    if flag == "default":
+        return default(arg)
+    return available[flag](arg)

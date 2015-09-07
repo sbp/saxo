@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import glob
+import os
+
+import saxo
+
+@saxo.command(authorised=True, private=True)
+def ls(arg):
+    kind, pattern = arg.split(" ")
+    os.chdir(saxo.commands())
+    if ("." in pattern) or ("/" in pattern):
+        return "No"
+    names = sorted(glob.glob(pattern))
+    if kind == "soft":
+        names = [n for n in names if os.path.islink(n)]
+    elif kind == "hard":
+        names = [n for n in names if not os.path.islink(n)]
+    return ", ".join(names)[:360]

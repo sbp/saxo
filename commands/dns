@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import subprocess
+import saxo
+
+def utf8(arg):
+    return arg.decode("utf-8", "replace")
+
+@saxo.command()
+def dns(arg):
+    domain = utf8(subprocess.check_output(["dig", arg, "+short"]))
+    return domain.replace("\n", " ")[:256]

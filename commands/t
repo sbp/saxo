@@ -8,30 +8,17 @@ import subprocess
 
 import saxo
 
-def utf8(obj):
-    return str(obj).encode("utf-8", "replace")
-
-# TODO: Generic shell command
-def shell(*args):
-    args = [utf8(arg) for arg in args]
-    output = subprocess.check_output(args)
-    return str(output, "utf-8").rstrip("\r\n")
-
 @saxo.pipe
 def t(arg):
     arg = arg if arg else saxo.env("url")
     if not arg:
         return "Give me a link, a twitter ID, or a twitter name"
 
-    commands = os.path.dirname(__file__)
-    title = os.path.join(commands, "title")
-    tw = os.path.join(commands, "tw")
-
     if arg[0] in "0123456789":
-        return shell(tw, arg)
+        return saxo.call("tw", arg)
     elif ("//twitter.com/" in arg) or ("//mobile.twitter.com/" in arg):
-        return shell(tw, arg)
+        return saxo.call("tw", arg)
     elif "/" in arg:
-        return shell(title, arg)
+        return saxo.call("title", arg)
     else:
-        return shell(tw, arg)
+        return saxo.call("tw", arg)

@@ -28,8 +28,9 @@ def which(arg):
     if not arg:
         return "Show information about a command"
 
-    base = saxo.env("base")
-    command = os.path.join(base, "commands", arg)
+    command = saxo.which(arg)
+    if not command:
+        return "Sorry, no such command!"
     result = []
     result.append(pretty(command))
     if os.path.islink(command):
