@@ -52,7 +52,7 @@ with open(os.path.join(path, "version")) as f:
 saxo_version = os.environ.get("SAXO_VERSION")
 if (saxo_version or version) != version:
     message = "Error: Version mismatch: Saxo %s attempted to import Saxo %s"
-    msg = message % (version, saxo_version)
+    msg = (message + " (try restarting saxo)") % (version, saxo_version)
     print(msg)
     raise ImportError(msg)
 
@@ -250,15 +250,6 @@ def event(command="*"):
     return decorate
 
 @public
-def lynx(*args, **kargs):
-    # Save PEP 3122!
-    if "." in __name__:
-        from . import web
-    else:
-        import web
-    return web.lynx(*args, **kargs)
-
-@public
 def pipe(function):
     # This gives you:
     # * concise code
@@ -349,3 +340,26 @@ def script(argv):
         from script import main
 
     main(argv, version)
+
+@public
+def call(cmd, arg, *, caller=None):
+    import subprocess
+    if caller is None:
+        commands = env("commands")
+        if not commands:
+            base = env("base")
+            if not base:
+                # http://stackoverflow.com/a/19707917
+                try: caller = sys._getframe(1).f_globals["__file__"]
+                except: caller = sys.argv[0]
+                commands = os.path.dirname(caller)
+            else:
+                commands = os.path.join(base, "commands")
+    else:
+        commands = os.path.dirname(caller)
+
+    def utf8(obj):
+        return str(obj).encode("utf-8", "replace")
+    path = os.path.join(commands, cmd)
+    output = subprocess.check_output([path, utf8(arg)])
+    return str(output, "utf-8").rstrip("\r\n")

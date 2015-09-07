@@ -3,43 +3,62 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
+import json
 import re
+import subprocess
 import urllib.parse
 
 import saxo
 
-def bing(arg):
-    regex_bing_result = re.compile(r"<h2><a href=\"([^\"]+)\"")
-    page = saxo.request(
-        "http://www.bing.com/search",
-        query={"mkt": "en-GB", "q": arg}, modern=True
-    )
+def ajax(arg):
+    if not arg:
+        return "Search for a query on Google through Tor (if available)"
+    arg = urllib.parse.quote(arg)
+    page = saxo.request("https://ajax.googleapis.com/ajax/services/search/web",
+        query={"v": "1.0", "q": arg}, modern=True)
+    data = json.loads(page["text"])
+    return data["responseData"]["results"][0]["url"]
 
-    for url in regex_bing_result.findall(page["text"]):
-        if "r.msn.com/" in url:
-            continue
+def bing(arg):
+    return saxo.call("bing", arg)
+
+def tor(arg):
+    return saxo.call("gtor", arg)
+
+def web(arg):
+    if not arg:
+        return "Search for a phrase on Google"
+
+    page = saxo.request("https://www.google.com/search",
+        query={"q": arg}, modern=True)
+
+    r_url = re.compile(r'(?ims)class="r".*?<a href="(.*?)"')
+    for url in r_url.findall(page["text"]):
         if url.startswith("/"):
-            continue
-        return url
-    return "No result found"
+           continue
+        return urllib.parse.unquote(url)
+    return "No result for %s" % arg
+
+def default(otherwise):
+    key = "g-default.default"
+    with saxo.database() as db:
+        query = "SELECT * FROM saxo_data where key = ?"
+        try: result = list(db.query(query, key))[0][1]
+        except: result = otherwise
+        return result
+
+def optflag(arg, flag=None):
+    if arg.startswith(":"):
+        if " " in arg:
+            flag, arg = arg.split(" ", 1)
+        else:
+            flag, arg = arg, ""
+        flag = flag[1:]
+    return arg, flag
 
 @saxo.command()
 def g(arg):
-    if not arg:
-        return "Search using Google (or Bing)"
-
-    base = "http://www.google.co.uk/search"
-    query = "ie=UTF-8&hl=en-GB&source=hp&q=%s&btnG=Google+Search&gbv=1"
-    url = base + "?" + (query % urllib.parse.quote(arg))
-
-    text = saxo.lynx(url, source=False)
-    if text == "LynxNotFound":
-        return bing(arg)
-
-    for line in text.splitlines():
-        if "url?q=" in line:
-            link = line.split(". ").pop().strip()
-            q = urllib.parse.urlparse(link).query
-            r = urllib.parse.parse_qs(q).get("q")
-            return r.pop(0)
-    return bing(arg)
+    try: oth = default("bing")
+    except: oth = "bing"
+    arg, flag = optflag(arg, oth)
+    return {"ajax": ajax, "bing": bing, "tor": tor, "web": web}[flag](arg)

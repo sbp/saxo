@@ -207,21 +207,3 @@ def request(url, query=None, data=None, method="GET",
                 response["decoded-entities"] = True
 
     return response
-
-def lynx(url, query=None, data=None, source=True):
-    import subprocess
-    url = construct(url, query=query)
-    command = ["lynx"]
-    if data is not None:
-        command.append("--post_data")
-    command.append("--dump")
-    if source is True:
-        command.append("--source")
-    # command.append("--accept_all_cookies")
-    command.append(url)
-    try: octets = subprocess.check_output(command, input=data)
-    except FileNotFoundError as err:
-        return "LynxNotFound"
-    except Exception as err:
-        return "Error: %s" % err
-    return octets.decode("utf-8", "ignore")

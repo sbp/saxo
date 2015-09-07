@@ -23,54 +23,10 @@ regex_tr = re.compile(r"(?ims)<tr.*?</(tr|table)>")
 regex_footnote = re.compile(r"[|]*\[[0-9]+\][|]*")
 regex_tag = re.compile(r"<[^>]+>")
 
-#######################################################################
-# TODO: Copied from ./g
-import re
-import urllib.parse
-
-import saxo
-
-def bing(arg):
-    regex_bing_result = re.compile(r"<h2><a href=\"([^\"]+)\"")
-    page = saxo.request(
-        "http://www.bing.com/search",
-        query={"mkt": "en-GB", "q": arg}, modern=True
-    )
-
-    for url in regex_bing_result.findall(page["text"]):
-        if "r.msn.com/" in url:
-            continue
-        if url.startswith("/"):
-            continue
-        return url
-    return "No result found"
-
-def g(arg):
-    if not arg:
-        return "Search using Google (or Bing)"
-
-    base = "http://www.google.co.uk/search"
-    query = "ie=UTF-8&hl=en-GB&source=hp&q=%s&btnG=Google+Search&gbv=1"
-    url = base + "?" + (query % urllib.parse.quote(arg))
-
-    text = saxo.lynx(url, source=False)
-    if text == "LynxNotFound":
-        return bing(arg)
-
-    for line in text.splitlines():
-        if "url?q=" in line:
-            link = line.split(". ").pop().strip()
-            q = urllib.parse.urlparse(link).query
-            r = urllib.parse.parse_qs(q).get("q")
-            return r.pop(0)
-    return bing(arg)
-#
-#######################################################################
-
 def article_search(term, language):
     site = "wow.gamepedia.com"
     phrase = "site:%s %s" % (site, term.replace("_", " "))
-    url = g(phrase)
+    url = saxo.call("bing", phrase)
     if not url:
         return
     if "?" in url:

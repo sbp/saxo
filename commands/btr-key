@@ -22,9 +22,4 @@ def btr_key(arg):
         saxo.data("key", arg)
         return "Set btr-key.key to %s" % arg
     else:
-        key = "btr-key.key"
-        with saxo.database() as db:
-            query = "SELECT * FROM saxo_data where key = ?"
-            try: result = list(db.query(query, key))[0][1]
-            except: result = None
-            return result or "Sorry, no key has been set"
+        return saxo.data("key") or "Sorry, no key has been set"

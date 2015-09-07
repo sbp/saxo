@@ -6,7 +6,9 @@ import json
 import saxo
 
 @saxo.pipe
-def cc(arg):
+def cap(arg):
+    if not arg:
+        return "Example: .cap BTC"
     api = "http://coinmarketcap.northpole.ro/api/%s.json"
     page = saxo.request(api % arg.lower())
 
