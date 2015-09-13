@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import saxo
+
+@saxo.command()
+def isgd(arg):
+    if not arg:
+        return "Shorten a url using is.gd"
+    if arg == "^":
+        arg = saxo.env("url")
+        if not arg:
+            return "Couldn't find a previous url to use"
+    page = saxo.request("https://is.gd/create.php",
+        query={"format": "simple", "url": arg})
+    return page["text"]

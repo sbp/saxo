@@ -7,6 +7,7 @@ import saxo
 
 @saxo.command(authorised=True, private=True)
 def part(arg):
+    arg = arg.strip()
     if arg.startswith("#"):
         saxo.client("part", arg)
         return "Parting %s" % arg

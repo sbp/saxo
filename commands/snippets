@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import html.entities
+import json
+import re
+import subprocess
+import urllib.parse
+
+import saxo
+
+_regex_entity = re.compile(r"&([^;\s]+);")
+
+def decode_entities(hypertext):
+    def entity(match):
+        name = match.group(1).lower()
+
+        if name.startswith("#x"):
+            return chr(int(name[2:], 16))
+        elif name.startswith("#"):
+            return chr(int(name[1:]))
+        elif name in html.entities.name2codepoint:
+            return chr(html.entities.name2codepoint[name])
+        return "[" + name + "]"
+
+    def default(match):
+        try: return entity(match)
+        except: return match.group(1)
+    return _regex_entity.sub(default, hypertext)
+
+@saxo.command()
+def snippets(arg):
+    if not arg:
+        return "Retrieve snippets from Google (Ajax via Tor)"
+    arg = urllib.parse.quote(arg)
+    url = "https://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=%s"
+    try: s = subprocess.check_output(["torsocks", "curl", "-s", url % arg])
+    except Exception as err:
+        return "Error: %s:%s" % (type(err).__name__, err)
+    data = json.loads(s.decode("utf-8", "replace"))
+    snippets = [res["content"] for res in data["responseData"]["results"]]
+    snippets = [decode_entities(res) for res in snippets]
+    snippets = [res.replace("<b>", "").replace("</b>", "") for res in snippets]
+    snippets = [re.sub(r"\s+", " ", res) for res in snippets]
+    snippets = " / ".join(snippets).replace("\n", " ")[:360]
+    return snippets

@@ -3,12 +3,11 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import os
 import saxo
 
 @saxo.pipe
 def ng(arg):
-    nick = os.environ.get("SAXO_NICK", "-")
+    nick = saxo.env("nick") or "-"
     page = saxo.request("http://www.websitedev.de/temp-bin/ng.pl",
                         query={"nick": nick, "q": arg})
     return page["text"]
