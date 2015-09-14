@@ -101,6 +101,13 @@ def request(url, query=None, data=None, method="GET",
         headers["User-Agent"] = modern_user_agent if modern else user_agent
     response["request-headers"] = headers
 
+    parts = urllib.parse.urlparse(url)
+    try: parts[1].encode("ascii")
+    except UnicodeEncodeError:
+        parts = list(parts)
+        parts[1] = parts[1].encode("idna").decode("ascii")
+        url = urllib.parse.urlunparse(tuple(parts))
+
     safe = "".join(chr(i) for i in range(0x01, 0x80))
     base = urllib.parse.quote(url, safe=safe)
     if query:
