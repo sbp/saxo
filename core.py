@@ -381,7 +381,7 @@ def _commands(*, methods=None):
         try: caller_file = sys._getframe(1).f_globals.get("__file__")
         except: caller_file = None
         if caller_file:
-            commands = os.path.dirname(caller)
+            commands = os.path.dirname(caller_file)
             if os.path.isdir(commands):
                 paths.append(commands)
     if "argv" in methods:

@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import json
+import subprocess
+import urllib.parse
+
+import saxo
+
+@saxo.command()
+def gctor(arg):
+    if not arg:
+        return "Search for a query on Google (Ajax via Tor)"
+    arg = urllib.parse.quote(arg)
+    url = "https://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=%s"
+    try: s = subprocess.check_output(["torsocks", "curl", "-s", url % arg])
+    except Exception as err:
+        return "Error: %s:%s" % (type(err).__name__, err)
+    data = json.loads(s.decode("utf-8", "replace"))
+    return data["responseData"]["cursor"].get("resultCount", "0")

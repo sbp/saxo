@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import re
+import saxo
+
+@saxo.pipe
+def bc(arg):
+    regex_bing_result = re.compile(r'class="sb_count">([^<]*?)</span>')
+    page = saxo.request("http://www.bing.com/search",
+        query={"mkt": "en-GB", "q": arg})
+
+    for count in regex_bing_result.findall(page["text"]):
+        count = count.lower().replace("results", "").strip()
+        return count
+    return "0"

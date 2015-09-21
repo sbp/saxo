@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import sys
+import saxo
+
+user = "freenoder"
+
+def secure():
+    authorised = saxo.env("authorised")
+    private = not saxo.env("sender").startswith("#")
+    return authorised and private
+
+def password(arg=None):
+    if not arg:
+        return saxo.data("password")
+    elif secure():
+        saxo.data("password", arg)
+        return 'Password has been set to "%s"' % arg
+    raise ValueError("Action not authorised")
+
+def venv(arg=None):
+    if not arg:
+        return saxo.data("venv")
+    elif secure():
+        saxo.data("venv", arg)
+        return 'Virtual environment has been set to "%s"' % arg
+    raise ValueError("Action not authorised")
+
+def optflag(arg):
+    flag = None
+    if arg.startswith(":"):
+        if " " in arg:
+            flag, arg = arg.split(" ", 1)
+        else:
+            flag, arg = arg, ""
+        flag = flag[1:]
+    return flag, arg
+
+@saxo.command()
+def tweet(arg):
+    flag, arg = optflag(arg)
+    if flag == "password":
+        return password(arg)
+    if flag == "venv":
+        return venv(arg)
+
+    virtualenv = venv()
+    if virtualenv:
+        sys.path.append(virtualenv)
+        warn = "(venv is set)"
+    else:
+        warn = "(no venv set)"
+
+    try: import requests
+    except ImportError:
+        return "Sorry, can't load the requests module %s" % warn
+
+    try: from lxml.html import fromstring
+    except ImportError:
+        return "Sorry, can't load the lxml.html module %s" % warn
+
+    secret = password()
+    if not secret:
+        return "Sorry, the password has not yet been set"
+
+    sig = "from %s on freenode irc" % saxo.env("nick")
+    content = "%s (%s)" % (arg, sig)
+    if len(content) > 140:
+        return "Sorry, your input is over 140 characters long"
+
+    with requests.Session() as s:
+        session = "https://mobile.twitter.com/session"
+        response = s.get(session)
+        html = fromstring(response.content)
+        payload = dict(html.forms[0].fields)
+        payload.update({"username": user, "password": secret})
+
+        s.post(session, data=payload)
+        response = s.get("https://mobile.twitter.com/account")
+        if user.encode("ascii") not in response.content:
+            return "Could not login"
+
+        compose = "https://mobile.twitter.com/compose/tweet"
+        response = s.get(compose)
+        html = fromstring(response.content)
+        payload = dict(html.forms[0].fields)
+        payload.update({"tweet[text]": content})
+
+        base = "https://mobile.twitter.com/"
+        action = requests.compat.urljoin(base, html.forms[0].action)
+        s.post(action, data=payload)
+    return "Sent!"

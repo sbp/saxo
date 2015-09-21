@@ -3,27 +3,38 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import json
 import re
-
 import saxo
 
-regex_results = re.compile(r"(?i)([0-9,]+) results?")
-@saxo.pipe
-def gc(arg):
-    if not arg:
-        return "Count the number of results for a phrase on Google"
-
-    query = {"hl": "en", "q": arg}
+def one(arg):
     page = saxo.request("https://www.google.com/search",
-                        query=query, modern=True)
+                        query={"hl": "en", "q": arg}, modern=True)
 
     if "No results found for" in page["text"]:
         return "0"
     elif "did not match any documents" in page["text"]:
         return "0"
 
+    regex_results = re.compile(r"(?i)([0-9,]+) results?")
     for result in regex_results.findall(page["text"]):
         if result:
             return result
     return "Sorry, there was an error"
+
+def two(arg):
+    page = saxo.request("https://www.google.co.uk/search", query={
+        "ie": "UTF-8", "hl": "en-GB", "source": "hp",
+        "q": arg, "btnG": "Google Search", "gbv": "1"})
+    results = re.compile("About ([^ ]+) results")
+    match = results.search(page["text"])
+    if not match:
+        return "0" # "No results found, sorry!"
+    return arg + ": " + match.group(1)
+
+@saxo.pipe
+def gc(arg):
+    if not arg:
+        return "Count the number of results for a phrase on Google"
+    if arg.startswith(": "):
+        return one(arg[2:])
+    return two(arg)

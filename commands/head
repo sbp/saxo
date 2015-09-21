@@ -5,8 +5,21 @@
 
 import saxo
 
+def optflag(arg, flag=None):
+    if arg.startswith(":"):
+        if " " in arg:
+            flag, arg = arg.split(" ", 1)
+        else:
+            flag, arg = arg, ""
+        flag = flag[1:]
+    return arg, flag
+
 @saxo.pipe
 def head(arg):
+    # TODO: This doesn't work
+    arg, flag = optflag(arg, "")
+    follow = (flag != "nofollow")
+
     if " " in arg:
         arg, header = arg.split(" ", 1)
     else:
@@ -16,7 +29,7 @@ def head(arg):
     if not arg:
         return "Please supply a URL"
 
-    page = saxo.request(arg)
+    page = saxo.request(arg, follow=follow)
 
     if header == "*":
         result = ", ".join([key for key in page["info"]])
