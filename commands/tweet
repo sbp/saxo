@@ -6,12 +6,18 @@
 import sys
 import saxo
 
-user = "freenoder"
-
 def secure():
     authorised = saxo.env("authorised")
     private = not saxo.env("sender").startswith("#")
     return authorised and private
+
+def username(arg=None):
+    if not arg:
+        return saxo.data("username") or "freenoder"
+    elif secure():
+        saxo.data("username", arg)
+        return 'Username has been set to "%s"' % arg
+    raise ValueError("Action not authorised")
 
 def password(arg=None):
     if not arg:
@@ -42,11 +48,14 @@ def optflag(arg):
 @saxo.command()
 def tweet(arg):
     flag, arg = optflag(arg)
+    if flag == "username":
+        return username(arg)
     if flag == "password":
         return password(arg)
     if flag == "venv":
         return venv(arg)
 
+    user = username()
     virtualenv = venv()
     if virtualenv:
         sys.path.append(virtualenv)
@@ -66,8 +75,8 @@ def tweet(arg):
     if not secret:
         return "Sorry, the password has not yet been set"
 
-    sig = "from %s on freenode irc" % saxo.env("nick")
-    content = "%s (%s)" % (arg, sig)
+    sig = "\u2014%s" % saxo.env("nick")
+    content = "%s [%s]" % (arg, sig)
     if len(content) > 140:
         return "Sorry, your input is over 140 characters long"
 

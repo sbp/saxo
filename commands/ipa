@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import re
+import sys
+import urllib.request
+
+import saxo
+
+r_ipa = re.compile(r'<span[^>]+class="?IPA"?[^>]*>([^<]+)</span>|(<h2)')
+
+def unique(iter):
+    seen = set()
+    for item in iter:
+        if item not in seen:
+            yield item
+            seen.add(item)
+
+@saxo.command()
+def ipa(arg):
+    url = "https://en.wiktionary.org/wiki/" + urllib.parse.quote(arg)
+    try:
+        with urllib.request.urlopen(url) as u:
+            text = str(u.read(), "utf-8")
+    except:
+        return "Couldnae find nae IPA dude, soz"
+    sections = [[]]
+    for (result, h2) in r_ipa.findall(text):
+        if h2:
+            if sections[-1]:
+                sections.append([])
+            continue
+        result = result.strip(" /[]")
+        if not result.startswith("-"):
+            sections[-1].append(result)
+    uniq = (" ".join(unique(section)) for section in sections if section)
+    return " / ".join(uniq) or "Couldnae find nae IPA dude, soz"
