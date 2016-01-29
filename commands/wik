@@ -42,6 +42,9 @@ def optflag(arg, flag=None):
         flag = flag[1:]
     return arg, flag
 
+def utf8(text):
+    return text.encode("utf-8")
+
 @saxo.pipe
 def wik(arg):
     term, language = optflag(arg, "en")
@@ -137,9 +140,12 @@ def wik(arg):
                 sentence += " " + sentence_match2.group(1)
 
         maxlength = 275
-        if len(sentence) > maxlength:
-            words = sentence[:maxlength][:-6].split(" ")
-            sentence = " ".join(words[:-1]) + " [...]"
+        ellipsis = False
+        while len(utf8(sentence)) > maxlength:
+            sentence = " ".join(sentence.split(" ")[:-1])
+            ellipsis = True
+        if ellipsis is True:
+            sentence += " [...]"
         sentence = sentence.replace('"', "'")
         if sentence.endswith(":"):
             sentence = sentence[:-1] + "..."

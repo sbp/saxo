@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+
+import re
+import urllib.parse
+import saxo
+
+@saxo.command()
+def lpd(arg):
+    page = saxo.request("http://dpk.io/lpd.cgi?" + urllib.parse.quote(arg))
+    text = page["text"]
+    text = re.sub(r"\x02(.*?)\x02", r"\g<1>", text)
+    text = re.sub(r"\x03..(.*?)\x03", r"\g<1>", text)
+    return text.replace("  ", " ")
