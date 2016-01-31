@@ -3,23 +3,9 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import os
-import subprocess
-
+import urllib.parse
 import saxo
 
-def utf8(obj):
-    return str(obj).encode("utf-8", "replace")
-
-# TODO: Generic shell command
-def shell(*args):
-    args = [utf8(arg) for arg in args]
-    output = subprocess.check_output(args)
-    return str(output, "utf-8").rstrip("\r\n")
-
-@saxo.pipe
+@saxo.command()
 def wa(arg):
-    if not arg:
-        return "Compute an expression using Wolfram|Alpha"
-    c = os.path.join(os.path.dirname(__file__), "c")
-    return shell(c, ":long " + arg)
+    return "http://www.wolframalpha.com/input/?i=" + urllib.parse.quote(arg)
