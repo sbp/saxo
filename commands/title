@@ -60,6 +60,10 @@ def title(url):
     if "#" in url:
         url = url.split("#", 1)[0]
 
+    if "//en.wikipedia.org/" in url:
+        article = url.split("/").pop()
+        return saxo.call("wik", article)
+
     for blacklisted in blacklist:
         if blacklisted in url:
             return "Sorry, domain is blacklisted"

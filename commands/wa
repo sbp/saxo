@@ -8,4 +8,6 @@ import saxo
 
 @saxo.command()
 def wa(arg):
-    return "http://www.wolframalpha.com/input/?i=" + urllib.parse.quote(arg)
+    arg = urllib.parse.quote(arg)
+    page = saxo.request("http://ch0wn.org/oblique/wa?" + arg)
+    return page["text"].strip()
