@@ -9,13 +9,11 @@ import urllib.parse
 import saxo
 
 @saxo.command()
-def bim(arg):
-    url = "https://www.bing.com/images/search?q=" + urllib.parse.quote(arg)
+def dim(arg):
+    arg = urllib.parse.quote(arg)
+    url = "https://duckduckgo.com/i.js?l=wt-wt&o=json&q=" + arg
     page = saxo.request(url)
     for result in re.findall(r'"([^"]*?\.[pj][np]g)"', page["text"]):
         if result.startswith("http"):
             return result
-    for result in re.findall(r'&quot;([^&]*?\.[pj][np]g)&quot;', page["text"]):
-        if result.startswith("http"):
-            return result
-    return "Oh no, Bing turned into Google!"
+    return "Oh no, Duck turned into Bing!"
