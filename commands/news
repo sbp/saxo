@@ -8,7 +8,7 @@ import saxo
 
 @saxo.command()
 def news(arg):
-    url = "https://www.bing.com/news/search?q=" + urllib.parse.quote(arg)
+    url = "https://www.bing.co.uk/news/search?q=" + urllib.parse.quote(arg)
     page = saxo.request(url)
     text = page["text"]
     if 'newstitle"><a href="' in text:
