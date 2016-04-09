@@ -3,16 +3,19 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import json
+import re
+import urllib.parse
+
 import saxo
 
-@saxo.pipe
-def img(arg):
-    page = saxo.request(
-        "http://ajax.googleapis.com/ajax/services/search/images",
-        query={"q": arg, "v": "1.0", "safe": "off"}, modern=True)
-    data = json.loads(page["text"])
-    try: result = data["responseData"]["results"][0]["unescapedUrl"]
-    except (KeyError, IndexError, TypeError):
-        return "No image search result found"
-    return result
+@saxo.command()
+def bim(arg):
+    url = "https://www.bing.com/images/search?q=" + urllib.parse.quote(arg)
+    page = saxo.request(url)
+    for result in re.findall(r'"([^"]*?\.[pj][np]g)"', page["text"]):
+        if result.startswith("http"):
+            return result
+    for result in re.findall(r'&quot;([^&]*?\.[pj][np]g)&quot;', page["text"]):
+        if result.startswith("http"):
+            return result
+    return "Oh no, Bing turned into Google!"

@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import json
+import saxo
+
+@saxo.pipe
+def news(arg):
+    page = saxo.request(
+        "http://ajax.googleapis.com/ajax/services/search/news",
+        query={"q": arg, "v": "1.0", "safe": "off"}
+    )
+    data = json.loads(page["text"])
+    try: result = data["responseData"]["results"][0]["unescapedUrl"]
+    except (KeyError, IndexError):
+        return "No news search result found"
+    return result

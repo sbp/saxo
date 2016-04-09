@@ -3,17 +3,15 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import json
+import urllib.parse
 import saxo
 
-@saxo.pipe
+@saxo.command()
 def news(arg):
-    page = saxo.request(
-        "http://ajax.googleapis.com/ajax/services/search/news",
-        query={"q": arg, "v": "1.0", "safe": "off"}
-    )
-    data = json.loads(page["text"])
-    try: result = data["responseData"]["results"][0]["unescapedUrl"]
-    except (KeyError, IndexError):
-        return "No news search result found"
-    return result
+    url = "https://www.bing.com/news/search?q=" + urllib.parse.quote(arg)
+    page = saxo.request(url)
+    text = page["text"]
+    if 'newstitle"><a href="' in text:
+        a, b = text.split('newstitle"><a href="', 1)
+        return b.split('"', 1)[0]
+    return "Sorry, no news about that"
