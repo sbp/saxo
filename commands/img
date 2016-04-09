@@ -9,7 +9,7 @@ import urllib.parse
 import saxo
 
 @saxo.command()
-def bim(arg):
+def img(arg):
     url = "https://www.bing.com/images/search?q=" + urllib.parse.quote(arg)
     page = saxo.request(url)
     for result in re.findall(r'"([^"]*?\.[pj][np]g)"', page["text"]):

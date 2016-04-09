@@ -7,7 +7,7 @@ import json
 import saxo
 
 @saxo.pipe
-def news(arg):
+def gnews(arg):
     page = saxo.request(
         "http://ajax.googleapis.com/ajax/services/search/news",
         query={"q": arg, "v": "1.0", "safe": "off"}
