@@ -425,6 +425,7 @@ def test(args):
     print("saxo script:", saxo_script)
     print("saxo test server:", saxo_test_server)
     print()
+    sys.stdout.flush()
 
     def run_server():
         server = subprocess.Popen([sys.executable, "-u", saxo_test_server],
@@ -469,9 +470,9 @@ def test(args):
             "pid", "plugins"}
         manifest02 = manifest01 | {"client.sock"}
 
-        if set(os.listdir(saxo_test)) == manifest01:
+        if set(os.listdir(saxo_test)) <= manifest01:
             shutil.rmtree(saxo_test)
-        elif set(os.listdir(saxo_test)) == manifest02:
+        elif set(os.listdir(saxo_test)) <= manifest02:
             outgoing.put("Warning: client.sock had not been removed")
             shutil.rmtree(saxo_test)
         else:

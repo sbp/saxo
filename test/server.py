@@ -32,7 +32,7 @@ def test(test_function):
     tests[decorated.number] = decorated
     return decorated
 
-# @@ quit from a test, then start a new instance
+# @@ quit from a test, then start a new instance
 
 @test
 def test_initial_ping(conn):
@@ -166,27 +166,32 @@ class Test(socketserver.StreamRequestHandler):
 
         if self.connection in tests:
             print("Test #%s" % self.connection)
+            sys.stdout.flush()
             tests[self.connection](self)
 
             # print(self.connection, test_counter)
             if self.connection == test_counter:
                 print("Tests complete")
+                sys.stdout.flush()
                 self.finish()
                 os._exit(0)
 
     def match(self, a, b, message):
         if not re.match(a, b):
             print("ERROR: Test #%s: %s" % (self.connection, message))
+            sys.stdout.flush()
             self.stop()
 
     def equal(self, a, b, message):
         if a != b:
             print("ERROR: Test #%s: %s" % (self.connection, message))
+            sys.stdout.flush()
             self.stop()
 
     def not_equal(self, a, b, message):
         if a == b:
             print("ERROR: Test #%s: %s" % (self.connection, message))
+            sys.stdout.flush()
             self.stop()
 
     def stop(self):
@@ -213,6 +218,7 @@ class Test(socketserver.StreamRequestHandler):
             try: octets = self.rfile.readline()
             except socket.timeout:
                 print("ERROR: Test #%s: timeout" % self.connection)
+                sys.stdout.flush()
                 self.stop()
                 break
 
@@ -233,6 +239,7 @@ class Test(socketserver.StreamRequestHandler):
             text = octets.decode("utf-8", "replace")
             args = (self.connection, text)
             print("ERROR: Test #%s: Expected timeout, got %r" % args)
+            sys.stdout.flush()
 
     def send(self, *args):
         args = list(args)
@@ -267,6 +274,7 @@ class Server(socketserver.TCPServer):
 
         import traceback
         print("Framework Error:", etype, evalue)
+        sys.stdout.flush()
         traceback.print_exc()
         os._exit(1)
 

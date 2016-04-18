@@ -13,7 +13,7 @@ wget https://pypi.python.org/packages/source/v/virtualenv/virtualenv-13.1.2.tar.
 tar -zxvf virtualenv-13.1.2.tar.gz
 python3 virtualenv-13.1.2/virtualenv.py saxo-pip
 
-saxo-pip/bin/pip3.4 install $SAXO
+saxo-pip/bin/pip3.5 install $SAXO
 saxo-pip/bin/saxo test
 echo
 
