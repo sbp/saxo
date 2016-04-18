@@ -93,6 +93,8 @@ def construct(url, query=None):
 
 def request(url, query=None, data=None, method="GET",
         limit=None, follow=True, headers=None, modern=False):
+    if url.startswith("file:"):
+        raise ValueError("file: scheme is not allowed")
     headers = {} if (headers is None) else headers
 
     response = {}
