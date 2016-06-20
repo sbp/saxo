@@ -15,7 +15,15 @@ def setup(irc):
                 ("unixtime", int),
                 ("channel", str),
                 ("message", str))
-        # TODO: Drop messages more than a year old
+        else:
+            # Drop messages more than a year old
+            now = int(time.time())
+            one_year = 60 * 60 * 24 * 366
+            query = "SELECT * FROM saxo_to"
+            for row in db.query(query):
+                date_posted = row[:3]
+                if now - date_posted > one_year:
+                    del db["saxo_to"][row]
 
 @saxo.event("PRIVMSG")
 def deliver(irc):
