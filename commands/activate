@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+# http://inamidst.com/saxo/
+# Created by Sean B. Palmer
+
+import os
+import saxo
+
+@saxo.command(authorised=True, private=True)
+def on(arg):
+    if not arg:
+        return "Turn a command on"
+
+    if "." in arg:
+        return "Refusing to touch commands containing '.'"
+
+    command = os.path.join(saxo.commands(), arg)
+    saxo_command = os.path.join(saxo.path, "commands", arg)
+
+    if os.path.islink(command):
+        return "Error: Command is a symlink"
+    elif os.path.isfile(command):
+        # This is true for symlinks too
+        if not os.path.getsize(command):
+            os.remove(command)
+            os.symlink(saxo_command, command)
+            return "Symlinked commands/%s to its saxo version" % arg
+        else:
+            os.chmod(command, 0o755)
+            return "Changed permissions of commands/%s to 755" % arg
+    elif os.path.exists(command):
+        return "Error: Command is not a regular file"
+    elif os.path.isfile(saxo_command):
+        os.symlink(saxo_command, command)
+        return "Symlinked commands/%s to new saxo version" % arg
+    return "Error: Command does not exist"

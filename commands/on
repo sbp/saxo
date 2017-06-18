@@ -3,34 +3,49 @@
 # http://inamidst.com/saxo/
 # Created by Sean B. Palmer
 
-import os
+import calendar
+import datetime
+import random
+import re
+import time
+
 import saxo
 
-@saxo.command(authorised=True, private=True)
-def on(arg):
+r_arg = re.compile("(\d?\d [A-Z][a-z][a-z])(?: (.*))?")
+
+@saxo.pipe
+def main(arg):
     if not arg:
-        return "Turn a command on"
+        return "Set a reminder at a certain time. Must match " + r_arg.pattern
 
-    if "." in arg:
-        return "Refusing to touch commands containing '.'"
+    match = r_arg.match(arg)
+    if not match:
+        return "Sorry, input must match " + r_arg.pattern
 
-    command = os.path.join(saxo.commands(), arg)
-    saxo_command = os.path.join(saxo.path, "commands", arg)
+    now = datetime.datetime.now()
+    t = datetime.datetime.strptime(match.group(1), "%d %b")
+    t = t.replace(hour=8)
+    t = t.replace(year=now.year)
+    t = t.replace(second=random.randint(1, 60))
+    if t < now:
+        t = t.replace(year=t.year + 1)
 
-    if os.path.islink(command):
-        return "Error: Command is a symlink"
-    elif os.path.isfile(command):
-        # This is true for symlinks too
-        if not os.path.getsize(command):
-            os.remove(command)
-            os.symlink(saxo_command, command)
-            return "Symlinked commands/%s to its saxo version" % arg
-        else:
-            os.chmod(command, 0o755)
-            return "Changed permissions of commands/%s to 755" % arg
-    elif os.path.exists(command):
-        return "Error: Command is not a regular file"
-    elif os.path.isfile(saxo_command):
-        os.symlink(saxo_command, command)
-        return "Symlinked commands/%s to new saxo version" % arg
-    return "Error: Command does not exist"
+    message = match.group(2)
+    unixtime = calendar.timegm(t.utctimetuple())
+
+    nick = saxo.env("nick")
+    sender = saxo.env("sender")
+
+    if not (nick or sender):
+        return "Sorry, couldn't set a reminder!"
+
+    if message:
+        message = nick + ": " + message
+    else:
+        message = nick + "!"
+
+    args = (unixtime, "msg", (sender, message))
+    saxo.client("schedule", *args)
+
+    when = time.strftime("%d %b %Y %H:%M:%S UTC", time.gmtime(unixtime))
+    return "%s: Will remind at %s" % (nick, when)
