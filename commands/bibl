@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+import re
+import urllib.parse
+import lxml.html
+
+import saxo
+
+# Quote a bible verse.  By clsn.
+
+# cribbed from tr
+def optflag(arg):
+    flag = None
+    if arg.startswith(":"):
+        if " " in arg:
+            flag, arg = arg.split(" ", 1)
+        else:
+            flag, arg = arg, ""
+        flag = flag[1:]
+    return flag, arg
+
+@saxo.command()
+def bibl(arg):
+    if not arg:
+        return "Show text of biblical verse."
+
+    version, arg = optflag(arg)
+    version = version or "NET"
+    url='''https://www.biblegateway.com/passage/?search={search}&version={version}'''
+    info = saxo.request(url.format(search=urllib.parse.quote(arg), version=version))
+    page = lxml.html.fromstring(info["text"])
+    try:
+        elt = page.xpath("//meta[@name='twitter:description']")[0]
+    except IndexError:
+        return "Sorry, not found."
+    return elt.attrib['content']
