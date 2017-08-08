@@ -11,7 +11,7 @@ import time
 
 import saxo
 
-r_arg = re.compile("(\d?\d [A-Z][a-z][a-z])(?: (.*))?")
+r_arg = re.compile("(\d?\d [A-Z][a-z][a-z])(?: (.*))?$")
 
 @saxo.pipe
 def main(arg):

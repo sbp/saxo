@@ -9,7 +9,7 @@ import saxo
 @saxo.command()
 def isup(arg):
     page = saxo.request("http://isup.me/" + arg)
-    pattern = r'(?ims)<div id="container">(.*?)<p>'
+    pattern = r'(?ims)<p>(.*?)</p>'
     for result in re.findall(pattern, page["text"]):
         text = re.sub(r"<[^>]+>", "", result)
         return '"' + text.strip().replace("  ", " ") + '"'
