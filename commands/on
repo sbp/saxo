@@ -11,7 +11,8 @@ import time
 
 import saxo
 
-r_arg = re.compile("(\d?\d [A-Z][a-z][a-z])(?: (.*))?$")
+months = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
+r_arg = re.compile("(\d?\d %s)(?: (.*))?$" % months)
 
 @saxo.pipe
 def main(arg):
