@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+
+import re
+import saxo
+
+pattern = "(?ims)<td>Version</td>.*?<td>(?:<[^>]+>)([^<]+)"
+
+@saxo.command()
+def uniwhen(arg):
+    if not arg:
+        return "o hai. uniwhen is the provenance of a unicode character. k thx"
+    arg = arg.lower()
+    if arg.startswith("u+"):
+        arg = arg[2:]
+    url = "http://www.fileformat.info/info/unicode/char/%s/index.htm" % arg
+    page = saxo.request(url)
+    text = page["text"]
+    for v in re.findall(pattern, text):
+        return v
+    return "Sorry, couldn't find the provenance of that character!"
