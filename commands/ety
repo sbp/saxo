@@ -13,7 +13,7 @@ pattern_sentence = \
     "18c", "17c", "16c", "St", "Capt", "obs", "Jan", "Feb", "Mar", "Apr",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "c", "tr", "e", "g"))
 regex_sentence = re.compile(pattern_sentence)
-regex_definition = re.compile("(?ims)<dd[^>]*>.*?</dd>")
+regex_definition = re.compile("(?ims)class=.word[^>]*>(.*?)</section>")
 regex_tag = re.compile(r"<[^>]+>")
 
 def etymology(term, limit=None):

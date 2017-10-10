@@ -10,7 +10,9 @@ def uniwhen(arg):
     if not arg:
         return "o hai. uniwhen is the provenance of a unicode character. k thx"
     arg = arg.lower()
-    if arg.startswith("u+"):
+    if len(arg) == 1:
+        arg = "%04x" % ord(arg)
+    elif arg.startswith("u+"):
         arg = arg[2:]
     url = "http://www.fileformat.info/info/unicode/char/%s/index.htm" % arg
     page = saxo.request(url)
