@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+
+import time
+
+base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+gmt = time.gmtime()
+y, m, d, H, M, S = gmt[:6]
+y = y % 50
+
+print(base[y] + base[m] + base[d] + base[H] + base[M] + base[S])
