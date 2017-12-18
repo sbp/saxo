@@ -3,9 +3,5 @@
 import time
 
 base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-gmt = time.gmtime()
-y, m, d, H, M, S = gmt[:6]
-y = y % 50
-
-print(base[y] + base[m] + base[d] + base[H] + base[M] + base[S])
+y, m, d, H, M, S = time.gmtime()[:6]
+print(base[y % 50] + base[m] + base[d] + base[H] + base[M] + base[S])

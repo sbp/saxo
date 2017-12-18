@@ -25,7 +25,9 @@ def etymology(term, limit=None):
     if not "text" in page:
         raise Exception("No response from %s" % page["url"])
 
-    definitions = regex_definition.findall(page["text"])
+    text = page["text"]
+    text = text.replace('<span class="adLabel">Advertisement</span>', '')
+    definitions = regex_definition.findall(text)
     if not definitions:
         raise Exception("No definitions found in %s" % page["url"])
 
