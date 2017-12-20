@@ -11,5 +11,5 @@ def bch(arg):
         return "This command takes no argument"
     url = "https://coinmarketcap.com/currencies/bitcoin-cash/"
     page = saxo.request(url)
-    res = page["text"].split('id="quote_price">', 1).pop()
-    return res.split("<", 1).pop(0).lstrip("$") + " USD (Coinmarketcap)"
+    res = page["text"].split('data-usd="', 1).pop()
+    return res.split('">', 1).pop(0).lstrip("$") + " USD (Coinmarketcap)"
