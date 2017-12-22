@@ -102,9 +102,9 @@ class Message(object):
             if self.private:
                 self.sender = self.nick
 
-            if saxo.address:
-                # TODO: Why was this 498 for duxlot?
-                self.limit = 493 - len(self.sender + saxo.address)
+            # if saxo.address:
+            #     # TODO: Why was this 498 for duxlot?
+            #     self.limit = 493 - len(self.sender + saxo.address)
 
             def say(text):
                 saxo.send("PRIVMSG", self.sender, text)
@@ -269,6 +269,7 @@ class Saxo(object):
         self.opt = opt
         self.events = {}
         self.address = None
+        self.limit = None
         self.discotimer = None
         self.receiving = False
         self.sending = False
@@ -485,6 +486,7 @@ class Saxo(object):
 
     def instruction_address(self, address):
         self.address = address
+        self.limit = 512 - len(": \r\n") - len(address)
 
     def instruction_connect(self, delay=5):
         # Warning: This quits the bot if the bot is already connected!
@@ -765,7 +767,12 @@ class Saxo(object):
                 if search:
                     incoming.put(("link", args[1], search.group(1)))
 
-        outgoing.put(text.encode("utf-8", "replace")[:510] + b"\r\n")
+        # Set a very conservative limit if we don't know the real limit
+        limit = self.limit or 360
+        while len(text.encode("utf-8", "replace")) > limit:
+            text = text[:-1]
+        octets = text.encode("utf-8", "replace")
+        outgoing.put(octets + b"\r\n")
 
 def serve(sockname, incoming):
     if os.path.exists(sockname):
