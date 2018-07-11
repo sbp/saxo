@@ -31,10 +31,25 @@ def two(arg):
         return "0" # "No results found, sorry!"
     return arg + ": " + match.group(1)
 
+def three(arg):
+    import urllib
+    import requests
+    page = requests.get("https://text.brow.sh/" +
+        "https://www.google.com/search?hl=en&q=%%22%s%%22" %
+            urllib.parse.quote(arg),
+        verify=False)
+    if "did not match" in page.text:
+        return "0"
+    if "results" not in page.text:
+        return "0"
+    return page.text.split(" results").pop(0).rsplit(" ", 1).pop()
+
 @saxo.pipe
 def gc(arg):
     if not arg:
         return "Count the number of results for a phrase on Google"
-    if arg.startswith(": "):
-        return one(arg[2:])
-    return two(arg)
+    if arg.startswith(":one "):
+        return one(arg.split(" ", 1).pop())
+    if arg.startswith(":two "):
+        return two(arg.split(" ", 1).pop())
+    return three(arg)

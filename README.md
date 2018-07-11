@@ -4,6 +4,8 @@
 
 Quick and flexible [irc bot](https://en.wikipedia.org/wiki/Internet_Relay_Chat_bot), extensible in any language.
 
+![The blocks signify modularity. Credit: @Abdur-rahmaanJ](logo.png?raw=true)
+
 ## Quick start
 
 You will need [Python](http://www.python.org/) 3.3 or later.
@@ -32,7 +34,7 @@ Try the [docs](docs) directory:
 
 ## Credits
 
-Thanks to Scott Arciszewski and many others!
+Thanks to Scott Arciszewski (@sarciszewski), and to Abdur-Rahmaan Janhangeer (@Abdur-rahmaanJ) for designing the logo.
 
 ## License
 

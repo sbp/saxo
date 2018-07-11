@@ -144,6 +144,7 @@ def request(url, query=None, data=None, method="GET",
         else:
             raise Exception("Unknown data type: %s" % type(data))
 
+    print(params)
     req = urllib.request.Request(**params)
     with urllib.request.urlopen(req) as res:
         response["url"] = res.url
