@@ -14,5 +14,5 @@ def tw(arg):
         if arg is None:
             return "Show a tweet from a link, username, or tweet id"
 
-    response = saxo.request("http://dpk.io/services/tw/" + arg)
+    response = saxo.request("http://services.nonceword.org/r/tw/" + arg)
     return response["text"]
