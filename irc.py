@@ -821,7 +821,7 @@ def start(base):
     opt = configparser.ConfigParser(interpolation=None)
     config = os.path.join(base, "config")
     if not os.path.isfile(config):
-        error("missing config file in: `%s`" % config, E_NO_CONFIG)
+        Error("missing config file in: `%s`" % config, E_NO_CONFIG)
     opt.read(config)
     # TODO: Defaulting?
     # TODO: Warn if the config file is widely readable?
