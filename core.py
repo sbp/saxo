@@ -37,6 +37,7 @@ if "__file__" in vars():
 if "__path__" in vars():
     global __path__
     if __path__:
+        global __path__
         for directory in __path__:
             if path is None:
                 path = directory
