@@ -35,6 +35,7 @@ if "__file__" in vars():
         path = os.path.dirname(path)
 
 if "__path__" in vars():
+    global __path__
     if __path__:
         for directory in __path__:
             if path is None:
