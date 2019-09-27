@@ -34,15 +34,15 @@ if "__file__" in vars():
         path = os.path.realpath(path)
         path = os.path.dirname(path)
 
-if "__path__" in vars():
-    global __path__
+try:
     if __path__:
-        global __path__
         for directory in __path__:
             if path is None:
                 path = directory
             elif path != directory:
                 raise Exception("Can't create saxo.path")
+except NameError:
+    pass
 
 if path is None:
    raise Exception("Can't create saxo.path")
