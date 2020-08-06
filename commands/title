@@ -71,7 +71,8 @@ def title(url):
     if "nytimes.com" in url:
         return url.rsplit(".html", 1)[0].rsplit("/").pop()
 
-    if url.startswith("https://www.youtube.com/watch?v="):
+    if (url.startswith("https://youtube.com/watch?v=") or
+        url.startswith("https://www.youtube.com/watch?v=")):
         url = url.replace("/watch?v=", "/embed/", 1)
 
     page = saxo.request(url, limit=262144, follow=True)
