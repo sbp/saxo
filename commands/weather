@@ -9,5 +9,5 @@ import saxo
 @saxo.pipe
 def weather(arg):
     arg = urllib.parse.quote(arg)
-    page = saxo.request("http://dpk.io/services/weather/" + arg)
+    page = saxo.request("http://services.nonceword.org/r/weather/" + arg)
     return page["text"]

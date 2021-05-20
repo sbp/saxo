@@ -7,9 +7,9 @@ import urllib.parse
 import saxo
 
 @saxo.pipe
-def dety(arg):
+def roll(arg):
     if not arg:
-        return "Get etymology of a German word"
+        return "Let me roll it"
     arg = urllib.parse.quote(arg)
-    page = saxo.request("http://services.nonceword.org/p/dety/{}".format(arg))
+    page = saxo.request("http://services.nonceword.org/p/roll/{}".format(arg))
     return page["text"]

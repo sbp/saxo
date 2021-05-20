@@ -9,5 +9,5 @@ import saxo
 @saxo.pipe
 def r2r(arg):
     arg = urllib.parse.quote(arg)
-    page = saxo.request("http://dpk.io/s2/rome2rio/" + arg)
+    page = saxo.request("http://services.nonceword.org/p/rome2rio/" + arg)
     return page["text"]
