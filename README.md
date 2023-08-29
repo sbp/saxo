@@ -20,7 +20,7 @@ Edit your `~/.saxo/config` file in a text editor. Then start the bot:
 
 ## Support
 
-Ask in `#saxo` on [freenode](http://freenode.net/), or tweet [@sbp](https://twitter.com/sbp).
+Ask in `#saxo` on [libera](http://libera.chat/), or tweet [@sbp](https://twitter.com/sbp).
 
 ## Documentation
 
