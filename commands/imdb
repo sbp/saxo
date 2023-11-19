@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+
+import json
+import saxo
+
+usage = ".imdb <title>"
+url = "http://www.omdbapi.com/"
+
+@saxo.command()
+def imdb(arg):
+	if not arg:
+		return usage
+	page = saxo.request(url, query={"t": arg, "plot":"short", "r":"json"})
+	data = json.loads(page["text"])
+	try:
+		title = data["Title"]
+	except:
+		return "Argh, something went wrong :("
+	year = data["Year"]
+	rated = data["Rated"]
+	runtime = data["Runtime"]
+	director = data["Director"]
+	actors = data["Actors"]
+	country = data["Country"].replace(", ", "/")
+	language = data["Language"]
+	rating = data["imdbRating"]
+	votes = data["imdbVotes"]
+	plot = data["Plot"]
+	iid = data["imdbID"]
+	link = "http://www.imdb.com/title/" + iid 
+	output = "\002%s\002 (%s, %s), directed by %s \002| Starring:\002 %s \002| Runtime:\002 %s \002| Language:\002 %s \002| IMDB Rating:\002 %s (%s votes) \002| Link:\002 %s \002| Plot:\002 %s" % (title, year, country, director, actors, runtime, language, rating, votes, link, plot) 
+	return output
+	
